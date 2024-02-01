@@ -1,13 +1,10 @@
-pub mod utils;
-
 use game::game::Game;
 use log::Level;
-use utils::set_panic_hook;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen(start)]
 fn main() {
-    set_panic_hook();
+    console_error_panic_hook::set_once();
     let _ = console_log::init_with_level(Level::Debug);
 }
 
