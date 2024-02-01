@@ -1,3 +1,9 @@
+pub mod board;
+pub mod game;
+pub mod player;
+pub mod tile;
+pub mod vec2;
+
 pub fn add(left: usize, right: usize) -> usize {
     left + right
 }

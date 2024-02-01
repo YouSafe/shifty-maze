@@ -1,7 +1,7 @@
 {
   "scripts": {
-    "build": "wasm-pack build --target web --dev --out-dir ../pkg web",
-    "postinstall": "wasm-pack build --target web --dev --out-dir ../pkg web"
+    "build": "wasm-pack build --target web --dev --out-dir ../pkg wasm",
+    "postinstall": "wasm-pack build --target web --dev --out-dir ../pkg wasm"
   },
   "devDependencies": {
     "wasm-pack": "^0.12"
