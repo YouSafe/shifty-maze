@@ -10,4 +10,7 @@ crate-type = ["cdylib"]
 [dependencies]
 wasm-bindgen = "0.2"
 console_error_panic_hook = { version = "0.1" }
-game = { path = "../game" }
+game = { path = "../game", features = ["wasm"] }
+serde = { version = "1.0", features = ["derive"] }
+serde-wasm-bindgen = "0.6"
+tsify =  { version = "0.4", default-features = false, features = ["js"] }
