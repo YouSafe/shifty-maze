@@ -1,36 +1,43 @@
 use std::num::NonZeroU8;
+use wasm_interop::wasm_interop;
 
+#[wasm_interop]
 pub struct Tile {
-    pub id: u32,
-    pub variant: TileVariant,
-    pub rotation: Rotation,
-    pub item: Option<Item>,
+    id: u32,
+    variant: TileVariant,
+    rotation: Rotation,
+    item: Option<Item>,
 }
 
-pub enum TileVariant {
+#[wasm_interop]
+enum TileVariant {
     LShape,
     TShape,
     IShape,
 }
 
-pub enum Rotation {
+#[wasm_interop]
+enum Rotation {
     Zero,
     Ninety,
     OneEighty,
     TwoSeventy,
 }
 
+#[wasm_interop]
 #[repr(transparent)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Item(pub NonZeroU8);
 
+#[wasm_interop]
 pub struct FreeTile {
-    pub tile: Tile,
-    pub side_with_index: Option<(Side, usize)>,
+    tile: Tile,
+    side_with_index: Option<(Side, usize)>,
 }
 
 /// The side of the board where the free tile is located.
 /// The index always goes from left to right or from top to bottom.
+#[wasm_interop]
 pub enum Side {
     Top,
     Right,

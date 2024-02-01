@@ -1,19 +1,18 @@
 use crate::tile::{FreeTile, Tile};
+use wasm_interop::wasm_interop;
 
+#[wasm_interop]
 pub struct Board {
-    pub tiles: Vec<Tile>,
-    pub side_length: usize,
-    pub free_tile: FreeTile,
+    tiles: Vec<Tile>,
+    side_length: usize,
+    free_tile: FreeTile,
 }
 
 impl Board {
     pub fn new(number_of_items: u8, side_length: usize) -> Self {
-        let tiles = Vec::with_capacity(side_length * side_length);
+        let tiles = Vec::with_capacity(side_length.pow(2));
         // TODO: Procedurally generate the board.
-        let free_tile = FreeTile {
-            tile: todo!(),
-            side_with_index: None,
-        };
+        let free_tile = todo!();
         Self {
             tiles,
             side_length,
