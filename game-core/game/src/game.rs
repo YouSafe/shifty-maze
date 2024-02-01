@@ -18,8 +18,8 @@ impl Game {
         Self {
             board: Board::new(number_of_items, side_length),
             number_of_items,
-            players: BTreeMap::new(),
-            player_turn: 0,
+            players: Default::default(),
+            player_turn: Default::default(),
         }
     }
 }

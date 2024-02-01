@@ -42,6 +42,7 @@ dependencies = [
  "serde",
  "tsify",
  "wasm-bindgen",
+ "wasm-interop",
 ]
 
 [[package]]
@@ -244,6 +245,14 @@ name = "wasm-bindgen-shared"
 version = "0.2.90"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4d91413b1c31d7539ba5ef2451af3f0b833a005eb27a631cec32bc0635a8602b"
+
+[[package]]
+name = "wasm-interop"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+]
 
 [[package]]
 name = "web-sys"
