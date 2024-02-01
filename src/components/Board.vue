@@ -1,36 +1,29 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+const props = defineProps<{
+  board: any | null;
+}>();
+</script>
 
 <template>
-  <div class="max-size" ref="containerElement">
+  <div class="max-size">
     <div class="constrain-width">
-      <div class="constrain-height">a</div>
+      <div class="constrain-height blue">
+        <div v-if="board === null" class="start-game">Start</div>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.max-size {
-  width: 100%;
-  height: 100%;
+.blue {
+  background-color: rgb(9, 9, 107);
 }
-.constrain-width {
+.start-game {
+  font-size: 10vmin;
+  color: white;
   display: flex;
-  flex-grow: 0;
-
-  margin: auto;
-  width: 100%;
-  height: auto;
-  aspect-ratio: 1/1;
-}
-
-.constrain-height {
-  display: flex;
-  flex-grow: 0;
-
-  margin: auto;
-  width: auto;
+  justify-content: center;
+  align-items: center;
   height: 100%;
-  aspect-ratio: 1/1;
-  background-color: blue;
 }
 </style>
