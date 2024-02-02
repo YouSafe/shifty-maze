@@ -3,7 +3,7 @@ import { computed } from "vue";
 import { Items } from "../items";
 import { PlayerColors } from "../players";
 const props = defineProps<{
-  orientation: "horizontal" | "vertical";
+  side: "top" | "bottom" | "left" | "right";
   id: number;
   isActive: boolean;
   hasPlayer: boolean;
@@ -12,30 +12,28 @@ const props = defineProps<{
 }>();
 
 const playerColor = computed(() => PlayerColors[props.id]);
+const orientation = computed(() =>
+  props.side === "top" || props.side === "bottom" ? "vertical" : "horizontal"
+);
 </script>
 
 <template>
   <div
     :class="{
       'is-active': props.isActive,
-    }"
-    :style="{
-      flexDirection: orientation === 'horizontal' ? 'row' : 'column',
+      horizontal: orientation === 'horizontal',
     }"
   >
-    <div
-      class="card"
-      :class="orientation === 'horizontal' ? 'horizontal' : 'vertical'"
-    >
-      {{ hasPlayer ? props.count : "" }}
+    <div class="card">
+      <div class="card-inner">
+        {{ hasPlayer ? props.count : "" }}
+      </div>
     </div>
 
-    <div
-      v-if="hasPlayer"
-      class="card item-card"
-      :class="orientation === 'horizontal' ? 'horizontal' : 'vertical'"
-    >
-      {{ Items[item] }}
+    <div v-if="hasPlayer" class="card item-card">
+      <div class="card-inner">
+        {{ Items[item] }}
+      </div>
     </div>
   </div>
 </template>
@@ -45,8 +43,35 @@ const playerColor = computed(() => PlayerColors[props.id]);
   margin: 5px;
   border: 2px solid black;
   border-radius: 8px;
-  /** red cross hatched background (playing card) */
+
   --red: v-bind(playerColor);
+  width: calc(63vmin * var(--card-scale));
+  height: calc(88vmin * var(--card-scale));
+  font-weight: bold;
+  font-size: 2em;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.card.item-card {
+  font-size: 4em;
+  background-image: none;
+}
+.card:hover {
+  cursor: pointer;
+  outline: 2px solid black;
+}
+.horizontal .card {
+  width: calc(88vmin * var(--card-scale));
+  height: calc(63vmin * var(--card-scale));
+}
+.card-inner {
+  border: 1px solid black;
+  border-radius: 5px;
+  width: calc(100% - 8px);
+  height: calc(100% - 8px);
+
   --blue: rgba(255, 255, 255, 0);
   background-image: repeating-linear-gradient(
       45deg,
@@ -63,43 +88,27 @@ const playerColor = computed(() => PlayerColors[props.id]);
       var(--red) 14px
     ),
     linear-gradient(0deg, var(--blue), var(--blue) 100%);
-  font-weight: bold;
-  font-size: 2em;
-  text-align: center;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-.card.item-card {
-  font-size: 4em;
-  background-image: none;
-}
-.card:hover {
-  cursor: pointer;
-  outline: 2px solid black;
-}
-.horizontal {
-  width: calc(63vmin * var(--card-scale));
-  height: calc(88vmin * var(--card-scale));
-}
-.vertical {
-  width: calc(88vmin * var(--card-scale));
-  height: calc(63vmin * var(--card-scale));
 }
 
 /** css animation */
 @keyframes pulse {
   0% {
-    box-shadow: 0 0 10px 1px rgba(12, 113, 160, 0.822);
+    box-shadow: 0 0 8px 0px var(--red);
   }
   50% {
-    box-shadow: 0 0 10px 3px rgba(12, 113, 160, 0.822);
+    box-shadow: 0 0 8px 2px var(--red);
   }
   100% {
-    box-shadow: 0 0 10px 1px rgba(12, 113, 160, 0.822);
+    box-shadow: 0 0 8px 0px var(--red);
   }
 }
 .is-active > * {
   animation: pulse 1s infinite;
+}
+.is-active {
+  flex-direction: row;
+}
+.is-active.horizontal {
+  flex-direction: column;
 }
 </style>

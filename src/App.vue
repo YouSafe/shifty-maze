@@ -27,15 +27,20 @@ function playerItemId(id: number) {
   if (!player) return 0;
   return player.to_collect[0];
 }
-function playerOrientation(id: number) {
-  return id === 0 || id === 1 || id === 4 || id === 5
-    ? "horizontal"
-    : "vertical";
-}
+const playerSideMap = new Map<number, "bottom" | "left" | "right" | "top">([
+  [0, "bottom"],
+  [1, "bottom"],
+  [2, "left"],
+  [3, "left"],
+  [4, "top"],
+  [5, "top"],
+  [6, "right"],
+  [7, "right"],
+]);
 // See also https://vuejs.org/guide/extras/render-function#typing-functional-components
 function OnePlayerCard(props: { id: number }) {
   return h(PlayerCards, {
-    orientation: playerOrientation(props.id),
+    side: playerSideMap.get(props.id) ?? "bottom",
     id: props.id,
     isActive: true,
     hasPlayer: playersMap.value.has(props.id),
