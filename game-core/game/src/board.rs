@@ -1,6 +1,7 @@
 use crate::tile::{FreeTile, Tile};
 use wasm_interop::wasm_interop;
 
+#[derive(Clone)]
 #[wasm_interop]
 pub struct Board {
     tiles: Vec<Tile>,

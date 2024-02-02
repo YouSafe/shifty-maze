@@ -22,4 +22,15 @@ impl Game {
             player_turn: Default::default(),
         }
     }
+    pub fn get_board(&self) -> &Board {
+        &self.board
+    }
+
+    pub fn get_players(&self) -> impl Iterator<Item = &Player> {
+        self.players.values()
+    }
+
+    pub fn get_player_turn(&self) -> PlayerId {
+        self.player_turn
+    }
 }

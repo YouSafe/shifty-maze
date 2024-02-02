@@ -14,5 +14,4 @@ log = "0.4"
 console_log = { version = "1", features = ["color"] }
 game = { path = "../game", features = ["wasm"] }
 serde = { version = "1.0", features = ["derive"] }
-serde-wasm-bindgen = "0.6"
-tsify =  { version = "0.4", default-features = false, features = ["js"] }
+serde-wasm-bindgen = "0.5"
