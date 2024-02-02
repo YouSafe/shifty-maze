@@ -1,5 +1,144 @@
-import { defineStore } from "pinia";
+import { computed, ref } from "vue";
+import init, { type Board, type Player, type PlayerId } from "../game-core/pkg";
 
-export const useGameStore = defineStore("game", {
-  // other options...
-});
+await init();
+
+class GameCoreCallbacks {
+  constructor(
+    public boardCallback: (board: Board) => void,
+    public playersCallback: (players: Player[]) => void
+  ) {}
+  update_board(board: Board) {
+    this.boardCallback(board);
+  }
+  update_players(players: Player[]) {
+    this.playersCallback(players);
+  }
+}
+
+export type PlayerMode = "local" | "online";
+
+export function useGame() {
+  const playersMap = ref(new Map<PlayerId, Player>());
+  const board = ref<Board | null>(null);
+  const activePlayer = ref<PlayerId | null>(2);
+
+  const x = createDummyGame();
+  board.value = x.board;
+  playersMap.value = new Map(x.players.map((p) => [p.id, p]));
+
+  const callbacks = new GameCoreCallbacks(
+    (board) => {
+      console.log(board);
+    },
+    (players) => {
+      playersMap.value.clear();
+      players.forEach((player) => {
+        playersMap.value.set(player.id, player);
+      });
+    }
+  );
+
+  const playerHelper = {
+    hasPlayer: (id: PlayerId) => {
+      return playersMap.value.has(id);
+    },
+    itemCount: (id: PlayerId) => {
+      const player = playersMap.value.get(id);
+      if (!player) return 0;
+      return player.to_collect.length;
+    },
+    currentItem: (id: PlayerId) => {
+      const player = playersMap.value.get(id);
+      if (!player) return 0;
+      return player.to_collect[0] ?? 0;
+    },
+  };
+
+  return {
+    playersMap: computed(() => playersMap.value),
+    playerHelper,
+    activePlayer: computed(() => activePlayer.value),
+    board: computed(() => board.value),
+  };
+}
+
+function createDummyGame(): {
+  board: Board;
+  players: Player[];
+} {
+  const size = 9;
+  const items = 15;
+
+  function createDummyPlayer(id: number): Player {
+    const position = {
+      x: Math.floor(Math.random() * size),
+      y: Math.floor(Math.random() * size),
+    };
+    const start_position = {
+      x: Math.floor(Math.random() * size),
+      y: Math.floor(Math.random() * size),
+    };
+
+    const collected = new Array(Math.floor(Math.random() * items)).map(() =>
+      Math.floor(Math.random() * items)
+    );
+    const to_collect = new Array(Math.floor(Math.random() * items)).map(() =>
+      Math.floor(Math.random() * items)
+    );
+
+    return {
+      id,
+      position,
+      start_position,
+      collected,
+      to_collect,
+    };
+  }
+
+  const players = new Array(Math.floor(Math.random() * 8))
+    .fill(0)
+    .map((_, i) => createDummyPlayer(i));
+
+  const tiles = new Array(size * size + 1).fill(0).map((_, i) => {
+    const variant = (["LShape", "TShape", "IShape"] as const)[
+      Math.floor(Math.random() * 3)
+    ];
+    const rotation = (["Zero", "Ninety", "OneEighty", "TwoSeventy"] as const)[
+      Math.floor(Math.random() * 4)
+    ];
+    const item =
+      Math.random() < 0.3 ? Math.floor(Math.random() * items + 1) : 0;
+    return {
+      id: i,
+      variant,
+      rotation,
+      item,
+    };
+  });
+
+  const free_tile = tiles.pop()!;
+  const side_with_index:
+    | ["Top" | "Right" | "Bottom" | "Left", number]
+    | undefined =
+    Math.random() < 0.3
+      ? undefined
+      : [
+          (["Top", "Right", "Bottom", "Left"] as const)[
+            Math.floor(Math.random() * 4)
+          ],
+          Math.floor(Math.random() * size),
+        ];
+
+  return {
+    board: {
+      tiles,
+      side_length: size,
+      free_tile: {
+        tile: free_tile,
+        side_with_index,
+      },
+    },
+    players,
+  };
+}

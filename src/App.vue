@@ -1,51 +1,38 @@
 <script setup lang="ts">
 import { h, ref } from "vue";
-import Board from "./components/Board.vue";
+import GameBoard from "./components/GameBoard.vue";
 import PlayerCards from "./components/PlayerCards.vue";
 import PlayerDialog from "./components/PlayerDialog.vue";
+import { useGame, type PlayerMode } from "./game";
+import type { Player, Side } from "game-core/pkg/wasm";
 
 const showDialog = ref(false);
 const showDialogFor = ref({
   id: 0,
-  mode: "local" as "local" | "online" | null,
+  mode: "local" as PlayerMode | null,
 });
 
-interface Player {
-  id: number;
-  collected: any[];
-  to_collect: any[];
-}
+const game = useGame();
 
-const playersMap = ref(new Map<number, Player>());
-function playerItemCount(id: number) {
-  const player = playersMap.value.get(id);
-  if (!player) return 0;
-  return player.to_collect.length;
-}
-function playerItemId(id: number) {
-  const player = playersMap.value.get(id);
-  if (!player) return 0;
-  return player.to_collect[0];
-}
-const playerSideMap = new Map<number, "bottom" | "left" | "right" | "top">([
-  [0, "bottom"],
-  [1, "bottom"],
-  [2, "left"],
-  [3, "left"],
-  [4, "top"],
-  [5, "top"],
-  [6, "right"],
-  [7, "right"],
-]);
+const playerSides: Side[] = [
+  "Bottom",
+  "Bottom",
+  "Left",
+  "Left",
+  "Top",
+  "Top",
+  "Right",
+  "Right",
+];
 // See also https://vuejs.org/guide/extras/render-function#typing-functional-components
 function OnePlayerCard(props: { id: number }) {
   return h(PlayerCards, {
-    side: playerSideMap.get(props.id) ?? "bottom",
+    side: playerSides[props.id] ?? "bottom",
     id: props.id,
-    isActive: true,
-    hasPlayer: playersMap.value.has(props.id),
-    count: playerItemCount(props.id),
-    item: playerItemId(props.id),
+    isActive: game.activePlayer.value === props.id,
+    hasPlayer: game.playerHelper.hasPlayer(props.id),
+    count: game.playerHelper.itemCount(props.id),
+    item: game.playerHelper.currentItem(props.id),
     onClick: () => {
       showDialogFor.value = { id: props.id, mode: "local" };
       showDialog.value = true;
@@ -70,7 +57,12 @@ OnePlayerCard.props = {
             <OnePlayerCard :id="3"></OnePlayerCard>
             <OnePlayerCard :id="2"></OnePlayerCard>
           </div>
-          <Board class="board" :board="null" />
+          <GameBoard
+            class="board"
+            :board="game.board.value"
+            :players="game.playersMap.value"
+            :active-player="game.activePlayer.value"
+          />
           <div class="space-between">
             <OnePlayerCard :id="6"></OnePlayerCard>
             <OnePlayerCard :id="7"></OnePlayerCard>
