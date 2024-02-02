@@ -2,6 +2,13 @@
 import { h, ref } from "vue";
 import Board from "./components/Board.vue";
 import PlayerCards from "./components/PlayerCards.vue";
+import PlayerDialog from "./components/PlayerDialog.vue";
+
+const showDialog = ref(false);
+const showDialogFor = ref({
+  id: 0,
+  mode: "local" as "local" | "online" | null,
+});
 
 interface Player {
   id: number;
@@ -25,8 +32,6 @@ function playerOrientation(id: number) {
     ? "horizontal"
     : "vertical";
 }
-// TODO: Respond to click (add & remove player - do a popup!)
-
 // See also https://vuejs.org/guide/extras/render-function#typing-functional-components
 function OnePlayerCard(props: { id: number }) {
   return h(PlayerCards, {
@@ -36,6 +41,10 @@ function OnePlayerCard(props: { id: number }) {
     hasPlayer: playersMap.value.has(props.id),
     count: playerItemCount(props.id),
     item: playerItemId(props.id),
+    onClick: () => {
+      showDialogFor.value = { id: props.id, mode: "local" };
+      showDialog.value = true;
+    },
   });
 }
 OnePlayerCard.props = {
@@ -68,10 +77,22 @@ OnePlayerCard.props = {
         </div>
       </div>
     </div>
+    <PlayerDialog
+      v-model:show="showDialog"
+      :id="showDialogFor.id"
+      :player-mode="showDialogFor.mode"
+    ></PlayerDialog>
   </div>
 </template>
 
 <style scoped>
+div {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+}
+
 .top {
   padding: 0 calc(88vmin * var(--card-scale) + 15px);
   flex-direction: row;
