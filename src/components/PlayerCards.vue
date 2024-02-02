@@ -2,23 +2,25 @@
 import { computed } from "vue";
 import { Items } from "../items";
 import { PlayerColors } from "../players";
+import type { Item, PlayerId, Side } from "game-core/pkg/wasm";
 const props = defineProps<{
-  side: "top" | "bottom" | "left" | "right";
-  id: number;
+  side: Side;
+  id: PlayerId;
   isActive: boolean;
   hasPlayer: boolean;
   count: number;
-  item: number;
+  item: Item;
 }>();
 
 const playerColor = computed(() => PlayerColors[props.id]);
 const orientation = computed(() =>
-  props.side === "top" || props.side === "bottom" ? "vertical" : "horizontal"
+  props.side === "Top" || props.side === "Bottom" ? "vertical" : "horizontal"
 );
 </script>
 
 <template>
   <div
+    class="player-cards"
     :class="{
       'is-active': props.isActive,
       horizontal: orientation === 'horizontal',
@@ -39,6 +41,13 @@ const orientation = computed(() =>
 </template>
 
 <style scoped>
+.player-cards {
+  display: flex;
+  flex-direction: row;
+}
+.player-cards.horizontal {
+  flex-direction: column;
+}
 .card {
   margin: 5px;
   border: 2px solid black;
@@ -47,16 +56,9 @@ const orientation = computed(() =>
   --red: v-bind(playerColor);
   width: calc(63vmin * var(--card-scale));
   height: calc(88vmin * var(--card-scale));
-  font-weight: bold;
-  font-size: 2em;
-  text-align: center;
   display: flex;
   justify-content: center;
   align-items: center;
-}
-.card.item-card {
-  font-size: 4em;
-  background-image: none;
 }
 .card:hover {
   cursor: pointer;
@@ -89,8 +91,20 @@ const orientation = computed(() =>
     ),
     linear-gradient(0deg, var(--blue), var(--blue) 100%);
 }
+.card-inner {
+  font-weight: bold;
+  font-size: 2em;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
-/** css animation */
+.card.item-card .card-inner {
+  font-size: 4em;
+  background-image: none;
+}
+
 @keyframes pulse {
   0% {
     box-shadow: 0 0 8px 0px var(--red);
@@ -104,11 +118,5 @@ const orientation = computed(() =>
 }
 .is-active > * {
   animation: pulse 1s infinite;
-}
-.is-active {
-  flex-direction: row;
-}
-.is-active.horizontal {
-  flex-direction: column;
 }
 </style>

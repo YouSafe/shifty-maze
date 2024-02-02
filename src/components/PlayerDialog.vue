@@ -2,15 +2,16 @@
 import { computed, ref, watch } from "vue";
 import { PlayerColors } from "../players";
 import { NModal, NButton, NSpace } from "naive-ui";
+import type { PlayerMode } from "@/game";
 const show = defineModel("show", { type: Boolean, required: true });
 const props = defineProps<{
   id: number;
-  playerMode: "local" | "online" | null;
+  playerMode: PlayerMode | null;
 }>();
 
 const emit = defineEmits<{
   (e: "remove", id: number): void;
-  (e: "join", id: number, mode: "local" | "online"): void;
+  (e: "join", id: number, mode: PlayerMode): void;
 }>();
 const playerColor = computed(() => PlayerColors[props.id]);
 const hasPlayer = computed(() => props.playerMode !== null);
