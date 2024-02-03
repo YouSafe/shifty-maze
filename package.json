@@ -13,6 +13,7 @@
     "type-check": "vue-tsc --build --force"
   },
   "dependencies": {
+    "peerjs": "^1.5.2",
     "vue": "^3.4.15"
   },
   "devDependencies": {

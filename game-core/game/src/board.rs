@@ -14,6 +14,7 @@ pub struct Board {
     tiles: Vec<Tile>,
     side_length: usize,
     free_tile: FreeTile,
+    number_of_items: u8,
 }
 
 impl Board {
@@ -111,6 +112,19 @@ impl Board {
 
     fn get(&self, position: Position) -> &Tile {
         &self.tiles[position.get_x() * self.side_length + position.get_y()]
+    }
+
+    pub fn get_number_of_items(&self) -> u8 {
+        self.number_of_items
+    }
+
+    pub fn get_item(&self, position: Position) -> Option<Item> {
+        let tile = &self.tiles[position.y * self.side_length + position.x];
+        tile.get_item()
+    }
+
+    pub fn shift_tiles(&mut self, side: Side, index: usize, insert_rotation: Rotation) {
+        todo!()
     }
 }
 

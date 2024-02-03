@@ -130,4 +130,7 @@ impl GameCore {
             self.update_phase(game.get_phase());
         }
     }
+    pub fn dummy_convince_tsify_2(&self) -> Board {
+        panic!("This method should not be called");
+    }
 }

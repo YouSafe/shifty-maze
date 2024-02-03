@@ -29,8 +29,8 @@ pub struct Player {
 #[ts_interop]
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Position {
-    x: usize,
-    y: usize,
+    pub x: usize,
+    pub y: usize,
 }
 
 pub enum MoveResult<'a> {

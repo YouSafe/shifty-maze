@@ -4,6 +4,9 @@ import init, {
   type Item,
   type Player,
   type PlayerId,
+  type Position,
+  type Rotation,
+  type Side,
 } from "../game-core/pkg";
 import { useStoredUndo } from "./stored-undo";
 
@@ -28,18 +31,13 @@ class GameCoreCallbacks {
 
 export type PlayerMode = "local" | "online";
 
-export interface GameStartSettings {
-  board_side_length: number;
-  cards_per_player: number;
-}
-
 export function useGame() {
   const hasStarted = ref(false);
   const playersMap = ref(new Map<PlayerId, Player>());
   const board = ref<Board | null>(null);
-  const activePlayer = ref<PlayerId | null>(2);
+  const activePlayer = ref<PlayerId | null>(0);
 
-  //const storedUndo = useStoredUndo<BinaryBoard>();
+  const storedUndo = useStoredUndo<BinaryBoard>();
 
   const x = createDummyGame();
   board.value = x.board;
@@ -54,11 +52,36 @@ export function useGame() {
       v.forEach((player) => {
         playersMap.value.set(player.id, player);
       });
+      if (playersMap.value.size === 0) {
+        finishGame();
+      }
     },
     (v) => {
+      if (v === activePlayer.value) return;
       activePlayer.value = v;
+      storedUndo.add(getGameBytes());
     }
   );
+
+  // TODO: create the game
+
+  function finishGame() {
+    hasStarted.value = false;
+    storedUndo.newGame();
+  }
+  function updateGameSettings(settings: GameStartSettings) {}
+  function shiftTiles(side: Side, index: number, insertRotation: Rotation) {}
+  function addPlayer(id: PlayerId, position: Position) {}
+  function removePlayer(id: PlayerId) {}
+  function movePlayer(id: PlayerId, x: number, y: number) {}
+  function getGameBytes(): BinaryBoard {}
+  function setGameBytes(game: BinaryBoard) {}
+  function undo() {
+    const game = storedUndo.undo();
+    if (game) {
+      setGameBytes(game);
+    }
+  }
 
   const playerHelper = {
     hasPlayer: (id: PlayerId) => {
@@ -93,6 +116,14 @@ export function useGame() {
       }
     }),
     board: computed(() => board.value),
+
+    updateGameSettings,
+    shiftTiles,
+    addPlayer,
+    removePlayer,
+    movePlayer,
+    getGame,
+    setGame,
   };
 }
 
