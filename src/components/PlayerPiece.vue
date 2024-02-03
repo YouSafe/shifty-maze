@@ -35,9 +35,6 @@ const playerColor = computed(() => PlayerColors[props.player.id]);
   display: flex;
   position: relative;
 }
-.tile:hover {
-  cursor: pointer;
-}
 img {
   position: absolute;
   image-rendering: pixelated;

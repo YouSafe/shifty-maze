@@ -94,6 +94,9 @@ img {
   background-color: rgb(6, 6, 17);
   display: flex;
 }
+.tile:hover {
+  outline: 6px solid rgb(6, 6, 17);
+}
 .item {
   position: absolute;
   top: var(--edge);
@@ -108,6 +111,7 @@ img {
   font-weight: bold;
   text-shadow: 0 0 5px black;
   filter: sepia(25%);
+  pointer-events: none;
 }
 .highlight {
   font-size: 3vmin;
