@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { DungeonTiles } from "@/dungeon_tiles";
+import { Items, getItemNonZeroU8 } from "@/items";
 import type { Tile } from "game-core/pkg/wasm";
 import { computed } from "vue";
 
@@ -37,7 +38,7 @@ const rotation = computed(() => {
     return 0;
   }
 });
-// TODO: Render item on top of tile
+const item = computed(() => getItemNonZeroU8(props.tile?.item));
 </script>
 
 <template>
@@ -51,6 +52,9 @@ const rotation = computed(() => {
         }"
       />
     </div>
+    <div class="item" v-if="item !== null">
+      {{ item }}
+    </div>
   </div>
 </template>
 
@@ -61,12 +65,31 @@ const rotation = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+  --edge: 5px;
 }
 .tile {
-  width: calc(100% - 5px);
-  height: calc(100% - 5px);
-  display: flex;
+  position: absolute;
+  top: var(--edge);
+  left: var(--edge);
+  right: var(--edge);
+  bottom: var(--edge);
   border-radius: 5px;
   background-color: rgb(6, 6, 17);
+  display: flex;
+}
+.item {
+  position: absolute;
+  top: var(--edge);
+  left: var(--edge);
+  right: var(--edge);
+  bottom: var(--edge);
+  display: flex;
+  font-size: 2.5vmin;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  text-shadow: 0 0 5px black;
 }
 </style>

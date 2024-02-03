@@ -70,6 +70,8 @@ function playerStyle(id: PlayerId) {
     left: (player.position.x / board.side_length) * 100 + "%",
   };
 }
+
+// TODO: Deal with stacked players
 </script>
 
 <template>
