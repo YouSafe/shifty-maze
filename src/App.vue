@@ -60,7 +60,6 @@ OnePlayerCard.props = {
             <OnePlayerCard :id="2"></OnePlayerCard>
           </div>
           <GameBoard
-            class="board"
             :board="game.hasStarted ? game.board.value : null"
             :players="game.playersMap.value"
             :active-player="game.activePlayer.value"
@@ -110,9 +109,6 @@ div {
 .middle {
   display: flex;
   flex-direction: row;
-  flex: 1;
-}
-.board {
   flex: 1;
 }
 .bottom {

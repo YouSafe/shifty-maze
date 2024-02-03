@@ -100,7 +100,7 @@ const sideArrows = computed(() => {
     for (let i = 1; i < sideLength; i += 2) {
       arrows.push({
         id: `${mainIndex}-${i}`,
-        ...position(((i + 0.5) / sideLength) * 100 + "%"),
+        ...position((i / sideLength) * 100 + "%"),
       });
     }
     return arrows;
@@ -142,7 +142,7 @@ function startGame() {
 <template>
   <div class="max-size">
     <div class="constrain-width">
-      <div class="constrain-height center">
+      <div class="constrain-height board-container">
         <div class="board">
           <div v-if="props.board === null" class="start-game">
             <n-button
@@ -190,7 +190,7 @@ function startGame() {
               <div
                 v-for="arrow in sideArrows"
                 :key="arrow.id"
-                class="arrow"
+                class="arrow-wrapper"
                 :class="arrow.side"
                 :style="{
                   top: arrow.top,
@@ -198,7 +198,9 @@ function startGame() {
                   right: arrow.right,
                   bottom: arrow.bottom,
                 }"
-              ></div>
+              >
+                <div class="arrow" :class="arrow.side"></div>
+              </div>
             </div>
           </template>
         </div>
@@ -224,18 +226,16 @@ div {
 .player {
   pointer-events: none;
 }
-.center {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.board-container {
+  padding: 1vmin;
+  background-color: #e0e0e0;
 }
 .board {
   /** The frick is this? https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_containment/Container_queries */
   container-type: size;
   --tile-size: v-bind(tileSize);
-  width: calc(100% - 2vmin);
-  height: calc(100% - 2vmin);
-  background-color: #e0e0e0;
+  width: 100%;
+  height: 100%;
   position: relative;
 }
 .start-game {
@@ -246,34 +246,33 @@ div {
   gap: 20px;
 }
 /* I hath nu idea. The numbers are magic*/
-.arrow {
+.arrow-wrapper {
   position: absolute;
-  width: calc(var(--tile-size) * 0.8);
+  height: 4vmin;
+  width: calc(var(--tile-size));
+}
+.arrow-wrapper.Top {
+  transform: translateY(-2vmin);
+}
+.arrow-wrapper.Bottom {
+  transform: translateY(2vmin) rotate(180deg);
+}
+.arrow-wrapper.Right {
+  transform-origin: 50% 100%;
+  transform: translateX(2vmin) rotate(90deg);
+}
+.arrow-wrapper.Left {
+  transform-origin: 50% 100%;
+  transform: translateX(-2vmin) rotate(-90deg);
+}
+.arrow {
+  width: 100%;
   height: 2vmin;
-  transform-origin: 0 0;
+  margin-top: 0vmin;
+  background-color: #7c7c7c;
+  clip-path: polygon(50% 100%, 100% 0%, 0 0%);
 }
-.arrow.Top {
-  transform: translate(-50%, -50%);
-}
-.arrow.Bottom {
-  transform: rotate(180deg) translate(-50%, -150%);
-}
-.arrow.Left {
-  transform: rotate(-90deg) translate(-50%, -50%);
-}
-.arrow.Right {
-  transform-origin: 100% 0;
-  transform: rotate(90deg) translate(50%, -50%);
-}
-.arrow::after {
-  content: "";
-  width: 0px;
-  height: 0px;
-  top: 0;
-  left: 0;
-  border-style: solid;
-  border-width: 2vmin calc(var(--tile-size) * 0.4) 0
-    calc(var(--tile-size) * 0.4);
-  border-color: #a5a5a5 transparent transparent transparent;
+.arrow-wrapper:hover .arrow {
+  background-color: #4c4c4c;
 }
 </style>
