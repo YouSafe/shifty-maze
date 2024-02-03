@@ -64,6 +64,8 @@ OnePlayerCard.props = {
             :players="game.playersMap.value"
             :active-player="game.activePlayer.value"
             :active-player-item="game.activePlayerItem.value"
+            @start-game="(v) => game.updateGameSettings(v)"
+            @player-move="(player, x, y) => game.movePlayer(player, x, y)"
           />
           <div class="right space-between">
             <OnePlayerCard :id="6"></OnePlayerCard>
