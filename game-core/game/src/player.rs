@@ -170,3 +170,9 @@ fn get_items_to_collect(num_board_items: usize, num_item_cards: usize) -> Vec<It
 
     items
 }
+
+impl Position {
+    pub fn new(x: usize, y: usize) -> Self {
+        Self { x, y }
+    }
+}
