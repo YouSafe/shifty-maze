@@ -3,6 +3,7 @@ import { h, ref } from "vue";
 import GameBoard from "./components/GameBoard.vue";
 import PlayerCards from "./components/PlayerCards.vue";
 import PlayerDialog from "./components/PlayerDialog.vue";
+import GameTile from "./components/GameTile.vue";
 import { useGame, type PlayerMode } from "./game";
 import type { Player, Side } from "game-core/pkg/wasm";
 
@@ -47,7 +48,7 @@ OnePlayerCard.props = {
 <template>
   <div class="max-size">
     <div class="constrain-width">
-      <div class="constrain-height">
+      <div class="constrain-height position-relative">
         <div class="top space-between">
           <OnePlayerCard :id="4"></OnePlayerCard>
           <OnePlayerCard :id="5"></OnePlayerCard>
@@ -59,9 +60,10 @@ OnePlayerCard.props = {
           </div>
           <GameBoard
             class="board"
-            :board="game.board.value"
+            :board="game.hasStarted ? game.board.value : null"
             :players="game.playersMap.value"
             :active-player="game.activePlayer.value"
+            :active-player-item="game.activePlayerItem.value"
           />
           <div class="space-between">
             <OnePlayerCard :id="6"></OnePlayerCard>
@@ -72,6 +74,12 @@ OnePlayerCard.props = {
           <OnePlayerCard :id="1"></OnePlayerCard>
           <OnePlayerCard :id="0"></OnePlayerCard>
         </div>
+        <GameTile
+          v-if="game.board.value?.free_tile"
+          :tile="game.board.value?.free_tile?.tile ?? null"
+          :searching-for="game.activePlayerItem.value"
+          class="free-tile"
+        ></GameTile>
       </div>
     </div>
     <PlayerDialog
@@ -109,5 +117,16 @@ div {
 }
 .space-between {
   justify-content: space-between;
+}
+.position-relative {
+  position: relative;
+}
+.free-tile {
+  position: absolute;
+  top: calc(88vmin * var(--card-scale) * 0.5);
+  left: calc(88vmin * var(--card-scale) * 0.5);
+  width: calc(70vmin * var(--card-scale));
+  height: calc(70vmin * var(--card-scale));
+  transform: translate(-50%, -50%);
 }
 </style>

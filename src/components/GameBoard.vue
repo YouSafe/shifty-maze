@@ -1,14 +1,28 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import GameTile from "./GameTile.vue";
 import PlayerPiece from "./PlayerPiece.vue";
 import type { Board, Player, PlayerId, Tile } from "game-core/pkg/wasm";
+import GameSettings from "./GameSettings.vue";
+import type { GameStartSettings } from "@/game";
+import { NButton } from "naive-ui";
 
 const props = defineProps<{
   board: Board | null;
   players: Map<PlayerId, Player>;
   activePlayer: PlayerId | null;
+  activePlayerItem: number | null;
 }>();
+
+const emits = defineEmits<{
+  (e: "player-move", player: PlayerId, x: number, y: number): void;
+  (e: "start-game", settings: GameStartSettings): void;
+}>();
+
+const gameSettings = ref<GameStartSettings>({
+  board_side_length: 7,
+  cards_per_player: 6,
+});
 
 const tileCount = computed(() => props.board?.tiles.length ?? 0);
 
@@ -71,6 +85,10 @@ function playerStyle(id: PlayerId) {
   };
 }
 
+function startGame() {
+  emits("start-game", gameSettings.value);
+}
+
 // TODO: Deal with stacked players
 </script>
 
@@ -78,7 +96,21 @@ function playerStyle(id: PlayerId) {
   <div class="max-size">
     <div class="constrain-width">
       <div class="constrain-height board">
-        <div v-if="props.board === null" class="start-game">Start</div>
+        <div v-if="props.board === null" class="start-game">
+          <n-button
+            secondary
+            round
+            size="large"
+            type="primary"
+            @click="startGame"
+          >
+            <h1>Press Start</h1>
+          </n-button>
+          <GameSettings
+            v-model:cards-per-player="gameSettings.cards_per_player"
+            v-model:side-length="gameSettings.board_side_length"
+          ></GameSettings>
+        </div>
         <template v-else>
           <div class="tiles-wrapper">
             <div
@@ -87,7 +119,10 @@ function playerStyle(id: PlayerId) {
               class="tile"
               :style="tileStyle(id - 1)"
             >
-              <GameTile :tile="tilesMap.get(id - 1)?.tile ?? null" />
+              <GameTile
+                :tile="tilesMap.get(id - 1)?.tile ?? null"
+                :searching-for="props.activePlayerItem"
+              />
             </div>
           </div>
           <div class="tiles-wrapper">
@@ -132,11 +167,10 @@ div {
   position: relative;
 }
 .start-game {
-  font-size: 10vmin;
-  color: white;
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100%;
+  gap: 20px;
 }
 </style>

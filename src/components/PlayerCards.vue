@@ -102,17 +102,20 @@ const item = computed(() => getItemNonZeroU8(props.item));
 .card.item-card .card-inner {
   font-size: 4em;
   background-image: none;
+  color: white;
+  font-weight: bold;
+  filter: sepia(25%);
 }
 
 @keyframes pulse {
   0% {
-    box-shadow: 0 0 8px 0px var(--red);
-  }
-  50% {
     box-shadow: 0 0 8px 2px var(--red);
   }
+  50% {
+    box-shadow: 0 0 8px 4px var(--red);
+  }
   100% {
-    box-shadow: 0 0 8px 0px var(--red);
+    box-shadow: 0 0 8px 2px var(--red);
   }
 }
 .is-active > * {

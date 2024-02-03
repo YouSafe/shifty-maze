@@ -23,7 +23,13 @@ class GameCoreCallbacks {
 
 export type PlayerMode = "local" | "online";
 
+export interface GameStartSettings {
+  board_side_length: number;
+  cards_per_player: number;
+}
+
 export function useGame() {
+  const hasStarted = ref(false);
   const playersMap = ref(new Map<PlayerId, Player>());
   const board = ref<Board | null>(null);
   const activePlayer = ref<PlayerId | null>(2);
@@ -65,9 +71,17 @@ export function useGame() {
   };
 
   return {
+    hasStarted: computed(() => hasStarted.value),
     playersMap: computed(() => playersMap.value),
     playerHelper,
     activePlayer: computed(() => activePlayer.value),
+    activePlayerItem: computed(() => {
+      if (activePlayer.value) {
+        return playerHelper.currentItem(activePlayer.value);
+      } else {
+        return 0;
+      }
+    }),
     board: computed(() => board.value),
   };
 }
