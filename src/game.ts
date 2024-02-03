@@ -90,7 +90,7 @@ function createDummyGame(): {
   board: Board;
   players: Player[];
 } {
-  const size = 9;
+  const size = 3;
   const items = 15;
 
   function createDummyPlayer(id: number): Player {
@@ -119,7 +119,7 @@ function createDummyGame(): {
     };
   }
 
-  const players = new Array(Math.floor(Math.random() * 8))
+  const players = new Array(Math.floor(Math.random() * 4) + 4)
     .fill(0)
     .map((_, i) => createDummyPlayer(i));
 

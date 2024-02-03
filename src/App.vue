@@ -49,13 +49,13 @@ OnePlayerCard.props = {
 <template>
   <div class="max-size">
     <div class="constrain-width">
-      <div class="constrain-height position-relative">
+      <div class="constrain-height container">
         <div class="top space-between">
           <OnePlayerCard :id="4"></OnePlayerCard>
           <OnePlayerCard :id="5"></OnePlayerCard>
         </div>
         <div class="middle">
-          <div class="space-between">
+          <div class="left space-between">
             <OnePlayerCard :id="3"></OnePlayerCard>
             <OnePlayerCard :id="2"></OnePlayerCard>
           </div>
@@ -65,7 +65,7 @@ OnePlayerCard.props = {
             :active-player="game.activePlayer.value"
             :active-player-item="game.activePlayerItem.value"
           />
-          <div class="space-between">
+          <div class="right space-between">
             <OnePlayerCard :id="6"></OnePlayerCard>
             <OnePlayerCard :id="7"></OnePlayerCard>
           </div>
@@ -94,32 +94,28 @@ OnePlayerCard.props = {
 </template>
 
 <style scoped>
-div {
+.top,
+.bottom {
   display: flex;
-  min-width: 0;
-  min-height: 0;
-  flex-direction: column;
-}
-
-.top {
   padding: 0 calc(88vmin * var(--card-scale) + 15px);
   flex-direction: row;
-  justify-content: space-between;
+}
+.left,
+.right {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
 }
 .middle {
   display: flex;
-  flex-direction: row;
-  flex: 1;
-}
-.bottom {
-  padding: 0 calc(88vmin * var(--card-scale) + 15px);
   flex-direction: row;
 }
 .space-between {
   justify-content: space-between;
 }
-.position-relative {
+.container {
   position: relative;
+  flex-direction: column;
 }
 .free-tile {
   position: absolute;
