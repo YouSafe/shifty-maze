@@ -4,6 +4,7 @@ import GameTile from "./GameTile.vue";
 import PlayerPiece from "./PlayerPiece.vue";
 import type {
   Board,
+  GameStartSettings,
   Player,
   PlayerId,
   Position,
@@ -11,8 +12,8 @@ import type {
   Tile,
 } from "game-core/pkg/wasm";
 import GameSettings from "./GameSettings.vue";
-import type { GameStartSettings } from "@/game";
 import { NButton } from "naive-ui";
+import { DefaultGameStartSettings } from "@/game";
 
 const props = defineProps<{
   board: Board | null;
@@ -26,10 +27,7 @@ const emits = defineEmits<{
   (e: "start-game", settings: GameStartSettings): void;
 }>();
 
-const gameSettings = ref<GameStartSettings>({
-  board_side_length: 7,
-  cards_per_player: 6,
-});
+const gameSettings = ref<GameStartSettings>(DefaultGameStartSettings());
 
 const tileCount = computed(() => props.board?.tiles.length ?? 0);
 
@@ -209,8 +207,8 @@ function startGame() {
               <h1>Press Start</h1>
             </n-button>
             <GameSettings
-              v-model:cards-per-player="gameSettings.cards_per_player"
-              v-model:side-length="gameSettings.board_side_length"
+              v-model:cards-per-player="gameSettings.items_per_player"
+              v-model:side-length="gameSettings.side_length"
             ></GameSettings>
           </div>
           <template v-else>

@@ -1,4 +1,3 @@
-use std::num::NonZeroU8;
 use wasm_interop::wasm_interop;
 
 #[wasm_interop]
