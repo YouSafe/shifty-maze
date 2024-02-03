@@ -104,7 +104,8 @@ img {
   right: var(--edge);
   bottom: var(--edge);
   display: flex;
-  font-size: 2.5vmin;
+  container-type: size;
+  font-size: 4cqw;
   align-items: center;
   justify-content: center;
   color: white;
@@ -112,6 +113,7 @@ img {
   text-shadow: 0 0 5px black;
   filter: sepia(25%);
   pointer-events: none;
+  z-index: 1;
 }
 .highlight {
   font-size: 3vmin;

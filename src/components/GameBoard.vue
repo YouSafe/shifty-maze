@@ -2,7 +2,14 @@
 import { computed, ref } from "vue";
 import GameTile from "./GameTile.vue";
 import PlayerPiece from "./PlayerPiece.vue";
-import type { Board, Player, PlayerId, Side, Tile } from "game-core/pkg/wasm";
+import type {
+  Board,
+  Player,
+  PlayerId,
+  Position,
+  Side,
+  Tile,
+} from "game-core/pkg/wasm";
 import GameSettings from "./GameSettings.vue";
 import type { GameStartSettings } from "@/game";
 import { NButton } from "naive-ui";
@@ -118,6 +125,42 @@ function tileStyle(id: number) {
     left: (tile.x / board.side_length) * 100 + "%",
   };
 }
+
+const positionToMapKey = (position: Position) =>
+  `${position.x} - ${position.y}`;
+const positionPlayersMap = computed(() =>
+  groupBy([...props.players.values()], (player) =>
+    positionToMapKey(player.position)
+  )
+);
+
+function groupBy<T, K extends string | number>(
+  array: T[],
+  key: (item: T) => K
+): Map<K, T[]> {
+  const map = new Map<K, T[]>();
+  for (const item of array) {
+    const k = key(item);
+    if (!map.has(k)) {
+      map.set(k, []);
+    }
+    map.get(k)!.push(item);
+  }
+  return map;
+}
+
+const playerOffsets = [
+  { x: -1, y: -1 },
+  { x: 0, y: -1 },
+  { x: 1, y: -1 },
+  { x: -1, y: 0 },
+  //
+  { x: -1, y: 0 },
+  { x: -1, y: 1 },
+  { x: 0, y: 1 },
+  { x: 1, y: 1 },
+];
+
 function playerStyle(id: PlayerId) {
   const board = props.board;
   const player = props.players.get(id) ?? null;
@@ -126,9 +169,20 @@ function playerStyle(id: PlayerId) {
       display: "none",
     };
   }
+
+  const hasMultiplePlayers =
+    (positionPlayersMap.value.get(positionToMapKey(player.position))?.length ??
+      0) > 1;
+  const transform = hasMultiplePlayers
+    ? `scale(0.9) translate(${30 * (playerOffsets[id]?.x ?? 0)}%, ${
+        30 * (playerOffsets[id]?.y ?? 0)
+      }%)`
+    : "";
+  console.log(transform);
   return {
     top: (player.position.y / board.side_length) * 100 + "%",
     left: (player.position.x / board.side_length) * 100 + "%",
+    transform,
   };
 }
 
@@ -210,12 +264,6 @@ function startGame() {
 </template>
 
 <style scoped>
-div {
-  display: flex;
-  min-width: 0;
-  min-height: 0;
-  flex-direction: column;
-}
 .tile,
 .player {
   position: absolute;
@@ -227,6 +275,7 @@ div {
   pointer-events: none;
 }
 .board-container {
+  margin: 1vmin;
   padding: 1vmin;
   background-color: #e0e0e0;
 }
@@ -248,22 +297,21 @@ div {
 /* I hath nu idea. The numbers are magic*/
 .arrow-wrapper {
   position: absolute;
-  height: 4vmin;
+  height: calc(var(--tile-size));
   width: calc(var(--tile-size));
+  transform-origin: 50% 50%;
 }
 .arrow-wrapper.Top {
   transform: translateY(-2vmin);
 }
 .arrow-wrapper.Bottom {
-  transform: translateY(2vmin) rotate(180deg);
+  transform: rotate(180deg) translateY(-2vmin);
 }
 .arrow-wrapper.Right {
-  transform-origin: 50% 100%;
-  transform: translateX(2vmin) rotate(90deg);
+  transform: rotate(90deg) translateY(-2vmin);
 }
 .arrow-wrapper.Left {
-  transform-origin: 50% 100%;
-  transform: translateX(-2vmin) rotate(-90deg);
+  transform: rotate(-90deg) translateY(-2vmin);
 }
 .arrow {
   width: 100%;

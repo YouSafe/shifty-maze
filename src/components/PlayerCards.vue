@@ -92,7 +92,7 @@ const item = computed(() => getItemNonZeroU8(props.item));
 }
 .card-inner {
   font-weight: bold;
-  font-size: 2em;
+  font-size: 3vmin;
   text-align: center;
   display: flex;
   justify-content: center;
@@ -100,7 +100,7 @@ const item = computed(() => getItemNonZeroU8(props.item));
 }
 
 .card.item-card .card-inner {
-  font-size: 4em;
+  font-size: 5vmin;
   background-image: none;
   color: white;
   font-weight: bold;
