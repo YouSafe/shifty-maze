@@ -1,6 +1,9 @@
 import { computed, ref } from "vue";
 import init, {
+  GameCore,
+  type BinaryGame,
   type Board,
+  type GameStartSettings,
   type Item,
   type Player,
   type PlayerId,
@@ -9,6 +12,7 @@ import init, {
   type Side,
 } from "../game-core/pkg";
 import { useStoredUndo } from "./stored-undo";
+import { Items } from "./items";
 
 await init();
 
@@ -31,17 +35,21 @@ class GameCoreCallbacks {
 
 export type PlayerMode = "local" | "online";
 
+export function DefaultGameStartSettings(): GameStartSettings {
+  return {
+    number_of_items: Items.length,
+    items_per_player: 6,
+    side_length: 7,
+  };
+}
+
 export function useGame() {
   const hasStarted = ref(false);
   const playersMap = ref(new Map<PlayerId, Player>());
   const board = ref<Board | null>(null);
   const activePlayer = ref<PlayerId | null>(0);
 
-  const storedUndo = useStoredUndo<BinaryBoard>();
-
-  const x = createDummyGame();
-  board.value = x.board;
-  playersMap.value = new Map(x.players.map((p) => [p.id, p]));
+  const storedUndo = useStoredUndo<BinaryGame>();
 
   const callbacks = new GameCoreCallbacks(
     (v) => {
@@ -63,24 +71,38 @@ export function useGame() {
     }
   );
 
-  // TODO: create the game
+  const game = new GameCore(DefaultGameStartSettings(), callbacks);
 
-  function finishGame() {
-    hasStarted.value = false;
-    storedUndo.newGame();
+  function updateGameSettings(settings: GameStartSettings) {
+    game.update_game_settings(settings);
   }
-  function updateGameSettings(settings: GameStartSettings) {}
-  function shiftTiles(side: Side, index: number, insertRotation: Rotation) {}
-  function addPlayer(id: PlayerId, position: Position) {}
-  function removePlayer(id: PlayerId) {}
-  function movePlayer(id: PlayerId, x: number, y: number) {}
-  function getGameBytes(): BinaryBoard {}
-  function setGameBytes(game: BinaryBoard) {}
+  function shiftTiles(side: Side, index: number, insertRotation: Rotation) {
+    game.shift_tiles(side, index, insertRotation);
+  }
+  function addPlayer(id: PlayerId, position: Position) {
+    game.add_player(id, position);
+  }
+  function removePlayer(id: PlayerId) {
+    game.remove_player(id);
+  }
+  function movePlayer(id: PlayerId, x: number, y: number) {
+    game.move_player(id, { x, y });
+  }
+  function getGameBytes(): BinaryGame {
+    return game.get_game_bytes();
+  }
+  function setGameBytes(v: BinaryGame) {
+    game.set_game_bytes(v);
+  }
   function undo() {
     const game = storedUndo.undo();
     if (game) {
       setGameBytes(game);
     }
+  }
+  function finishGame() {
+    hasStarted.value = false;
+    storedUndo.newGame();
   }
 
   const playerHelper = {
@@ -122,87 +144,9 @@ export function useGame() {
     addPlayer,
     removePlayer,
     movePlayer,
-    getGame,
-    setGame,
-  };
-}
-
-function createDummyGame(): {
-  board: Board;
-  players: Player[];
-} {
-  const size = 3;
-  const items = 15;
-
-  function createDummyPlayer(id: number): Player {
-    const position = {
-      x: Math.floor(Math.random() * size),
-      y: Math.floor(Math.random() * size),
-    };
-    const start_position = {
-      x: Math.floor(Math.random() * size),
-      y: Math.floor(Math.random() * size),
-    };
-
-    const collected = new Array(Math.floor(Math.random() * items))
-      .fill(0)
-      .map(() => Math.floor(Math.random() * items) + 1);
-    const to_collect = new Array(Math.floor(Math.random() * items))
-      .fill(0)
-      .map(() => Math.floor(Math.random() * items) + 1);
-
-    return {
-      id,
-      position,
-      start_position,
-      collected,
-      to_collect,
-    };
-  }
-
-  const players = new Array(Math.floor(Math.random() * 4) + 4)
-    .fill(0)
-    .map((_, i) => createDummyPlayer(i));
-
-  const tiles = new Array(size * size + 1).fill(0).map((_, i) => {
-    const variant = (["LShape", "TShape", "IShape"] as const)[
-      Math.floor(Math.random() * 3)
-    ];
-    const rotation = (["Zero", "Ninety", "OneEighty", "TwoSeventy"] as const)[
-      Math.floor(Math.random() * 4)
-    ];
-    const item =
-      Math.random() < 0.3 ? Math.floor(Math.random() * items + 1) : 0;
-    return {
-      id: i,
-      variant,
-      rotation,
-      item,
-    };
-  });
-
-  const free_tile = tiles.pop()!;
-  const side_with_index:
-    | ["Top" | "Right" | "Bottom" | "Left", number]
-    | undefined =
-    Math.random() < 0.3
-      ? undefined
-      : [
-          (["Top", "Right", "Bottom", "Left"] as const)[
-            Math.floor(Math.random() * 4)
-          ],
-          Math.floor(Math.random() * size),
-        ];
-
-  return {
-    board: {
-      tiles,
-      side_length: size,
-      free_tile: {
-        tile: free_tile,
-        side_with_index,
-      },
-    },
-    players,
+    getGameBytes,
+    setGameBytes,
+    undo,
+    finishGame,
   };
 }
