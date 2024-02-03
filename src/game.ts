@@ -5,19 +5,24 @@ import init, {
   type Player,
   type PlayerId,
 } from "../game-core/pkg";
+import { useStoredUndo } from "./stored-undo";
 
 await init();
 
 class GameCoreCallbacks {
   constructor(
     public boardCallback: (board: Board) => void,
-    public playersCallback: (players: Player[]) => void
+    public playersCallback: (players: Player[]) => void,
+    public playersTurnCallback: (player_id: PlayerId) => void
   ) {}
   update_board(board: Board) {
     this.boardCallback(board);
   }
   update_players(players: Player[]) {
     this.playersCallback(players);
+  }
+  update_player_turn(player_id: PlayerId) {
+    this.playersTurnCallback(player_id);
   }
 }
 
@@ -34,19 +39,24 @@ export function useGame() {
   const board = ref<Board | null>(null);
   const activePlayer = ref<PlayerId | null>(2);
 
+  //const storedUndo = useStoredUndo<BinaryBoard>();
+
   const x = createDummyGame();
   board.value = x.board;
   playersMap.value = new Map(x.players.map((p) => [p.id, p]));
 
   const callbacks = new GameCoreCallbacks(
-    (board) => {
-      console.log(board);
+    (v) => {
+      board.value = v;
     },
-    (players) => {
+    (v) => {
       playersMap.value.clear();
-      players.forEach((player) => {
+      v.forEach((player) => {
         playersMap.value.set(player.id, player);
       });
+    },
+    (v) => {
+      activePlayer.value = v;
     }
   );
 
