@@ -1,6 +1,9 @@
 use std::iter;
 
-use crate::tile::{FreeTile, Rotation, Tile, TileVariant};
+use crate::{
+    player::Position,
+    tile::{FreeTile, Item, Rotation, Side, Tile, TileVariant},
+};
 use rand::seq::SliceRandom;
 use wasm_interop::wasm_interop;
 
@@ -10,6 +13,7 @@ pub struct Board {
     tiles: Vec<Tile>,
     side_length: usize,
     free_tile: FreeTile,
+    number_of_items: u8,
 }
 
 impl Board {
@@ -48,19 +52,43 @@ impl Board {
                         *rotations.choose(&mut rng).unwrap(),
                     ),
                 };
-                tiles.push(Tile::new(row * side_length + col, variant, rotation, None)); // TODO add item
+                tiles.push(Tile::new(
+                    (row * side_length + col) as u32,
+                    variant,
+                    rotation,
+                    None,
+                )); // TODO add item
             }
         }
 
         let free_tile = rand_tiles.pop().unwrap();
         assert!(rand_tiles.is_empty());
-        let free_tile = FreeTile::new(Tile::new(side_length.pow(2), free_tile, Zero, None));
+        let free_tile = FreeTile::new(Tile::new(
+            (side_length * side_length) as u32,
+            free_tile,
+            Zero,
+            None,
+        ));
 
         Self {
             tiles,
             side_length,
             free_tile,
+            number_of_items,
         }
+    }
+
+    pub fn get_number_of_items(&self) -> u8 {
+        self.number_of_items
+    }
+
+    pub fn get_item(&self, position: Position) -> Option<Item> {
+        let tile = &self.tiles[position.y * self.side_length + position.x];
+        tile.get_item()
+    }
+
+    pub fn shift_tiles(&mut self, side: Side, index: usize, insert_rotation: Rotation) {
+        todo!()
     }
 }
 

@@ -30,7 +30,7 @@ pub enum Rotation {
 #[wasm_interop]
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq)]
-pub struct Item(pub NonZeroU8);
+pub struct Item(pub u8);
 
 #[wasm_interop]
 #[derive(Clone, Copy)]
@@ -51,13 +51,17 @@ pub enum Side {
 }
 
 impl Tile {
-    pub fn new(id: usize, variant: TileVariant, rotation: Rotation, item: Option<Item>) -> Self {
+    pub fn new(id: u32, variant: TileVariant, rotation: Rotation, item: Option<Item>) -> Self {
         Self {
             id,
             variant,
             rotation,
             item,
         }
+    }
+
+    pub fn get_item(&self) -> Option<Item> {
+        self.item
     }
 }
 
