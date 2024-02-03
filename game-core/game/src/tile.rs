@@ -33,6 +33,7 @@ pub enum Rotation {
 pub struct Item(pub NonZeroU8);
 
 #[wasm_interop]
+#[derive(Clone, Copy)]
 pub struct FreeTile {
     tile: Tile,
     side_with_index: Option<(Side, usize)>,
@@ -41,6 +42,7 @@ pub struct FreeTile {
 /// The side of the board where the free tile is located.
 /// The index always goes from left to right or from top to bottom.
 #[wasm_interop]
+#[derive(Clone, Copy)]
 pub enum Side {
     Top,
     Right,

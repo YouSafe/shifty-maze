@@ -6,8 +6,8 @@ use crate::tile::Item;
 #[cfg_attr(feature = "wasm", declare)]
 pub type PlayerId = u8;
 
-#[derive(Clone)]
 #[wasm_interop]
+#[derive(Clone)]
 pub struct Player {
     id: PlayerId,
     position: Position,
@@ -16,8 +16,8 @@ pub struct Player {
     to_collect: Vec<Item>,
 }
 
-#[derive(Clone)]
 #[wasm_interop]
+#[derive(Clone, Copy)]
 pub struct Position {
     x: usize,
     y: usize,

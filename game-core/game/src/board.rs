@@ -4,8 +4,8 @@ use crate::tile::{FreeTile, Rotation, Tile, TileVariant};
 use rand::seq::SliceRandom;
 use wasm_interop::wasm_interop;
 
-#[derive(Clone)]
 #[wasm_interop]
+#[derive(Clone)]
 pub struct Board {
     tiles: Vec<Tile>,
     side_length: usize,
