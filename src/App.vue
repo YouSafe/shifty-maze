@@ -80,7 +80,15 @@ OnePlayerCard.props = {
           :searching-for="game.activePlayerItem.value"
           class="free-tile"
         ></GameTile>
-        <NButton :disabled="!game.hasStarted" round class="undo-button">
+        <NButton
+          :disabled="!game.hasStarted"
+          round
+          size="small"
+          class="undo-button-small"
+        >
+          ⟲</NButton
+        >
+        <NButton :disabled="!game.hasStarted" round class="undo-button-large">
           ⟲ Undo</NButton
         >
       </div>
@@ -125,9 +133,24 @@ OnePlayerCard.props = {
   height: calc(70vmin * var(--card-scale));
   transform: translate(-50%, -50%);
 }
-.undo-button {
+.undo-button-small,
+.undo-button-large {
   position: absolute;
   top: 10px;
-  right: 10px;
+  right: 5px;
+}
+.undo-button-small {
+  display: block;
+}
+.undo-button-large {
+  display: none;
+}
+@media (min-width: 800px) {
+  .undo-button-small {
+    display: none;
+  }
+  .undo-button-large {
+    display: block;
+  }
 }
 </style>
