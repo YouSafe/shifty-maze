@@ -6,6 +6,7 @@ import PlayerDialog from "./components/PlayerDialog.vue";
 import GameTile from "./components/GameTile.vue";
 import { useGame, type PlayerMode } from "./game";
 import type { Player, Side } from "game-core/pkg/wasm";
+import { NButton } from "naive-ui";
 
 const showDialog = ref(false);
 const showDialogFor = ref({
@@ -80,6 +81,9 @@ OnePlayerCard.props = {
           :searching-for="game.activePlayerItem.value"
           class="free-tile"
         ></GameTile>
+        <NButton :disabled="!game.hasStarted" round class="undo-button">
+          ⟲ Undo</NButton
+        >
       </div>
     </div>
     <PlayerDialog
@@ -128,5 +132,10 @@ div {
   width: calc(70vmin * var(--card-scale));
   height: calc(70vmin * var(--card-scale));
   transform: translate(-50%, -50%);
+}
+.undo-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
 }
 </style>
