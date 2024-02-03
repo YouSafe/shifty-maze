@@ -10,6 +10,7 @@ import init, {
   type Position,
   type Rotation,
   type Side,
+  type GamePhase,
 } from "../game-core/pkg";
 import { useStoredUndo } from "./stored-undo";
 import { Items } from "./items";
@@ -20,6 +21,7 @@ class GameCoreCallbacks {
   constructor(
     public boardCallback: (board: Board) => void,
     public playersCallback: (players: Player[]) => void,
+    public phaseCallback: (phase: GamePhase) => void,
     public playersTurnCallback: (player_id: PlayerId) => void
   ) {}
   update_board(board: Board) {
@@ -27,6 +29,9 @@ class GameCoreCallbacks {
   }
   update_players(players: Player[]) {
     this.playersCallback(players);
+  }
+  update_phase(phase: GamePhase) {
+    this.phaseCallback(phase);
   }
   update_player_turn(player_id: PlayerId) {
     this.playersTurnCallback(player_id);
@@ -40,14 +45,16 @@ export function DefaultGameStartSettings(): GameStartSettings {
     number_of_items: Items.length,
     items_per_player: 6,
     side_length: 7,
+    players: [],
   };
 }
 
 export function useGame() {
-  const hasStarted = ref(false);
   const playersMap = ref(new Map<PlayerId, Player>());
   const board = ref<Board | null>(null);
-  const activePlayer = ref<PlayerId | null>(0);
+  const activePlayer = ref<PlayerId>(0);
+  const phase = ref<GamePhase>("TurnMoveTiles");
+  const hasStarted = computed(() => board.value !== null);
 
   const storedUndo = useStoredUndo<BinaryGame>();
 
@@ -65,22 +72,31 @@ export function useGame() {
       }
     },
     (v) => {
+      phase.value = v;
+    },
+    (v) => {
       if (v === activePlayer.value) return;
       activePlayer.value = v;
-      storedUndo.add(getGameBytes());
+      // Prevent "recursive use of an object detected which would lead to unsafe aliasing in rust"
+      setTimeout(() => {
+        const bytes = getGameBytes();
+        if (bytes) {
+          storedUndo.add(bytes);
+        }
+      }, 0);
     }
   );
 
-  const game = new GameCore(DefaultGameStartSettings(), callbacks);
+  const game = new GameCore(callbacks);
 
-  function updateGameSettings(settings: GameStartSettings) {
-    game.update_game_settings(settings);
+  function startGame(settings: GameStartSettings) {
+    game.start_game(settings);
   }
   function shiftTiles(side: Side, index: number, insertRotation: Rotation) {
     game.shift_tiles(side, index, insertRotation);
   }
-  function addPlayer(id: PlayerId, position: Position) {
-    game.add_player(id, position);
+  function addPlayer(id: PlayerId, mode: PlayerMode) {
+    game.add_player(id);
   }
   function removePlayer(id: PlayerId) {
     game.remove_player(id);
@@ -88,8 +104,8 @@ export function useGame() {
   function movePlayer(id: PlayerId, x: number, y: number) {
     game.move_player(id, { x, y });
   }
-  function getGameBytes(): BinaryGame {
-    return game.get_game_bytes();
+  function getGameBytes(): BinaryGame | null {
+    return game.get_game_bytes() ?? null;
   }
   function setGameBytes(v: BinaryGame) {
     game.set_game_bytes(v);
@@ -101,7 +117,7 @@ export function useGame() {
     }
   }
   function finishGame() {
-    hasStarted.value = false;
+    board.value = null;
     storedUndo.newGame();
   }
 
@@ -139,7 +155,7 @@ export function useGame() {
     }),
     board: computed(() => board.value),
 
-    updateGameSettings,
+    startGame,
     shiftTiles,
     addPlayer,
     removePlayer,

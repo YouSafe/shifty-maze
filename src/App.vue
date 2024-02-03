@@ -4,7 +4,7 @@ import GameBoard from "./components/GameBoard.vue";
 import PlayerCards from "./components/PlayerCards.vue";
 import PlayerDialog from "./components/PlayerDialog.vue";
 import GameTile from "./components/GameTile.vue";
-import { useGame, type PlayerMode } from "./game";
+import { useGame, type PlayerMode, DefaultGameStartSettings } from "./game";
 import type { Player, Side } from "game-core/pkg/wasm";
 import { NButton } from "naive-ui";
 
@@ -14,7 +14,31 @@ const showDialogFor = ref({
   mode: "local" as PlayerMode | null,
 });
 
+const gameSettings = ref(DefaultGameStartSettings());
 const game = useGame();
+
+function addPlayer(id: number, mode: PlayerMode) {
+  if (game.hasStarted.value === false) {
+    if (gameSettings.value.players.includes(id)) {
+      return;
+    }
+    gameSettings.value.players.push(id);
+    // TODO: Deal with online players
+  } else {
+    game.addPlayer(id, mode);
+  }
+}
+
+function removePlayer(id: number) {
+  if (game.hasStarted.value === false) {
+    const index = gameSettings.value.players.indexOf(id);
+    if (index !== -1) {
+      gameSettings.value.players.splice(index, 1);
+    }
+  } else {
+    game.removePlayer(id);
+  }
+}
 
 const playerSides: Side[] = [
   "Bottom",
@@ -36,7 +60,11 @@ function OnePlayerCard(props: { id: number }) {
     count: game.playerHelper.itemCount(props.id),
     item: game.playerHelper.currentItem(props.id),
     onClick: () => {
-      showDialogFor.value = { id: props.id, mode: "local" };
+      if (game.hasStarted.value === false) {
+        showDialogFor.value = { id: props.id, mode: null };
+      } else {
+        showDialogFor.value = { id: props.id, mode: "local" };
+      }
       showDialog.value = true;
     },
   });
@@ -64,7 +92,8 @@ OnePlayerCard.props = {
             :players="game.playersMap.value"
             :active-player="game.activePlayer.value"
             :active-player-item="game.activePlayerItem.value"
-            @start-game="(v) => game.updateGameSettings(v)"
+            v-model:start-settings="gameSettings"
+            @start-game="(v) => game.startGame(v)"
             @player-move="(player, x, y) => game.movePlayer(player, x, y)"
           />
           <div class="right space-between">
@@ -99,6 +128,8 @@ OnePlayerCard.props = {
       v-model:show="showDialog"
       :id="showDialogFor.id"
       :player-mode="showDialogFor.mode"
+      @join="(id, mode) => addPlayer(id, mode)"
+      @remove="(v) => removePlayer(v)"
     ></PlayerDialog>
   </div>
 </template>

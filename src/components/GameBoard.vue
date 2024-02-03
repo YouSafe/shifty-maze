@@ -13,7 +13,10 @@ import type {
 } from "game-core/pkg/wasm";
 import GameSettings from "./GameSettings.vue";
 import { NButton } from "naive-ui";
-import { DefaultGameStartSettings } from "@/game";
+
+const gameSettings = defineModel<GameStartSettings>("startSettings", {
+  required: true,
+});
 
 const props = defineProps<{
   board: Board | null;
@@ -26,8 +29,6 @@ const emits = defineEmits<{
   (e: "player-move", player: PlayerId, x: number, y: number): void;
   (e: "start-game", settings: GameStartSettings): void;
 }>();
-
-const gameSettings = ref<GameStartSettings>(DefaultGameStartSettings());
 
 const tileCount = computed(() => props.board?.tiles.length ?? 0);
 
@@ -200,6 +201,7 @@ function startGame() {
               round
               size="large"
               type="primary"
+              :disabled="gameSettings.players.length < 2"
               @click="startGame"
             >
               <h1>Press Start</h1>
@@ -208,6 +210,17 @@ function startGame() {
               v-model:cards-per-player="gameSettings.items_per_player"
               v-model:side-length="gameSettings.side_length"
             ></GameSettings>
+            <h2>
+              <span>{{ gameSettings.players.length }}</span>
+              <span>&nbsp;</span>
+              <span v-if="gameSettings.players.length !== 1">Players</span
+              ><span v-else>Player</span>
+            </h2>
+            <ul>
+              <li v-for="playerId in gameSettings.players" :key="playerId">
+                Player {{ playerId }}
+              </li>
+            </ul>
           </div>
           <template v-else>
             <div class="tiles-wrapper">
@@ -289,6 +302,7 @@ function startGame() {
   align-items: center;
   height: 100%;
   gap: 20px;
+  flex-direction: column;
 }
 /* I hath nu idea. The numbers are magic*/
 .arrow-wrapper {
