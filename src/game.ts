@@ -1,5 +1,10 @@
 import { computed, ref } from "vue";
-import init, { type Board, type Player, type PlayerId } from "../game-core/pkg";
+import init, {
+  type Board,
+  type Item,
+  type Player,
+  type PlayerId,
+} from "../game-core/pkg";
 
 await init();
 
@@ -48,10 +53,14 @@ export function useGame() {
       if (!player) return 0;
       return player.to_collect.length;
     },
-    currentItem: (id: PlayerId) => {
+    currentItem: (id: PlayerId): Item => {
       const player = playersMap.value.get(id);
       if (!player) return 0;
-      return player.to_collect[0] ?? 0;
+      if (player.to_collect.length > 0) {
+        return player.to_collect[player.to_collect.length - 1];
+      } else {
+        return 0;
+      }
     },
   };
 
@@ -80,12 +89,12 @@ function createDummyGame(): {
       y: Math.floor(Math.random() * size),
     };
 
-    const collected = new Array(Math.floor(Math.random() * items)).map(() =>
-      Math.floor(Math.random() * items)
-    );
-    const to_collect = new Array(Math.floor(Math.random() * items)).map(() =>
-      Math.floor(Math.random() * items)
-    );
+    const collected = new Array(Math.floor(Math.random() * items))
+      .fill(0)
+      .map(() => Math.floor(Math.random() * items) + 1);
+    const to_collect = new Array(Math.floor(Math.random() * items))
+      .fill(0)
+      .map(() => Math.floor(Math.random() * items) + 1);
 
     return {
       id,

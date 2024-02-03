@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { Items } from "../items";
+import { Items, getItemNonZeroU8 } from "../items";
 import { PlayerColors } from "../players";
 import type { Item, PlayerId, Side } from "game-core/pkg/wasm";
 const props = defineProps<{
@@ -16,6 +16,7 @@ const playerColor = computed(() => PlayerColors[props.id]);
 const orientation = computed(() =>
   props.side === "Top" || props.side === "Bottom" ? "vertical" : "horizontal"
 );
+const item = computed(() => getItemNonZeroU8(props.item));
 </script>
 
 <template>
@@ -33,9 +34,7 @@ const orientation = computed(() =>
     </div>
 
     <div v-if="hasPlayer" class="card item-card">
-      <div class="card-inner">
-        {{ Items[item] }}
-      </div>
+      <div class="card-inner">{{ item }}</div>
     </div>
   </div>
 </template>
