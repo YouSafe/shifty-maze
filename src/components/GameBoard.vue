@@ -187,8 +187,6 @@ function playerStyle(id: PlayerId) {
 function startGame() {
   emits("start-game", gameSettings.value);
 }
-
-// TODO: Deal with stacked players
 </script>
 
 <template>

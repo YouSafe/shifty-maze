@@ -1,6 +1,8 @@
+use std::borrow::BorrowMut;
+
 use game::{
     board::Board,
-    game::{BinaryGame, Game, GameStartSettings},
+    game::{BinaryGame, Game, GamePhase, GameStartSettings},
     player::{Player, PlayerId, Position},
     tile::{Item, Rotation, Side},
 };
@@ -19,6 +21,9 @@ extern "C" {
     fn update_players(this: &GameCoreCallbacks, players: JsValue);
 
     #[wasm_bindgen(method)]
+    fn update_phase(this: &GameCoreCallbacks, phase: GamePhase);
+
+    #[wasm_bindgen(method)]
     fn update_player_turn(this: &GameCoreCallbacks, player_id: PlayerId);
 }
 
@@ -30,77 +35,99 @@ fn main() {
 
 #[wasm_bindgen]
 pub struct GameCore {
-    game: Game,
+    game: Option<Game>,
     callbacks: GameCoreCallbacks,
     serializer: serde_wasm_bindgen::Serializer,
 }
 
 impl GameCore {
     fn update_board(&self) {
-        self.callbacks.update_board(self.game.get_board().clone());
+        if let Some(game) = self.game.as_ref() {
+            self.callbacks.update_board(game.get_board().clone());
+        }
     }
     fn update_players(&self) {
-        let players: Vec<_> = self.game.get_players().cloned().collect();
-        let serialized = players.serialize(&self.serializer);
-        match serialized {
-            Ok(serialized) => self.callbacks.update_players(serialized),
-            Err(err) => log::error!("Failed to serialize players: {}", err),
+        if let Some(game) = self.game.as_ref() {
+            let players: Vec<_> = game.get_players().cloned().collect();
+            let serialized = players.serialize(&self.serializer);
+            match serialized {
+                Ok(serialized) => self.callbacks.update_players(serialized),
+                Err(err) => log::error!("Failed to serialize players: {}", err),
+            }
+        }
+    }
+    fn update_phase(&self) {
+        if let Some(game) = self.game.as_ref() {
+            self.callbacks.update_phase(game.get_phase());
         }
     }
     fn update_player_turn(&self) {
-        self.callbacks
-            .update_player_turn(self.game.get_player_turn());
+        if let Some(game) = self.game.as_ref() {
+            self.callbacks.update_player_turn(game.get_player_turn());
+        }
     }
 }
 
 #[wasm_bindgen]
 impl GameCore {
     #[wasm_bindgen(constructor)]
-    pub fn new(settings: GameStartSettings, callbacks: GameCoreCallbacks) -> Self {
+    pub fn new(callbacks: GameCoreCallbacks) -> Self {
         Self {
-            game: Game::new(settings),
+            game: None,
             callbacks,
             serializer: serde_wasm_bindgen::Serializer::new(),
         }
     }
 
-    pub fn update_game_settings(&mut self, settings: GameStartSettings) {
-        self.game.update_settings(settings);
+    pub fn start_game(&mut self, settings: GameStartSettings) {
+        self.game = Some(Game::new(settings));
         self.update_board();
         self.update_players();
+        self.update_phase();
+        self.update_player_turn();
     }
 
     pub fn shift_tiles(&mut self, side: Side, index: usize, insert_rotation: Rotation) {
-        self.game.shift_tiles(side, index, insert_rotation);
-        self.update_board();
-        self.update_players();
+        if let Some(game) = self.game.as_mut() {
+            game.shift_tiles(side, index, insert_rotation);
+            self.update_board();
+            self.update_players();
+            self.update_phase();
+        }
     }
 
-    pub fn add_player(&mut self, player_id: PlayerId, position: Position) {
-        self.game.add_player(player_id, position);
-        self.update_players();
-        self.update_player_turn();
+    pub fn add_player(&mut self, player_id: PlayerId) {
+        if let Some(game) = self.game.as_mut() {
+            game.add_player(player_id);
+            self.update_players();
+            self.update_player_turn();
+        }
     }
 
     pub fn remove_player(&mut self, player_id: PlayerId) {
-        self.game.remove_player(player_id);
-        self.update_players();
-        self.update_player_turn();
+        if let Some(game) = self.game.as_mut() {
+            game.remove_player(player_id);
+            self.update_players();
+            self.update_player_turn();
+        }
     }
 
     pub fn move_player(&mut self, player_id: PlayerId, position: Position) {
-        self.game.move_player(player_id, position);
-        self.update_players();
-        self.update_player_turn();
+        if let Some(game) = self.game.as_mut() {
+            game.move_player(player_id, position);
+            self.update_players();
+            self.update_player_turn();
+            self.update_phase();
+        }
     }
 
-    pub fn get_game_bytes(&self) -> BinaryGame {
-        self.game.get_game_bytes()
+    pub fn get_game_bytes(&self) -> Option<BinaryGame> {
+        self.game.as_ref().map(|v| v.get_game_bytes())
     }
 
     pub fn set_game_bytes(&mut self, game_bytes: BinaryGame) {
         self.game = match Game::load_game_from_bytes(game_bytes) {
-            Ok(game) => game,
+            Ok(game) => Some(game),
             Err(err) => {
                 log::error!("Failed to load game from bytes: {}", err);
                 return;
@@ -109,6 +136,7 @@ impl GameCore {
         self.update_board();
         self.update_players();
         self.update_player_turn();
+        self.update_phase();
     }
 
     /// Convince TSify to generate those types as well

@@ -82,6 +82,10 @@ impl Board {
         self.number_of_items
     }
 
+    pub fn get_side_length(&self) -> usize {
+        self.side_length
+    }
+
     pub fn get_item(&self, position: Position) -> Option<Item> {
         let tile = &self.tiles[position.y * self.side_length + position.x];
         tile.get_item()

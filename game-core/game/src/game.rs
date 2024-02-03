@@ -14,6 +14,14 @@ use crate::{
 pub struct Game {
     board: Board,
     players: Players,
+    phase: GamePhase,
+}
+
+#[wasm_interop]
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum GamePhase {
+    TurnMoveTiles,
+    TurnMovePlayer,
 }
 
 const BINARY_GAME_VERSION: u8 = 1;
@@ -31,33 +39,29 @@ pub struct GameStartSettings {
     number_of_items: u8,
     items_per_player: u8,
     side_length: usize,
+    players: Vec<PlayerId>,
 }
 
 impl Game {
     pub fn new(settings: GameStartSettings) -> Self {
         Self {
             board: Board::new(settings.number_of_items, settings.side_length),
-            players: Players::new(settings.items_per_player),
+            players: Players::new(&settings),
+            phase: GamePhase::TurnMoveTiles,
         }
-    }
-
-    pub fn update_settings(&mut self, settings: GameStartSettings) {
-        let mut rng = rand::thread_rng();
-        self.board = Board::new(settings.number_of_items, settings.side_length);
-        self.players.generate_new_items(
-            settings.number_of_items,
-            settings.items_per_player,
-            &mut rng,
-        );
     }
 
     pub fn shift_tiles(&mut self, side: Side, index: usize, insert_rotation: Rotation) {
         self.board.shift_tiles(side, index, insert_rotation);
+        self.phase = GamePhase::TurnMovePlayer;
     }
 
-    pub fn add_player(&mut self, player_id: PlayerId, start_position: Position) {
-        self.players
-            .add_player(player_id, start_position, self.board.get_number_of_items());
+    pub fn add_player(&mut self, player_id: PlayerId) {
+        self.players.add_player(
+            player_id,
+            self.board.get_number_of_items(),
+            self.board.get_side_length(),
+        );
     }
 
     pub fn remove_player(&mut self, player_id: PlayerId) {
@@ -69,6 +73,7 @@ impl Game {
         if let Some(item) = self.board.get_item(position) {
             self.players.try_collect_item(player_id, item);
         }
+        self.phase = GamePhase::TurnMoveTiles;
     }
 
     pub fn get_game_bytes(&self) -> BinaryGame {
@@ -99,6 +104,10 @@ impl Game {
     pub fn get_player_turn(&self) -> PlayerId {
         self.players.get_player_turn()
     }
+
+    pub fn get_phase(&self) -> GamePhase {
+        self.phase
+    }
 }
 
 fn generate_items_to_collect(
@@ -112,6 +121,16 @@ fn generate_items_to_collect(
     items
 }
 
+fn get_start_position(player_id: PlayerId, side_length: usize) -> Position {
+    match player_id % 4 {
+        0 => Position::new(0, 0),
+        1 => Position::new(0, side_length - 1),
+        2 => Position::new(side_length - 1, side_length - 1),
+        3 => Position::new(side_length - 1, 0),
+        _ => unreachable!(),
+    }
+}
+
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Players {
     /// Stores the players in the order of their turn.
@@ -121,12 +140,35 @@ pub struct Players {
 }
 
 impl Players {
-    pub fn new(items_per_player: u8) -> Self {
-        Self {
-            players: Default::default(),
+    pub fn new(settings: &GameStartSettings) -> Self {
+        let mut rng = rand::thread_rng();
+
+        let players = settings
+            .players
+            .iter()
+            .copied()
+            .map(|id| {
+                (
+                    id,
+                    Player::new(
+                        id,
+                        get_start_position(id, settings.side_length),
+                        generate_items_to_collect(
+                            settings.number_of_items,
+                            settings.items_per_player,
+                            &mut rng,
+                        ),
+                    ),
+                )
+            })
+            .collect();
+        let mut result = Self {
+            players,
             player_turn: Default::default(),
-            items_per_player,
-        }
+            items_per_player: settings.items_per_player,
+        };
+        result.update_player_turn();
+        result
     }
 
     pub fn get_players(&self) -> impl Iterator<Item = &Player> {
@@ -137,18 +179,14 @@ impl Players {
         self.player_turn
     }
 
-    pub fn add_player(
-        &mut self,
-        player_id: PlayerId,
-        start_position: Position,
-        number_of_items: u8,
-    ) {
+    pub fn add_player(&mut self, player_id: PlayerId, number_of_items: u8, side_length: usize) {
         let mut rng = rand::thread_rng();
+
         self.players.insert(
             player_id,
             Player::new(
                 player_id,
-                start_position,
+                get_start_position(player_id, side_length),
                 generate_items_to_collect(number_of_items, self.items_per_player, &mut rng),
             ),
         );
@@ -174,22 +212,6 @@ impl Players {
                 .unwrap();
             self.player_turn = next_player;
         }
-    }
-
-    pub fn generate_new_items(
-        &mut self,
-        number_of_items: u8,
-        items_per_player: u8,
-        rng: &mut ThreadRng,
-    ) {
-        for player in self.players.values_mut() {
-            player.set_to_collect(generate_items_to_collect(
-                number_of_items,
-                items_per_player,
-                rng,
-            ));
-        }
-        self.items_per_player = items_per_player;
     }
 
     pub fn move_player(&mut self, player_id: u8, position: Position) {
