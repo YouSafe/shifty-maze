@@ -6,6 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+rand = "0.8.5"
+getrandom = { version = "0.2", features = ["js"] }
 serde = { version = "1.0", features = ["derive"] }
 tsify =  { version = "0.4", optional = true, default-features = false, features = ["js"] }
 wasm-bindgen = { version = "0.2", optional = true }
