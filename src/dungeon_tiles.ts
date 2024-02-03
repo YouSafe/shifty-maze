@@ -92,10 +92,6 @@ function assembleTile(
     }
   });
 
-  const img = new Image();
-  img.src = canvas.toDataURL();
-  document.body.appendChild(img);
-
   return {
     img: canvas.toDataURL(),
     width: 16 * 3,

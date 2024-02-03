@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { DungeonTiles } from "@/dungeon_tiles";
-import { Items, getItemNonZeroU8 } from "@/items";
-import type { Tile } from "game-core/pkg/wasm";
+import { getItemNonZeroU8 } from "@/items";
+import type { Item, Tile } from "game-core/pkg/wasm";
 import { computed } from "vue";
 
 const props = defineProps<{
   tile: Tile | null;
+  searchingFor: Item | null;
 }>();
 const dungeonTile = computed(() => {
   if (!props.tile) {
@@ -39,6 +40,12 @@ const rotation = computed(() => {
   }
 });
 const item = computed(() => getItemNonZeroU8(props.tile?.item));
+const isSearchingFor = computed(() => {
+  if (props.searchingFor === null || props.searchingFor === 0) {
+    return false;
+  }
+  return props.searchingFor === props.tile?.item;
+});
 </script>
 
 <template>
@@ -52,13 +59,22 @@ const item = computed(() => getItemNonZeroU8(props.tile?.item));
         }"
       />
     </div>
-    <div class="item" v-if="item !== null">
+    <div
+      v-if="item !== null"
+      class="item"
+      :class="{
+        highlight: isSearchingFor,
+      }"
+    >
       {{ item }}
     </div>
   </div>
 </template>
 
 <style scoped>
+img {
+  image-rendering: pixelated;
+}
 .tile-container {
   width: 100%;
   height: 100%;
@@ -91,5 +107,11 @@ const item = computed(() => getItemNonZeroU8(props.tile?.item));
   color: white;
   font-weight: bold;
   text-shadow: 0 0 5px black;
+  filter: sepia(25%);
+}
+.highlight {
+  font-size: 3vmin;
+  filter: none;
+  text-shadow: 0 0 5px black, 0 0 8px rgb(0, 23, 87);
 }
 </style>
