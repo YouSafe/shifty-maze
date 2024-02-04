@@ -4,15 +4,20 @@ import GameTile from "./GameTile.vue";
 import PlayerPiece from "./PlayerPiece.vue";
 import type {
   Board,
+  GamePhase,
   GameStartSettings,
+  Item,
   Player,
   PlayerId,
   Position,
+  Rotation,
   Side,
   Tile,
 } from "game-core/pkg/wasm";
 import GameSettings from "./GameSettings.vue";
 import { NButton } from "naive-ui";
+import { groupBy } from "@/array-utils";
+import { PlayerColors } from "@/players";
 
 const gameSettings = defineModel<GameStartSettings>("startSettings", {
   required: true,
@@ -22,12 +27,14 @@ const props = defineProps<{
   board: Board | null;
   players: Map<PlayerId, Player>;
   activePlayer: PlayerId | null;
-  activePlayerItem: number | null;
+  activePlayerItem: Item | null;
+  phase: GamePhase;
 }>();
 
 const emits = defineEmits<{
   (e: "player-move", player: PlayerId, x: number, y: number): void;
   (e: "start-game", settings: GameStartSettings): void;
+  (e: "shift-tiles", side: Side, index: number, insertRotation: Rotation): void;
 }>();
 
 const tileCount = computed(() => props.board?.tiles.length ?? 0);
@@ -66,6 +73,7 @@ const tilesMap = computed(() => {
 interface SideArrow {
   id: string;
   side: Side;
+  index: number;
   top?: string;
   left?: string;
   right?: string;
@@ -106,6 +114,7 @@ const sideArrows = computed(() => {
     for (let i = 1; i < sideLength; i += 2) {
       arrows.push({
         id: `${mainIndex}-${i}`,
+        index: i,
         ...position((i / sideLength) * 100 + "%"),
       });
     }
@@ -132,23 +141,13 @@ const positionPlayersMap = computed(() =>
     positionToMapKey(player.position)
   )
 );
+const startPositionPlayersMap = computed(() =>
+  groupBy([...props.players.values()], (player) =>
+    positionToMapKey(player.start_position)
+  )
+);
 
-function groupBy<T, K extends string | number>(
-  array: T[],
-  key: (item: T) => K
-): Map<K, T[]> {
-  const map = new Map<K, T[]>();
-  for (const item of array) {
-    const k = key(item);
-    if (!map.has(k)) {
-      map.set(k, []);
-    }
-    map.get(k)!.push(item);
-  }
-  return map;
-}
-
-const playerOffsets = [
+const playerRenderOffsets = [
   { x: -1, y: -1 },
   { x: 0, y: -1 },
   { x: 1, y: -1 },
@@ -173,16 +172,60 @@ function playerStyle(id: PlayerId) {
     (positionPlayersMap.value.get(positionToMapKey(player.position))?.length ??
       0) > 1;
   const transform = hasMultiplePlayers
-    ? `scale(0.9) translate(${30 * (playerOffsets[id]?.x ?? 0)}%, ${
-        30 * (playerOffsets[id]?.y ?? 0)
+    ? `scale(0.9) translate(${30 * (playerRenderOffsets[id]?.x ?? 0)}%, ${
+        30 * (playerRenderOffsets[id]?.y ?? 0)
       }%)`
     : "";
-  console.log(transform);
   return {
     top: (player.position.y / board.side_length) * 100 + "%",
     left: (player.position.x / board.side_length) * 100 + "%",
     transform,
   };
+}
+
+function startCircleStyle(id: PlayerId) {
+  const board = props.board;
+  const player = props.players.get(id) ?? null;
+  if (board === null || player === null) {
+    return {
+      display: "none",
+    };
+  }
+  const hasMultiplePlayers =
+    (startPositionPlayersMap.value.get(positionToMapKey(player.start_position))
+      ?.length ?? 0) > 1;
+  const transform = hasMultiplePlayers
+    ? `scale(0.9) translate(${30 * (playerRenderOffsets[id]?.x ?? 0)}%, ${
+        30 * (playerRenderOffsets[id]?.y ?? 0)
+      }%)`
+    : "";
+  return {
+    top: (player.start_position.y / board.side_length) * 100 + "%",
+    left: (player.start_position.x / board.side_length) * 100 + "%",
+    transform,
+  };
+}
+
+const playerColors = computed(() => {
+  return PlayerColors;
+});
+
+function tryMovePlayer(tileId: number) {
+  if (props.phase !== "TurnMovePlayer") {
+    return;
+  }
+  if (props.activePlayer === null) {
+    return;
+  }
+  const tile = tilesMap.value.get(tileId);
+  if (tile === undefined) {
+    return;
+  }
+  emits("player-move", props.activePlayer, tile.x, tile.y);
+}
+
+function startShiftTiles(side: Side, index: number) {
+  emits("shift-tiles", side, index, "Zero");
 }
 
 function startGame() {
@@ -233,7 +276,22 @@ function startGame() {
                 <GameTile
                   :tile="tilesMap.get(id - 1)?.tile ?? null"
                   :searching-for="props.activePlayerItem"
+                  @click="() => tryMovePlayer(id - 1)"
                 />
+              </div>
+            </div>
+            <div class="tiles-wrapper">
+              <div
+                v-for="[id, player] of props.players.entries()"
+                :key="id"
+                class="start-circle"
+                :style="startCircleStyle(id)"
+              >
+                <div
+                  :style="{
+                    backgroundColor: playerColors[id],
+                  }"
+                ></div>
               </div>
             </div>
             <div class="tiles-wrapper">
@@ -245,7 +303,10 @@ function startGame() {
               >
                 <PlayerPiece
                   :player="player"
-                  :is-active="player.id === props.activePlayer"
+                  :is-active="
+                    props.phase === 'TurnMovePlayer' &&
+                    player.id === props.activePlayer
+                  "
                 />
               </div>
             </div>
@@ -261,8 +322,15 @@ function startGame() {
                   right: arrow.right,
                   bottom: arrow.bottom,
                 }"
+                @click="() => startShiftTiles(arrow.side, arrow.index)"
               >
-                <div class="arrow" :class="arrow.side"></div>
+                <div
+                  class="arrow"
+                  :class="{
+                    [arrow.side]: true,
+                    highlight: props.phase === 'TurnMoveTiles',
+                  }"
+                ></div>
               </div>
             </div>
           </template>
@@ -279,9 +347,21 @@ function startGame() {
   transition: top 1s ease-in-out, left 1s ease-in-out;
   width: var(--tile-size);
   height: var(--tile-size);
-}
-.player {
   pointer-events: none;
+}
+.start-circle {
+  position: absolute;
+  width: var(--tile-size);
+  height: var(--tile-size);
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.start-circle div {
+  width: 40%;
+  height: 40%;
+  border-radius: 50%;
 }
 .board-container {
   margin: 1vmin;
@@ -304,7 +384,6 @@ function startGame() {
   gap: 20px;
   flex-direction: column;
 }
-/* I hath nu idea. The numbers are magic*/
 .arrow-wrapper {
   position: absolute;
   height: calc(var(--tile-size));
@@ -332,5 +411,22 @@ function startGame() {
 }
 .arrow-wrapper:hover .arrow {
   background-color: #4c4c4c;
+}
+
+.arrow-wrapper:has(.arrow.highlight) {
+  animation: pulse 1.2s infinite;
+}
+
+/* animation for drop shadow */
+@keyframes pulse {
+  0% {
+    filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0));
+  }
+  70% {
+    filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.5));
+  }
+  100% {
+    filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0));
+  }
 }
 </style>

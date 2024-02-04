@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { DungeonTiles } from "@/dungeon_tiles";
-import { getItemNonZeroU8 } from "@/items";
+import { getItem } from "@/items";
 import type { Item, Tile } from "game-core/pkg/wasm";
 import { computed } from "vue";
 
@@ -39,9 +39,9 @@ const rotation = computed(() => {
     return 0;
   }
 });
-const item = computed(() => getItemNonZeroU8(props.tile?.item));
+const item = computed(() => getItem(props.tile?.item));
 const isSearchingFor = computed(() => {
-  if (props.searchingFor === null || props.searchingFor === 0) {
+  if (props.searchingFor === null) {
     return false;
   }
   return props.searchingFor === props.tile?.item;
