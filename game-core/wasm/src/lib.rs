@@ -1,5 +1,3 @@
-use std::borrow::BorrowMut;
-
 use game::{
     board::Board,
     game::{Game, GamePhase, GameStartSettings},

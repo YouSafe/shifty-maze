@@ -3,16 +3,20 @@ import { h, ref } from "vue";
 import GameBoard from "./components/GameBoard.vue";
 import PlayerCards from "./components/PlayerCards.vue";
 import PlayerDialog from "./components/PlayerDialog.vue";
+import SettingsDialog from "./components/SettingsDialog.vue";
 import GameTile from "./components/GameTile.vue";
 import { useGame, type PlayerMode, DefaultGameStartSettings } from "./game";
 import type { Player, Side } from "game-core/pkg/wasm";
 import { NButton } from "naive-ui";
+import { PlayerSides } from "./players";
 
-const showDialog = ref(false);
+const showPlayerDialog = ref(false);
 const showDialogFor = ref({
   id: 0,
   mode: "local" as PlayerMode | null,
 });
+
+const showSettingsDialog = ref(false);
 
 const gameSettings = ref(DefaultGameStartSettings());
 const game = useGame();
@@ -40,20 +44,10 @@ function removePlayer(id: number) {
   }
 }
 
-const playerSides: Side[] = [
-  "Bottom",
-  "Bottom",
-  "Left",
-  "Left",
-  "Top",
-  "Top",
-  "Right",
-  "Right",
-];
 // See also https://vuejs.org/guide/extras/render-function#typing-functional-components
 function OnePlayerCard(props: { id: number }) {
   return h(PlayerCards, {
-    side: playerSides[props.id] ?? "bottom",
+    side: PlayerSides[props.id] ?? "Bottom",
     id: props.id,
     isActive: game.activePlayer.value === props.id,
     hasPlayer: game.playerHelper.hasPlayer(props.id),
@@ -65,7 +59,7 @@ function OnePlayerCard(props: { id: number }) {
       } else {
         showDialogFor.value = { id: props.id, mode: "local" };
       }
-      showDialog.value = true;
+      showPlayerDialog.value = true;
     },
   });
 }
@@ -92,9 +86,13 @@ OnePlayerCard.props = {
             :players="game.playersMap.value"
             :active-player="game.activePlayer.value"
             :active-player-item="game.activePlayerItem.value"
+            :phase="game.phase.value"
             v-model:start-settings="gameSettings"
             @start-game="(v) => game.startGame(v)"
             @player-move="(player, x, y) => game.movePlayer(player, x, y)"
+            @shift-tiles="
+              (side, index, rotation) => game.shiftTiles(side, index, rotation)
+            "
           />
           <div class="right space-between">
             <OnePlayerCard :id="6"></OnePlayerCard>
@@ -112,25 +110,35 @@ OnePlayerCard.props = {
           class="free-tile"
         ></GameTile>
         <NButton
-          :disabled="!game.hasStarted"
           round
           size="small"
-          class="undo-button-small"
+          class="settings-button-small"
+          @click="showSettingsDialog = true"
         >
-          ⟲</NButton
+          ⚙️</NButton
         >
-        <NButton :disabled="!game.hasStarted" round class="undo-button-large">
-          ⟲ Undo</NButton
+        <NButton
+          round
+          class="settings-button-large"
+          @click="showSettingsDialog = true"
+        >
+          Settings</NButton
         >
       </div>
     </div>
     <PlayerDialog
-      v-model:show="showDialog"
+      v-model:show="showPlayerDialog"
       :id="showDialogFor.id"
       :player-mode="showDialogFor.mode"
       @join="(id, mode) => addPlayer(id, mode)"
       @remove="(v) => removePlayer(v)"
     ></PlayerDialog>
+    <SettingsDialog
+      v-model:show="showSettingsDialog"
+      :has-game-started="game.hasStarted.value"
+      @undo="game.undo()"
+      @quit-game="game.finishGame()"
+    ></SettingsDialog>
   </div>
 </template>
 
@@ -166,23 +174,23 @@ OnePlayerCard.props = {
   height: calc(70vmin * var(--card-scale));
   transform: translate(-50%, -50%);
 }
-.undo-button-small,
-.undo-button-large {
+.settings-button-small,
+.settings-button-large {
   position: absolute;
   top: 10px;
   right: 5px;
 }
-.undo-button-small {
+.settings-button-small {
   display: block;
 }
-.undo-button-large {
+.settings-button-large {
   display: none;
 }
 @media (min-width: 800px) {
-  .undo-button-small {
+  .settings-button-small {
     display: none;
   }
-  .undo-button-large {
+  .settings-button-large {
     display: block;
   }
 }

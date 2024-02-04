@@ -45,9 +45,18 @@ export function useStoredUndo<T>() {
     localStorage.removeItem(key);
   };
 
+  const load = () => {
+    const history = get();
+    if (history.length > 0) {
+      return history[history.length - 1];
+    }
+    return null;
+  };
+
   return {
     add,
     undo,
     newGame,
+    load,
   };
 }

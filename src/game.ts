@@ -55,8 +55,15 @@ export function useGame() {
   const activePlayer = ref<PlayerId>(0);
   const phase = ref<GamePhase>("TurnMoveTiles");
   const hasStarted = computed(() => board.value !== null);
-
   const storedUndo = useStoredUndo<BinaryGame>();
+
+  function reset() {
+    playersMap.value.clear();
+    board.value = null;
+    activePlayer.value = 0;
+    phase.value = "TurnMoveTiles";
+    storedUndo.newGame();
+  }
 
   const callbacks = new GameCoreCallbacks(
     (v) => {
@@ -89,7 +96,15 @@ export function useGame() {
 
   const game = new GameCore(callbacks);
 
+  (() => {
+    const bytes = storedUndo.load();
+    if (bytes) {
+      setGameBytes(bytes);
+    }
+  })();
+
   function startGame(settings: GameStartSettings) {
+    reset();
     game.start_game(settings);
   }
   function shiftTiles(side: Side, index: number, insertRotation: Rotation) {
@@ -117,7 +132,7 @@ export function useGame() {
     }
   }
   function finishGame() {
-    board.value = null;
+    reset();
     storedUndo.newGame();
   }
 
@@ -130,14 +145,10 @@ export function useGame() {
       if (!player) return 0;
       return player.to_collect.length;
     },
-    currentItem: (id: PlayerId): Item => {
+    currentItem: (id: PlayerId): Item | null => {
       const player = playersMap.value.get(id);
       if (!player) return 0;
-      if (player.to_collect.length > 0) {
-        return player.to_collect[player.to_collect.length - 1];
-      } else {
-        return 0;
-      }
+      return player.to_collect.at(-1) ?? null;
     },
   };
 
@@ -154,6 +165,7 @@ export function useGame() {
       }
     }),
     board: computed(() => board.value),
+    phase: computed(() => phase.value),
 
     startGame,
     shiftTiles,
