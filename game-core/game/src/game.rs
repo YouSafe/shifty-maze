@@ -93,4 +93,8 @@ impl GameStartSettings {
             items_per_player,
         }
     }
+
+    pub fn get_phase(&self) -> GamePhase {
+        self.phase
+    }
 }
