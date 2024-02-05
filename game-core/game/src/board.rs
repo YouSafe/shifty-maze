@@ -113,23 +113,6 @@ impl Board {
     fn get(&self, position: Position) -> &Tile {
         &self.tiles[position.get_x() * self.side_length + position.get_y()]
     }
-
-    pub fn get_number_of_items(&self) -> u8 {
-        self.number_of_items
-    }
-
-    pub fn get_side_length(&self) -> usize {
-        self.side_length
-    }
-
-    pub fn get_item(&self, position: Position) -> Option<Item> {
-        let tile = &self.tiles[position.y * self.side_length + position.x];
-        tile.get_item()
-    }
-
-    pub fn shift_tiles(&mut self, side: Side, index: usize, insert_rotation: Rotation) {
-        todo!()
-    }
 }
 
 fn get_tile_assortment(side_length: usize) -> Vec<TileVariant> {
