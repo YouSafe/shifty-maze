@@ -1,8 +1,12 @@
-use crate::tile::Item;
+use tsify::declare;
 use wasm_interop::wasm_interop;
 
+use crate::tile::Item;
+
+#[cfg_attr(feature = "wasm", declare)]
 pub type PlayerId = u8;
 
+#[derive(Clone)]
 #[wasm_interop]
 pub struct Player {
     id: PlayerId,
@@ -12,8 +16,9 @@ pub struct Player {
     to_collect: Vec<Item>,
 }
 
+#[derive(Clone)]
 #[wasm_interop]
-struct Position {
+pub struct Position {
     x: usize,
     y: usize,
 }
