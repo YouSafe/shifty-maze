@@ -1,5 +1,5 @@
 use tsify::declare;
-use wasm_interop::wasm_interop;
+use ts_interop::ts_interop;
 
 use crate::tile::Item;
 
@@ -7,7 +7,7 @@ use crate::tile::Item;
 pub type PlayerId = u8;
 
 #[derive(Clone)]
-#[wasm_interop]
+#[ts_interop]
 pub struct Player {
     id: PlayerId,
     position: Position,
@@ -17,7 +17,7 @@ pub struct Player {
 }
 
 #[derive(Clone)]
-#[wasm_interop]
+#[ts_interop]
 pub struct Position {
     x: usize,
     y: usize,

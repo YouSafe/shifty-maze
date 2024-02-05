@@ -1,8 +1,8 @@
 use crate::tile::{FreeTile, Tile};
-use wasm_interop::wasm_interop;
+use ts_interop::ts_interop;
 
 #[derive(Clone)]
-#[wasm_interop]
+#[ts_interop]
 pub struct Board {
     tiles: Vec<Tile>,
     side_length: usize,
