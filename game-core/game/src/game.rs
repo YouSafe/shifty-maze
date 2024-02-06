@@ -97,4 +97,21 @@ impl GameStartSettings {
     pub fn get_phase(&self) -> GamePhase {
         self.phase
     }
+
+    pub fn rotate_free_tile(&mut self, rotation: Rotation) {
+        self.board.rotate_free_tile(rotation);
+    }
+
+    pub fn shift_tiles(&mut self, side_index: SideIndex) {
+        self.board.shift_tiles(side_index);
+    }
+
+    pub fn remove_player(&mut self, player_id: PlayerId) {
+        self.players.remove_player(player_id);
+    }
+
+    pub fn move_player(&mut self, player_id: PlayerId, position: Position) {
+        // TODO: check validity
+        self.players.move_player(player_id, position);
+    }
 }

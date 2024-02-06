@@ -63,8 +63,8 @@ const tilesMap = computed(() => {
       tile.id,
       {
         tile,
-        x: index % board.side_length,
-        y: Math.floor(index / board.side_length),
+        x: 6 - Math.floor(index / board.side_length),
+        y: index % board.side_length,
       },
     ])
   );
@@ -172,9 +172,8 @@ function playerStyle(id: PlayerId) {
     (positionPlayersMap.value.get(positionToMapKey(player.position))?.length ??
       0) > 1;
   const transform = hasMultiplePlayers
-    ? `scale(0.9) translate(${30 * (playerRenderOffsets[id]?.x ?? 0)}%, ${
-        30 * (playerRenderOffsets[id]?.y ?? 0)
-      }%)`
+    ? `scale(0.9) translate(${30 * (playerRenderOffsets[id]?.x ?? 0)}%, ${30 * (playerRenderOffsets[id]?.y ?? 0)
+    }%)`
     : "";
   return {
     top: (player.position.y / board.side_length) * 100 + "%",
@@ -195,9 +194,8 @@ function startCircleStyle(id: PlayerId) {
     (startPositionPlayersMap.value.get(positionToMapKey(player.start_position))
       ?.length ?? 0) > 1;
   const transform = hasMultiplePlayers
-    ? `scale(0.9) translate(${30 * (playerRenderOffsets[id]?.x ?? 0)}%, ${
-        30 * (playerRenderOffsets[id]?.y ?? 0)
-      }%)`
+    ? `scale(0.9) translate(${30 * (playerRenderOffsets[id]?.x ?? 0)}%, ${30 * (playerRenderOffsets[id]?.y ?? 0)
+    }%)`
     : "";
   return {
     top: (player.start_position.y / board.side_length) * 100 + "%",
@@ -211,7 +209,7 @@ const playerColors = computed(() => {
 });
 
 function tryMovePlayer(tileId: number) {
-  if (props.phase !== "TurnMovePlayer") {
+  if (props.phase !== "MovePlayer") {
     return;
   }
   if (props.activePlayer === null) {
@@ -239,25 +237,16 @@ function startGame() {
       <div class="constrain-height board-container">
         <div class="board">
           <div v-if="props.board === null" class="start-game">
-            <n-button
-              secondary
-              round
-              size="large"
-              type="primary"
-              :disabled="gameSettings.players.length < 2"
-              @click="startGame"
-            >
+            <n-button secondary round size="large" type="primary" :disabled="gameSettings.players.length < 2"
+              @click="startGame">
               <h1>Press Start</h1>
             </n-button>
-            <GameSettings
-              v-model:cards-per-player="gameSettings.items_per_player"
-              v-model:side-length="gameSettings.side_length"
-            ></GameSettings>
+            <GameSettings v-model:cards-per-player="gameSettings.items_per_player"
+              v-model:side-length="gameSettings.side_length"></GameSettings>
             <h2>
               <span>{{ gameSettings.players.length }}</span>
               <span>&nbsp;</span>
-              <span v-if="gameSettings.players.length !== 1">Players</span
-              ><span v-else>Player</span>
+              <span v-if="gameSettings.players.length !== 1">Players</span><span v-else>Player</span>
             </h2>
             <ul>
               <li v-for="playerId in gameSettings.players" :key="playerId">
@@ -267,70 +256,37 @@ function startGame() {
           </div>
           <template v-else>
             <div class="tiles-wrapper">
-              <div
-                v-for="id in tileCount"
-                :key="id"
-                class="tile"
-                :style="tileStyle(id - 1)"
-              >
-                <GameTile
-                  :tile="tilesMap.get(id - 1)?.tile ?? null"
-                  :searching-for="props.activePlayerItem"
-                  @click="() => tryMovePlayer(id - 1)"
-                />
+              <div v-for="id in tileCount" :key="id" class="tile" :style="tileStyle(id - 1)">
+                <GameTile :tile="tilesMap.get(id - 1)?.tile ?? null" :searching-for="props.activePlayerItem"
+                  @click="() => tryMovePlayer(id - 1)" />
               </div>
             </div>
             <div class="tiles-wrapper">
-              <div
-                v-for="[id, player] of props.players.entries()"
-                :key="id"
-                class="start-circle"
-                :style="startCircleStyle(id)"
-              >
-                <div
-                  :style="{
-                    backgroundColor: playerColors[id],
-                  }"
-                ></div>
+              <div v-for="[id, player] of props.players.entries()" :key="id" class="start-circle"
+                :style="startCircleStyle(id)">
+                <div :style="{
+                  backgroundColor: playerColors[id],
+                }"></div>
               </div>
             </div>
             <div class="tiles-wrapper">
-              <div
-                v-for="[id, player] of props.players.entries()"
-                :key="id"
-                class="player"
-                :style="playerStyle(id)"
-              >
-                <PlayerPiece
-                  :player="player"
-                  :is-active="
-                    props.phase === 'TurnMovePlayer' &&
-                    player.id === props.activePlayer
-                  "
-                />
+              <div v-for="[id, player] of props.players.entries()" :key="id" class="player" :style="playerStyle(id)">
+                <PlayerPiece :player="player" :is-active="props.phase === 'MovePlayer' &&
+                  player.id === props.activePlayer
+                  " />
               </div>
             </div>
             <div class="tiles-wrapper">
-              <div
-                v-for="arrow in sideArrows"
-                :key="arrow.id"
-                class="arrow-wrapper"
-                :class="arrow.side"
-                :style="{
-                  top: arrow.top,
-                  left: arrow.left,
-                  right: arrow.right,
-                  bottom: arrow.bottom,
-                }"
-                @click="() => startShiftTiles(arrow.side, arrow.index)"
-              >
-                <div
-                  class="arrow"
-                  :class="{
-                    [arrow.side]: true,
-                    highlight: props.phase === 'TurnMoveTiles',
-                  }"
-                ></div>
+              <div v-for="arrow in sideArrows" :key="arrow.id" class="arrow-wrapper" :class="arrow.side" :style="{
+                top: arrow.top,
+                left: arrow.left,
+                right: arrow.right,
+                bottom: arrow.bottom,
+              }" @click="() => startShiftTiles(arrow.side, arrow.index)">
+                <div class="arrow" :class="{
+                  [arrow.side]: true,
+                  highlight: props.phase === 'MoveTiles',
+                }"></div>
               </div>
             </div>
           </template>
@@ -349,6 +305,7 @@ function startGame() {
   height: var(--tile-size);
   pointer-events: none;
 }
+
 .start-circle {
   position: absolute;
   width: var(--tile-size);
@@ -358,16 +315,19 @@ function startGame() {
   justify-content: center;
   align-items: center;
 }
+
 .start-circle div {
   width: 40%;
   height: 40%;
   border-radius: 50%;
 }
+
 .board-container {
   margin: 1vmin;
   padding: 1vmin;
   background-color: #e0e0e0;
 }
+
 .board {
   /** The frick is this? https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_containment/Container_queries */
   container-type: size;
@@ -376,6 +336,7 @@ function startGame() {
   height: 100%;
   position: relative;
 }
+
 .start-game {
   display: flex;
   justify-content: center;
@@ -384,24 +345,30 @@ function startGame() {
   gap: 20px;
   flex-direction: column;
 }
+
 .arrow-wrapper {
   position: absolute;
   height: calc(var(--tile-size));
   width: calc(var(--tile-size));
   transform-origin: 50% 50%;
 }
+
 .arrow-wrapper.Top {
   transform: translateY(-2vmin);
 }
+
 .arrow-wrapper.Bottom {
   transform: rotate(180deg) translateY(-2vmin);
 }
+
 .arrow-wrapper.Right {
   transform: rotate(90deg) translateY(-2vmin);
 }
+
 .arrow-wrapper.Left {
   transform: rotate(-90deg) translateY(-2vmin);
 }
+
 .arrow {
   width: 100%;
   height: 2vmin;
@@ -409,6 +376,7 @@ function startGame() {
   background-color: #7c7c7c;
   clip-path: polygon(50% 100%, 100% 0%, 0 0%);
 }
+
 .arrow-wrapper:hover .arrow {
   background-color: #4c4c4c;
 }
@@ -422,9 +390,11 @@ function startGame() {
   0% {
     filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0));
   }
+
   70% {
     filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.5));
   }
+
   100% {
     filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0));
   }

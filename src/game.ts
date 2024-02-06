@@ -1,40 +1,36 @@
 import { computed, ref } from "vue";
 import init, {
   GameCore,
-  type BinaryGame,
   type Board,
   type GameStartSettings,
   type Item,
   type Player,
   type PlayerId,
-  type Position,
   type Rotation,
-  type Side,
+  type SideIndex,
   type GamePhase,
+  type Players,
 } from "../game-core/pkg";
-import { useStoredUndo } from "./stored-undo";
-import { Items } from "./items";
 
 await init();
 
 class GameCoreCallbacks {
   constructor(
     public boardCallback: (board: Board) => void,
-    public playersCallback: (players: Player[]) => void,
+    public playersCallback: (players: Players) => void,
     public phaseCallback: (phase: GamePhase) => void,
-    public playersTurnCallback: (player_id: PlayerId) => void
-  ) {}
+  ) { }
+
   update_board(board: Board) {
     this.boardCallback(board);
   }
-  update_players(players: Player[]) {
+
+  update_players(players: Players) {
     this.playersCallback(players);
   }
+
   update_phase(phase: GamePhase) {
     this.phaseCallback(phase);
-  }
-  update_player_turn(player_id: PlayerId) {
-    this.playersTurnCallback(player_id);
   }
 }
 
@@ -42,7 +38,6 @@ export type PlayerMode = "local" | "online";
 
 export function DefaultGameStartSettings(): GameStartSettings {
   return {
-    number_of_items: Items.length,
     items_per_player: 6,
     side_length: 7,
     players: [],
@@ -50,19 +45,16 @@ export function DefaultGameStartSettings(): GameStartSettings {
 }
 
 export function useGame() {
-  const playersMap = ref(new Map<PlayerId, Player>());
+  const players = ref<Players>({ players: new Map<PlayerId, Player>(), player_turn: 0 });
   const board = ref<Board | null>(null);
-  const activePlayer = ref<PlayerId>(0);
-  const phase = ref<GamePhase>("TurnMoveTiles");
+  const phase = ref<GamePhase>("MoveTiles");
   const hasStarted = computed(() => board.value !== null);
-  const storedUndo = useStoredUndo<BinaryGame>();
 
   function reset() {
-    playersMap.value.clear();
+    players.value.players.clear();
+    players.value.player_turn = 0;
     board.value = null;
-    activePlayer.value = 0;
-    phase.value = "TurnMoveTiles";
-    storedUndo.newGame();
+    phase.value = "MoveTiles";
   }
 
   const callbacks = new GameCoreCallbacks(
@@ -70,83 +62,51 @@ export function useGame() {
       board.value = v;
     },
     (v) => {
-      playersMap.value.clear();
-      v.forEach((player) => {
-        playersMap.value.set(player.id, player);
-      });
-      if (playersMap.value.size === 0) {
-        finishGame();
-      }
+      players.value = v;
     },
     (v) => {
       phase.value = v;
-    },
-    (v) => {
-      if (v === activePlayer.value) return;
-      activePlayer.value = v;
-      // Prevent "recursive use of an object detected which would lead to unsafe aliasing in rust"
-      setTimeout(() => {
-        const bytes = getGameBytes();
-        if (bytes) {
-          storedUndo.add(bytes);
-        }
-      }, 0);
     }
   );
 
   const game = new GameCore(callbacks);
 
-  (() => {
-    const bytes = storedUndo.load();
-    if (bytes) {
-      setGameBytes(bytes);
-    }
-  })();
-
   function startGame(settings: GameStartSettings) {
     reset();
     game.start_game(settings);
   }
-  function shiftTiles(side: Side, index: number, insertRotation: Rotation) {
-    game.shift_tiles(side, index, insertRotation);
+
+  function rotate_free_tile(rotation: Rotation) {
+    game.rotate_free_tile(rotation);
   }
-  function addPlayer(id: PlayerId, mode: PlayerMode) {
-    game.add_player(id);
+
+  function shiftTiles(side_index: SideIndex) {
+    game.shift_tiles(side_index);
   }
+
   function removePlayer(id: PlayerId) {
     game.remove_player(id);
   }
+
   function movePlayer(id: PlayerId, x: number, y: number) {
     game.move_player(id, { x, y });
   }
-  function getGameBytes(): BinaryGame | null {
-    return game.get_game_bytes() ?? null;
-  }
-  function setGameBytes(v: BinaryGame) {
-    game.set_game_bytes(v);
-  }
-  function undo() {
-    const game = storedUndo.undo();
-    if (game) {
-      setGameBytes(game);
-    }
-  }
+
   function finishGame() {
     reset();
-    storedUndo.newGame();
   }
 
   const playerHelper = {
     hasPlayer: (id: PlayerId) => {
-      return playersMap.value.has(id);
+      return players.value.players.has(id);
     },
     itemCount: (id: PlayerId) => {
-      const player = playersMap.value.get(id);
+      const player = players.value.players.get(id);
       if (!player) return 0;
       return player.to_collect.length;
     },
     currentItem: (id: PlayerId): Item | null => {
-      const player = playersMap.value.get(id);
+      const player = players.value.players.get(id);
       if (!player) return 0;
       return player.to_collect.at(-1) ?? null;
     },
@@ -154,12 +114,12 @@ export function useGame() {
 
   return {
     hasStarted: computed(() => hasStarted.value),
-    playersMap: computed(() => playersMap.value),
+    playersMap: computed(() => players.value.players),
     playerHelper,
-    activePlayer: computed(() => activePlayer.value),
+    activePlayer: computed(() => players.value.player_turn),
     activePlayerItem: computed(() => {
-      if (activePlayer.value) {
-        return playerHelper.currentItem(activePlayer.value);
+      if (players.value.player_turn) {
+        return playerHelper.currentItem(players.value.player_turn);
       } else {
         return 0;
       }
@@ -168,13 +128,10 @@ export function useGame() {
     phase: computed(() => phase.value),
 
     startGame,
+    rotate_free_tile,
     shiftTiles,
-    addPlayer,
     removePlayer,
     movePlayer,
-    getGameBytes,
-    setGameBytes,
-    undo,
     finishGame,
   };
 }

@@ -1,4 +1,4 @@
-import type { Side } from "game-core/pkg/wasm";
+import type { SideIndex } from "game-core/pkg/wasm";
 
 export const PlayerColors = [
   "#332288",
@@ -11,13 +11,13 @@ export const PlayerColors = [
   "#882255",
 ];
 
-export const PlayerSides: Side[] = [
-  "Bottom",
-  "Bottom",
-  "Left",
-  "Left",
-  "Top",
-  "Top",
-  "Right",
-  "Right",
+export const PlayerSides: SideIndex[] = [
+  { Bottom: 0 },
+  { Bottom: 7 },
+  { Left: 0 },
+  { Left: 7 },
+  { Top: 0 },
+  { Top: 7 },
+  { Top: 0 },
+  { Top: 7 },
 ];

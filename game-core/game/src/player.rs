@@ -170,3 +170,12 @@ fn get_items_to_collect(num_board_items: usize, num_item_cards: usize) -> Vec<It
 
     items
 }
+
+fn get_start_position(index: usize, side_length: usize) -> Position {
+    match index % 4 {
+        0 => Position::new(0, 0),
+        1 => Position::new(0, side_length - 1),
+        2 => Position::new(side_length - 1, side_length - 1),
+        _ => Position::new(side_length - 1, 0),
+    }
+}

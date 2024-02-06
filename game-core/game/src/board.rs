@@ -14,7 +14,6 @@ pub struct Board {
     tiles: Vec<Tile>,
     side_length: usize,
     free_tile: FreeTile,
-    number_of_items: u8,
 }
 
 impl Board {
