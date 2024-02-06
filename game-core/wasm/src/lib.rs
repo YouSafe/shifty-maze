@@ -28,7 +28,6 @@ fn main() {
 }
 
 #[wasm_bindgen]
-#[allow(dead_code)]
 pub struct GameCore {
     history: Vec<Game>,
     callbacks: GameCoreCallbacks,
