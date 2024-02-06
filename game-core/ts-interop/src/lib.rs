@@ -2,7 +2,7 @@ use proc_macro::TokenStream;
 use quote::quote;
 
 #[proc_macro_attribute]
-pub fn wasm_interop(_: TokenStream, item: TokenStream) -> TokenStream {
+pub fn ts_interop(_: TokenStream, item: TokenStream) -> TokenStream {
     let item: proc_macro2::TokenStream = item.into();
     quote! {
     #[derive(serde::Serialize, serde::Deserialize)]

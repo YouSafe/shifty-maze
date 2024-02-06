@@ -1,8 +1,8 @@
 use std::num::NonZeroU8;
-use wasm_interop::wasm_interop;
+use ts_interop::ts_interop;
 
 #[derive(Clone)]
-#[wasm_interop]
+#[ts_interop]
 pub struct Tile {
     id: u32,
     variant: TileVariant,
@@ -29,11 +29,11 @@ pub enum Rotation {
 
 #[repr(transparent)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-#[wasm_interop]
+#[ts_interop]
 pub struct Item(#[cfg_attr(feature = "wasm", tsify(type = "number"))] NonZeroU8);
 
 #[derive(Clone)]
-#[wasm_interop]
+#[ts_interop]
 pub struct FreeTile {
     tile: Tile,
     side_with_index: Option<(Side, usize)>,
@@ -42,7 +42,7 @@ pub struct FreeTile {
 /// The side of the board where the free tile is located.
 /// The index always goes from left to right or from top to bottom.
 #[derive(Clone)]
-#[wasm_interop]
+#[ts_interop]
 pub enum Side {
     Top,
     Right,

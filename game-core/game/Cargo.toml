@@ -8,8 +8,8 @@ edition = "2021"
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
 tsify =  { version = "0.4", optional = true, default-features = false, features = ["js"] }
+ts-interop = { path = "../ts-interop" }
 wasm-bindgen = { version = "0.2", optional = true }
-wasm-interop = { path = "../wasm-interop" }
 
 
 [features]
