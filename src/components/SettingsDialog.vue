@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
-import { PlayerColors } from "../players";
-import { NModal, NButton, NSpace } from "naive-ui";
-import type { PlayerMode } from "@/game";
+import { ref, watch } from "vue";
+import { NModal, NButton } from "naive-ui";
 const show = defineModel("show", { type: Boolean, required: true });
 const props = defineProps<{
   hasGameStarted: boolean;
@@ -37,35 +35,25 @@ function close() {
 </script>
 
 <template open>
-  <n-modal
-    :show="show"
-    @update:show="
-      (v) => {
-        if (!v) close();
-        else show = v;
-      }
-    "
-    preset="card"
-    title="Game Settings"
-    :bordered="false"
-    size="huge"
-    :segmented="{
-      content: 'soft',
-      footer: 'soft',
-    }"
-    :style="{
-      width: '80%',
-      maxWidth: '600px',
-    }"
-  >
+  <n-modal :show="show" @update:show="(v) => {
+    if (!v) close();
+    else show = v;
+  }
+    " preset="card" title="Game Settings" :bordered="false" size="huge" :segmented="{
+    content: 'soft',
+    footer: 'soft',
+  }" :style="{
+  width: '80%',
+  maxWidth: '600px',
+}">
     <p>Undo move</p>
     <NButton :disabled="!props.hasGameStarted" round @click="undo()">
       ⟲ Undo
     </NButton>
     <template #footer>
       <div v-if="hasGameStarted">
-        <n-button strong secondary round type="error" @click="quitGame()"
-          ><p v-if="!isTryingToQuit">Quit Game</p>
+        <n-button strong secondary round type="error" @click="quitGame()">
+          <p v-if="!isTryingToQuit">Quit Game</p>
           <p v-else>Are you sure?</p>
         </n-button>
       </div>

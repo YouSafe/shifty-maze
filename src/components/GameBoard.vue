@@ -11,7 +11,7 @@ import type {
   PlayerId,
   Position,
   Rotation,
-  Side,
+  SideIndex,
   Tile,
 } from "game-core/pkg/wasm";
 import GameSettings from "./GameSettings.vue";
@@ -34,7 +34,7 @@ const props = defineProps<{
 const emits = defineEmits<{
   (e: "player-move", player: PlayerId, x: number, y: number): void;
   (e: "start-game", settings: GameStartSettings): void;
-  (e: "shift-tiles", side: Side, index: number, insertRotation: Rotation): void;
+  (e: "shift-tiles", side_index: SideIndex, insertRotation: Rotation): void;
 }>();
 
 const tileCount = computed(() => props.board?.tiles.length ?? 0);
@@ -72,8 +72,7 @@ const tilesMap = computed(() => {
 
 interface SideArrow {
   id: string;
-  side: Side;
-  index: number;
+  side_index: SideIndex;
   top?: string;
   left?: string;
   right?: string;
@@ -88,23 +87,23 @@ const sideArrows = computed(() => {
   const sideLength = board.side_length;
   return (
     [
-      (percent: string) => ({
-        side: "Top" as const,
+      (percent: string, index: number) => ({
+        side_index: { Top: index },
         top: "0",
         left: percent,
       }),
-      (percent: string) => ({
-        side: "Bottom" as const,
+      (percent: string, index: number) => ({
+        side_index: { Bottom: index },
         bottom: "0",
         left: percent,
       }),
-      (percent: string) => ({
-        side: "Left" as const,
+      (percent: string, index: number) => ({
+        side_index: { Left: index },
         left: "0",
         top: percent,
       }),
-      (percent: string) => ({
-        side: "Right" as const,
+      (percent: string, index: number) => ({
+        side_index: { Right: index },
         right: "0",
         top: percent,
       }),
@@ -114,8 +113,7 @@ const sideArrows = computed(() => {
     for (let i = 1; i < sideLength; i += 2) {
       arrows.push({
         id: `${mainIndex}-${i}`,
-        index: i,
-        ...position((i / sideLength) * 100 + "%"),
+        ...position((i / sideLength) * 100 + "%", i),
       });
     }
     return arrows;
@@ -132,6 +130,10 @@ function tileStyle(id: number) {
     top: (tile.y / board.side_length) * 100 + "%",
     left: (tile.x / board.side_length) * 100 + "%",
   };
+}
+
+function arrowStyle(arrow: SideArrow) {
+  return Object.keys(arrow.side_index)[0]
 }
 
 const positionToMapKey = (position: Position) =>
@@ -222,8 +224,8 @@ function tryMovePlayer(tileId: number) {
   emits("player-move", props.activePlayer, tile.x, tile.y);
 }
 
-function startShiftTiles(side: Side, index: number) {
-  emits("shift-tiles", side, index, "Zero");
+function startShiftTiles(side_index: SideIndex) {
+  emits("shift-tiles", side_index, "Zero");
 }
 
 function startGame() {
@@ -277,14 +279,14 @@ function startGame() {
               </div>
             </div>
             <div class="tiles-wrapper">
-              <div v-for="arrow in sideArrows" :key="arrow.id" class="arrow-wrapper" :class="arrow.side" :style="{
+              <div v-for="arrow in sideArrows" :key="arrow.id" class="arrow-wrapper" :class="arrowStyle(arrow)" :style="{
                 top: arrow.top,
                 left: arrow.left,
                 right: arrow.right,
                 bottom: arrow.bottom,
-              }" @click="() => startShiftTiles(arrow.side, arrow.index)">
+              }" @click="() => startShiftTiles(arrow.side_index)">
                 <div class="arrow" :class="{
-                  [arrow.side]: true,
+                  [arrowStyle(arrow)]: true,
                   highlight: props.phase === 'MoveTiles',
                 }"></div>
               </div>
