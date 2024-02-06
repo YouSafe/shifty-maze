@@ -58,13 +58,14 @@ const tilesMap = computed(() => {
   if (board === null) {
     return new Map<number, TileData>();
   }
+
   return new Map(
     board.tiles.map((tile, index) => [
       tile.id,
       {
         tile,
-        x: 6 - Math.floor(index / board.side_length),
-        y: index % board.side_length,
+        x: index % board.side_length,
+        y: Math.floor(index / board.side_length),
       },
     ])
   );
@@ -133,7 +134,17 @@ function tileStyle(id: number) {
 }
 
 function arrowStyle(arrow: SideArrow) {
-  return Object.keys(arrow.side_index)[0]
+  if ("Top" in arrow.side_index) {
+    return "Top";
+  } else if ("Bottom" in arrow.side_index) {
+    return "Bottom";
+  } else if ("Left" in arrow.side_index) {
+    return "Left";
+  } else if ("Right" in arrow.side_index) {
+    return "Right";
+  } else {
+    throw new Error("Invalid side index");
+  }
 }
 
 const positionToMapKey = (position: Position) =>
@@ -174,8 +185,9 @@ function playerStyle(id: PlayerId) {
     (positionPlayersMap.value.get(positionToMapKey(player.position))?.length ??
       0) > 1;
   const transform = hasMultiplePlayers
-    ? `scale(0.9) translate(${30 * (playerRenderOffsets[id]?.x ?? 0)}%, ${30 * (playerRenderOffsets[id]?.y ?? 0)
-    }%)`
+    ? `scale(0.9) translate(${30 * (playerRenderOffsets[id]?.x ?? 0)}%, ${
+        30 * (playerRenderOffsets[id]?.y ?? 0)
+      }%)`
     : "";
   return {
     top: (player.position.y / board.side_length) * 100 + "%",
@@ -196,8 +208,9 @@ function startCircleStyle(id: PlayerId) {
     (startPositionPlayersMap.value.get(positionToMapKey(player.start_position))
       ?.length ?? 0) > 1;
   const transform = hasMultiplePlayers
-    ? `scale(0.9) translate(${30 * (playerRenderOffsets[id]?.x ?? 0)}%, ${30 * (playerRenderOffsets[id]?.y ?? 0)
-    }%)`
+    ? `scale(0.9) translate(${30 * (playerRenderOffsets[id]?.x ?? 0)}%, ${
+        30 * (playerRenderOffsets[id]?.y ?? 0)
+      }%)`
     : "";
   return {
     top: (player.start_position.y / board.side_length) * 100 + "%",
@@ -239,16 +252,25 @@ function startGame() {
       <div class="constrain-height board-container">
         <div class="board">
           <div v-if="props.board === null" class="start-game">
-            <n-button secondary round size="large" type="primary" :disabled="gameSettings.players.length < 2"
-              @click="startGame">
+            <n-button
+              secondary
+              round
+              size="large"
+              type="primary"
+              :disabled="gameSettings.players.length < 2"
+              @click="startGame"
+            >
               <h1>Press Start</h1>
             </n-button>
-            <GameSettings v-model:cards-per-player="gameSettings.items_per_player"
-              v-model:side-length="gameSettings.side_length"></GameSettings>
+            <GameSettings
+              v-model:cards-per-player="gameSettings.items_per_player"
+              v-model:side-length="gameSettings.side_length"
+            ></GameSettings>
             <h2>
               <span>{{ gameSettings.players.length }}</span>
               <span>&nbsp;</span>
-              <span v-if="gameSettings.players.length !== 1">Players</span><span v-else>Player</span>
+              <span v-if="gameSettings.players.length !== 1">Players</span
+              ><span v-else>Player</span>
             </h2>
             <ul>
               <li v-for="playerId in gameSettings.players" :key="playerId">
@@ -258,37 +280,70 @@ function startGame() {
           </div>
           <template v-else>
             <div class="tiles-wrapper">
-              <div v-for="id in tileCount" :key="id" class="tile" :style="tileStyle(id - 1)">
-                <GameTile :tile="tilesMap.get(id - 1)?.tile ?? null" :searching-for="props.activePlayerItem"
-                  @click="() => tryMovePlayer(id - 1)" />
+              <div
+                v-for="id in tileCount"
+                :key="id"
+                class="tile"
+                :style="tileStyle(id - 1)"
+              >
+                <GameTile
+                  :tile="tilesMap.get(id - 1)?.tile ?? null"
+                  :searching-for="props.activePlayerItem"
+                  @click="() => tryMovePlayer(id - 1)"
+                />
               </div>
             </div>
             <div class="tiles-wrapper">
-              <div v-for="[id, player] of props.players.entries()" :key="id" class="start-circle"
-                :style="startCircleStyle(id)">
-                <div :style="{
-                  backgroundColor: playerColors[id],
-                }"></div>
+              <div
+                v-for="[id, player] of props.players.entries()"
+                :key="id"
+                class="start-circle"
+                :style="startCircleStyle(id)"
+              >
+                <div
+                  :style="{
+                    backgroundColor: playerColors[id],
+                  }"
+                ></div>
               </div>
             </div>
             <div class="tiles-wrapper">
-              <div v-for="[id, player] of props.players.entries()" :key="id" class="player" :style="playerStyle(id)">
-                <PlayerPiece :player="player" :is-active="props.phase === 'MovePlayer' &&
-                  player.id === props.activePlayer
-                  " />
+              <div
+                v-for="[id, player] of props.players.entries()"
+                :key="id"
+                class="player"
+                :style="playerStyle(id)"
+              >
+                <PlayerPiece
+                  :player="player"
+                  :is-active="
+                    props.phase === 'MovePlayer' &&
+                    player.id === props.activePlayer
+                  "
+                />
               </div>
             </div>
             <div class="tiles-wrapper">
-              <div v-for="arrow in sideArrows" :key="arrow.id" class="arrow-wrapper" :class="arrowStyle(arrow)" :style="{
-                top: arrow.top,
-                left: arrow.left,
-                right: arrow.right,
-                bottom: arrow.bottom,
-              }" @click="() => startShiftTiles(arrow.side_index)">
-                <div class="arrow" :class="{
-                  [arrowStyle(arrow)]: true,
-                  highlight: props.phase === 'MoveTiles',
-                }"></div>
+              <div
+                v-for="arrow in sideArrows"
+                :key="arrow.id"
+                class="arrow-wrapper"
+                :class="arrowStyle(arrow)"
+                :style="{
+                  top: arrow.top,
+                  left: arrow.left,
+                  right: arrow.right,
+                  bottom: arrow.bottom,
+                }"
+                @click="() => startShiftTiles(arrow.side_index)"
+              >
+                <div
+                  class="arrow"
+                  :class="{
+                    [arrowStyle(arrow)]: true,
+                    highlight: props.phase === 'MoveTiles',
+                  }"
+                ></div>
               </div>
             </div>
           </template>
