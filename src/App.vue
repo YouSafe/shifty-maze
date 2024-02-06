@@ -78,11 +78,17 @@ OnePlayerCard.props = {
             <OnePlayerCard :id="3"></OnePlayerCard>
             <OnePlayerCard :id="2"></OnePlayerCard>
           </div>
-          <GameBoard :board="game.hasStarted ? game.board.value : null" :players="game.playersMap.value"
-            :active-player="game.activePlayer.value" :active-player-item="game.activePlayerItem.value"
-            :phase="game.phase.value" v-model:start-settings="gameSettings" @start-game="(v) => game.startGame(v)"
-            @player-move="(player, x, y) => game.movePlayer(player, x, y)" @shift-tiles="(side_index, rotation) => game.shiftTiles(side_index)
-              " />
+          <GameBoard
+            :board="game.hasStarted ? game.board.value : null"
+            :players="game.playersMap.value"
+            :active-player="game.activePlayer.value"
+            :active-player-item="game.activePlayerItem.value"
+            :phase="game.phase.value"
+            v-model:start-settings="gameSettings"
+            @start-game="(v) => game.startGame(v)"
+            @player-move="(player, x, y) => game.movePlayer(player, x, y)"
+            @shift-tiles="(side_index, rotation) => game.shiftTiles(side_index)"
+          />
           <div class="right space-between">
             <OnePlayerCard :id="6"></OnePlayerCard>
             <OnePlayerCard :id="7"></OnePlayerCard>
@@ -92,18 +98,41 @@ OnePlayerCard.props = {
           <OnePlayerCard :id="1"></OnePlayerCard>
           <OnePlayerCard :id="0"></OnePlayerCard>
         </div>
-        <GameTile v-if="game.board.value?.free_tile" :tile="game.board.value?.free_tile?.tile ?? null"
-          :searching-for="game.activePlayerItem.value" class="free-tile"></GameTile>
-        <NButton round size="small" class="settings-button-small" @click="showSettingsDialog = true">
-          ⚙️</NButton>
-        <NButton round class="settings-button-large" @click="showSettingsDialog = true">
-          Settings</NButton>
+        <GameTile
+          v-if="game.board.value?.free_tile"
+          :tile="game.board.value?.free_tile?.tile ?? null"
+          :searching-for="game.activePlayerItem.value"
+          class="free-tile"
+        ></GameTile>
+        <NButton
+          round
+          size="small"
+          class="settings-button-small"
+          @click="showSettingsDialog = true"
+        >
+          ⚙️</NButton
+        >
+        <NButton
+          round
+          class="settings-button-large"
+          @click="showSettingsDialog = true"
+        >
+          Settings</NButton
+        >
       </div>
     </div>
-    <PlayerDialog v-model:show="showPlayerDialog" :id="showDialogFor.id" :player-mode="showDialogFor.mode"
-      @join="(id, mode) => addPlayer(id, mode)" @remove="(v) => removePlayer(v)"></PlayerDialog>
-    <SettingsDialog v-model:show="showSettingsDialog" :has-game-started="game.hasStarted.value"
-      @quit-game="game.finishGame()"></SettingsDialog>
+    <PlayerDialog
+      v-model:show="showPlayerDialog"
+      :id="showDialogFor.id"
+      :player-mode="showDialogFor.mode"
+      @join="(id, mode) => addPlayer(id, mode)"
+      @remove="(v) => removePlayer(v)"
+    ></PlayerDialog>
+    <SettingsDialog
+      v-model:show="showSettingsDialog"
+      :has-game-started="game.hasStarted.value"
+      @quit-game="game.finishGame()"
+    ></SettingsDialog>
   </div>
 </template>
 
@@ -125,6 +154,7 @@ OnePlayerCard.props = {
 .middle {
   display: flex;
   flex-direction: row;
+  min-height: 0;
 }
 
 .space-between {
