@@ -122,9 +122,12 @@ function makeAbyssTiles() {
       null,
       null,
       null,
-      straight,
-      corner,
       null,
+      {
+        ...corner,
+        rotation: 270,
+      },
+      straight,
       null,
       {
         ...straight,
