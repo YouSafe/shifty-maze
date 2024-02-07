@@ -8,7 +8,7 @@ mod tests {
     use crate::board::Board;
 
     #[test]
-    fn it_works() {
-        Board::new(0, 7);
+    fn new_board() {
+        Board::new(7);
     }
 }
