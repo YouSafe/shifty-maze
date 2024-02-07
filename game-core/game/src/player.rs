@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, iter};
 
 use rand::seq::SliceRandom;
 use ts_interop::ts_interop;
@@ -97,8 +97,8 @@ fn get_start_position(index: usize, side_length: usize) -> Position {
 fn get_items_to_collect(num_board_items: usize, num_item_cards: usize) -> Vec<Item> {
     let num_repeats = num_item_cards / num_board_items;
     let num_remainder = num_item_cards % num_board_items;
-    let mut items: Vec<_> = (0..num_repeats)
-        .map(|_| (1..=num_board_items))
+    let mut items: Vec<_> = iter::repeat(1..=num_board_items)
+        .take(num_repeats)
         .flatten()
         .map(Item::new)
         .collect();
