@@ -120,19 +120,19 @@ function makeAbyssTiles() {
   return {
     LShape: assembleTile([
       null,
-      null,
+      {
+        ...straight,
+        rotation: 270,
+      },
       null,
       null,
       {
         ...corner,
-        rotation: 270,
+        rotation: 180,
       },
       straight,
       null,
-      {
-        ...straight,
-        rotation: 90,
-      },
+      null,
       null,
     ]),
     TShape: assembleTile([
@@ -151,13 +151,22 @@ function makeAbyssTiles() {
     ]),
     IShape: assembleTile([
       null,
+      {
+        ...straight,
+        rotation: 270,
+      },
       null,
       null,
-      straight,
-      straight,
-      straight,
+      {
+        ...straight,
+        rotation: 90,
+      },
       null,
       null,
+      {
+        ...straight,
+        rotation: 90,
+      },
       null,
     ]),
   };
