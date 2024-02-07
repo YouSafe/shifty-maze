@@ -19,9 +19,6 @@ extern "C" {
 
     #[wasm_bindgen(method)]
     fn update_phase(this: &GameCoreCallbacks, phase: GamePhase);
-
-    #[wasm_bindgen(method)]
-    fn update_player_turn(this: &GameCoreCallbacks, player_id: PlayerId);
 }
 
 #[wasm_bindgen(start)]
@@ -31,20 +28,24 @@ fn main() {
 }
 
 #[wasm_bindgen]
-#[allow(dead_code)]
 pub struct GameCore {
-    game: Option<Game>,
+    history: Vec<Game>,
     callbacks: GameCoreCallbacks,
 }
 
 #[wasm_bindgen]
 impl GameCore {
     #[wasm_bindgen(constructor)]
-    pub fn new(callbacks: GameCoreCallbacks) -> Self {
-        Self {
-            game: None,
-            callbacks,
-        }
+    pub fn new(callbacks: GameCoreCallbacks, history_size: usize) -> Self {
+        todo!()
+    }
+
+    pub fn get_current_game(&self) -> Option<Game> {
+        todo!()
+    }
+
+    pub fn set_game(&mut self, game: Game) {
+        todo!()
     }
 
     pub fn start_game(&mut self, settings: GameStartSettings) {
@@ -64,6 +65,10 @@ impl GameCore {
     }
 
     pub fn move_player(&mut self, player_id: PlayerId, position: Position) {
+        todo!()
+    }
+
+    pub fn undo_move(&mut self) {
         todo!()
     }
 }
