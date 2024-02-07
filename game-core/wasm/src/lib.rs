@@ -60,6 +60,21 @@ impl GameCore {
             None
         }
     }
+
+    fn do_action(&mut self, action: impl Fn(&mut Game)) -> Option<&Game> {
+        if let Some(mut current) = self.history.last().cloned() {
+            action(&mut current);
+            if self.history.len() < self.history.capacity() {
+                self.history.push(current);
+            } else {
+                self.history.rotate_left(1);
+                *self.history.last_mut().unwrap() = current;
+            }
+            self.history.last()
+        } else {
+            None
+        }
+    }
 }
 
 #[wasm_bindgen]
