@@ -1,13 +1,22 @@
-use tsify::declare;
+use std::collections::BTreeMap;
+
 use ts_interop::ts_interop;
 
 use crate::tile::Item;
 
-#[cfg_attr(feature = "wasm", declare)]
-pub type PlayerId = u8;
+#[cfg_attr(feature = "wasm", tsify::declare)]
+pub type PlayerId = usize;
 
-#[derive(Clone)]
 #[ts_interop]
+#[derive(Clone)]
+pub struct Players {
+    /// Stores the players in the order of their turn.
+    players: BTreeMap<PlayerId, Player>,
+    player_turn: PlayerId,
+}
+
+#[ts_interop]
+#[derive(Clone)]
 pub struct Player {
     id: PlayerId,
     position: Position,
@@ -16,8 +25,8 @@ pub struct Player {
     to_collect: Vec<Item>,
 }
 
-#[derive(Clone)]
 #[ts_interop]
+#[derive(Clone, Copy)]
 pub struct Position {
     x: usize,
     y: usize,

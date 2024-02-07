@@ -1,7 +1,11 @@
-use game::{board::Board, game::Game, player::Player, tile::Item};
+use game::{
+    board::Board,
+    game::{Game, GamePhase, GameStartSettings},
+    player::{PlayerId, Players, Position},
+    tile::{Rotation, SideIndex},
+};
 use log::Level;
-use serde::Serialize;
-use wasm_bindgen::prelude::*;
+use wasm_bindgen::prelude::wasm_bindgen;
 
 #[wasm_bindgen]
 extern "C" {
@@ -11,7 +15,10 @@ extern "C" {
     fn update_board(this: &GameCoreCallbacks, board: Board);
 
     #[wasm_bindgen(method)]
-    fn update_players(this: &GameCoreCallbacks, players: JsValue);
+    fn update_players(this: &GameCoreCallbacks, players: Players);
+
+    #[wasm_bindgen(method)]
+    fn update_phase(this: &GameCoreCallbacks, phase: GamePhase);
 }
 
 #[wasm_bindgen(start)]
@@ -22,36 +29,46 @@ fn main() {
 
 #[wasm_bindgen]
 pub struct GameCore {
-    game: Game,
+    history: Vec<Game>,
     callbacks: GameCoreCallbacks,
-    serializer: serde_wasm_bindgen::Serializer,
 }
 
 #[wasm_bindgen]
 impl GameCore {
     #[wasm_bindgen(constructor)]
-    pub fn new(number_of_items: u8, side_length: usize, callbacks: GameCoreCallbacks) -> Self {
-        Self {
-            game: Game::new(number_of_items, side_length),
-            callbacks,
-            serializer: serde_wasm_bindgen::Serializer::new(),
-        }
+    pub fn new(callbacks: GameCoreCallbacks, history_size: usize) -> Self {
+        todo!()
     }
 
-    pub fn get_board(&self) -> Board {
-        self.game.get_board().clone()
+    pub fn get_current_game(&self) -> Option<Game> {
+        todo!()
     }
 
-    pub fn get_players(&self) -> Result<JsValue, JsValue> {
-        let players: Vec<_> = self.game.get_players().cloned().collect();
-        Ok(players.serialize(&self.serializer)?)
+    pub fn set_game(&mut self, game: Game) {
+        todo!()
     }
 
-    /// Convince TSify to generate those types as well
-    pub fn dummy_convince_tsify_0(&self) -> Item {
-        panic!("This method should not be called");
+    pub fn start_game(&mut self, settings: GameStartSettings) {
+        todo!()
     }
-    pub fn dummy_convince_tsify_1(&self) -> Player {
-        panic!("This method should not be called");
+
+    pub fn rotate_free_tile(&mut self, rotation: Rotation) {
+        todo!()
+    }
+
+    pub fn shift_tiles(&mut self, side_index: SideIndex) {
+        todo!()
+    }
+
+    pub fn remove_player(&mut self, player_id: PlayerId) {
+        todo!()
+    }
+
+    pub fn move_player(&mut self, player_id: PlayerId, position: Position) {
+        todo!()
+    }
+
+    pub fn undo_move(&mut self) {
+        todo!()
     }
 }
