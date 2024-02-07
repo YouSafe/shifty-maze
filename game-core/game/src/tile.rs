@@ -69,3 +69,31 @@ pub enum Side {
     Bottom,
     Left,
 }
+
+impl Tile {
+    pub fn new(id: usize, variant: TileVariant, rotation: Rotation, item: Option<Item>) -> Self {
+        Self {
+            id,
+            variant,
+            rotation,
+            item,
+        }
+    }
+}
+
+impl Item {
+    pub fn new(id: usize) -> Self {
+        assert!(id != 0);
+        // Safety: id != 0
+        Self(unsafe { NonZeroUsize::new_unchecked(id) })
+    }
+}
+
+impl FreeTile {
+    pub fn new(tile: Tile) -> Self {
+        Self {
+            tile,
+            side_with_index: None,
+        }
+    }
+}
