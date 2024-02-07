@@ -85,6 +85,14 @@ impl Board {
             free_tile,
         }
     }
+
+    pub fn get_side_length(&self) -> usize {
+        self.side_length
+    }
+
+    pub fn get_number_of_items(&self) -> usize {
+        calculate_number_of_items(self.side_length)
+    }
 }
 
 fn get_tile_assortment(side_length: usize) -> Vec<TileVariant> {
