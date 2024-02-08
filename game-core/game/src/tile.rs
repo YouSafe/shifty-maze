@@ -79,6 +79,10 @@ impl Tile {
             item,
         }
     }
+
+    pub fn get_item(&self) -> Option<Item> {
+        self.item
+    }
 }
 
 impl Item {
@@ -95,5 +99,9 @@ impl FreeTile {
             tile,
             side_with_index: None,
         }
+    }
+
+    pub fn set_rotation(&mut self, rotation: Rotation) {
+        self.tile.rotation = rotation;
     }
 }
