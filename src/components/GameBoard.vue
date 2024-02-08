@@ -318,7 +318,10 @@ function startGame() {
                 v-for="arrow in sideArrows"
                 :key="arrow.id"
                 class="arrow-wrapper"
-                :class="arrow.side_index.side"
+                :class="{
+                  [arrow.side_index.side]: true,
+                  'is-active': props.phase === 'MoveTiles',
+                }"
                 :style="{
                   top: arrow.top,
                   left: arrow.left,
@@ -400,6 +403,7 @@ function startGame() {
   height: calc(var(--tile-size));
   width: calc(var(--tile-size));
   transform-origin: 50% 50%;
+  pointer-events: none;
 }
 
 .arrow-wrapper.Top {
@@ -416,6 +420,10 @@ function startGame() {
 
 .arrow-wrapper.Left {
   transform: rotate(-90deg) translateY(-2vmin);
+}
+
+.arrow-wrapper.is-active {
+  pointer-events: auto;
 }
 
 .arrow {
