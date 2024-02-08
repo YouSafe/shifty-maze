@@ -1,3 +1,4 @@
+#![feature(get_many_mut)]
 pub mod board;
 pub mod game;
 pub mod player;

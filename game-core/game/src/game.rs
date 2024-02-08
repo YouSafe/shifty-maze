@@ -59,7 +59,7 @@ impl Game {
     pub fn shift_tiles(&mut self, side_index: SideIndex) {
         assert!(self.phase == GamePhase::MoveTiles);
         self.board.shift_tiles(side_index);
-        self.phase = GamePhase::MovePlayer;
+        // self.phase = GamePhase::MovePlayer; TODO: uncomment
     }
 
     pub fn remove_player(&mut self, player_id: PlayerId) {

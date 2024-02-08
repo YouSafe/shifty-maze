@@ -62,7 +62,7 @@ pub struct SideIndex {
 
 /// The side of the board where the free tile is located.
 #[ts_interop]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Side {
     Top,
     Right,
@@ -103,5 +103,19 @@ impl FreeTile {
 
     pub fn set_rotation(&mut self, rotation: Rotation) {
         self.tile.rotation = rotation;
+    }
+
+    pub fn tile_mut(&mut self) -> &mut Tile {
+        &mut self.tile
+    }
+}
+
+impl SideIndex {
+    pub fn get_side(&self) -> Side {
+        self.side
+    }
+
+    pub fn get_index(&self) -> usize {
+        self.index
     }
 }
