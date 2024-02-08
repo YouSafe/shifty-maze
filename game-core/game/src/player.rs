@@ -1,8 +1,9 @@
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, iter};
 
+use rand::seq::SliceRandom;
 use ts_interop::ts_interop;
 
-use crate::tile::Item;
+use crate::{board::Board, tile::Item};
 
 #[cfg_attr(feature = "wasm", tsify::declare)]
 pub type PlayerId = usize;
@@ -30,4 +31,78 @@ pub struct Player {
 pub struct Position {
     x: usize,
     y: usize,
+}
+
+impl Players {
+    pub fn new(mut ids: Vec<PlayerId>, items_per_player: usize, board: &Board) -> Self {
+        assert!(ids.len() > 1);
+        ids.sort();
+
+        let player_turn = *ids.first().unwrap();
+        let mut items =
+            get_items_to_collect(board.get_number_of_items(), ids.len() * items_per_player);
+        items.shuffle(&mut rand::thread_rng());
+
+        let players = ids
+            .into_iter()
+            .enumerate()
+            .map(|(index, id)| {
+                (
+                    id,
+                    Player::new(
+                        id,
+                        get_start_position(index, board.get_side_length()),
+                        items.drain(0..items_per_player).collect(),
+                    ),
+                )
+            })
+            .collect();
+
+        assert!(items.is_empty());
+
+        Self {
+            players,
+            player_turn,
+        }
+    }
+}
+
+impl Player {
+    pub fn new(id: PlayerId, start_position: Position, to_collect: Vec<Item>) -> Self {
+        Self {
+            id,
+            position: start_position,
+            start_position,
+            collected: Vec::new(),
+            to_collect,
+        }
+    }
+}
+
+impl Position {
+    pub fn new(x: usize, y: usize) -> Self {
+        Self { x, y }
+    }
+}
+
+fn get_start_position(index: usize, side_length: usize) -> Position {
+    match index % 4 {
+        0 => Position::new(0, 0),
+        1 => Position::new(0, side_length - 1),
+        2 => Position::new(side_length - 1, side_length - 1),
+        _ => Position::new(side_length - 1, 0),
+    }
+}
+
+fn get_items_to_collect(num_board_items: usize, num_item_cards: usize) -> Vec<Item> {
+    let num_repeats = num_item_cards / num_board_items;
+    let num_remainder = num_item_cards % num_board_items;
+    let mut items: Vec<_> = iter::repeat(1..=num_board_items)
+        .take(num_repeats)
+        .flatten()
+        .map(Item::new)
+        .collect();
+    items.extend((1..=num_remainder).map(Item::new));
+
+    items
 }
