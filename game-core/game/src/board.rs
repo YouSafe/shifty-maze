@@ -1,9 +1,12 @@
-use std::iter;
+use std::{collections::HashMap, iter};
 
 use rand::seq::{IteratorRandom, SliceRandom};
 use ts_interop::ts_interop;
 
-use crate::tile::{FreeTile, Item, Rotation, Tile, TileVariant};
+use crate::{
+    player::Position,
+    tile::{FreeTile, Item, Rotation, SideIndex, Tile, TileVariant},
+};
 
 #[ts_interop]
 #[derive(Clone)]
@@ -92,6 +95,22 @@ impl Board {
 
     pub fn get_number_of_items(&self) -> usize {
         calculate_number_of_items(self.side_length)
+    }
+
+    pub fn get_item(&self, position: Position) -> Option<Item> {
+        self.get(position).get_item()
+    }
+
+    pub fn rotate_free_tile(&mut self, rotation: Rotation) {
+        self.free_tile.set_rotation(rotation);
+    }
+
+    pub fn shift_tiles(&mut self, _side_index: SideIndex) -> HashMap<Position, Position> {
+        todo!()
+    }
+
+    fn get(&self, position: Position) -> &Tile {
+        &self.tiles[position.get_x() * self.side_length + position.get_y()]
     }
 }
 

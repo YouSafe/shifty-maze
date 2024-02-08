@@ -27,10 +27,15 @@ pub struct Player {
 }
 
 #[ts_interop]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Position {
     x: usize,
     y: usize,
+}
+
+pub enum MoveResult<'a> {
+    Won(PlayerId),
+    Moved(&'a mut Player),
 }
 
 impl Players {
@@ -65,6 +70,38 @@ impl Players {
             player_turn,
         }
     }
+
+    pub fn remove_player(&mut self, player_id: PlayerId) {
+        self.players.remove(&player_id);
+        if player_id == self.player_turn {
+            self.next_player_turn();
+        }
+    }
+
+    pub fn next_player_turn(&mut self) {
+        self.player_turn = self
+            .players
+            .range(self.player_turn..)
+            .next()
+            .or_else(|| self.players.iter().next())
+            .map(|(id, _)| *id)
+            .unwrap_or_default();
+    }
+
+    pub fn move_player(&mut self, player_id: PlayerId, position: Position) -> MoveResult {
+        let player = self.get_mut(player_id);
+        player.set_position(position);
+
+        if player.get_next_to_collect().is_none() && player.is_at_start() {
+            MoveResult::Won(player_id)
+        } else {
+            MoveResult::Moved(player)
+        }
+    }
+
+    fn get_mut(&mut self, player_id: PlayerId) -> &mut Player {
+        self.players.get_mut(&player_id).unwrap()
+    }
 }
 
 impl Player {
@@ -77,11 +114,38 @@ impl Player {
             to_collect,
         }
     }
+
+    pub fn get_next_to_collect(&self) -> Option<Item> {
+        self.to_collect.last().copied()
+    }
+
+    pub fn is_at_start(&self) -> bool {
+        self.position == self.start_position
+    }
+
+    pub fn set_position(&mut self, position: Position) {
+        self.position = position;
+    }
+
+    pub fn try_collect_item(&mut self, board: &Board) {
+        let next = self.get_next_to_collect();
+        if next.is_some() && next == board.get_item(self.position) {
+            self.collected.push(self.to_collect.pop().unwrap());
+        }
+    }
 }
 
 impl Position {
     pub fn new(x: usize, y: usize) -> Self {
         Self { x, y }
+    }
+
+    pub fn get_x(&self) -> usize {
+        self.x
+    }
+
+    pub fn get_y(&self) -> usize {
+        self.y
     }
 }
 
