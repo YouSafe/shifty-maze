@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from "vue";
+import { reactive } from "vue";
 import { NInputNumber, NSpace, NSelect } from "naive-ui";
 const sideLength = defineModel("sideLength", { type: Number, required: true });
 const cardsPerPlayer = defineModel("cardsPerPlayer", {

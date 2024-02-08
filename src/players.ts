@@ -12,12 +12,12 @@ export const PlayerColors = [
 ];
 
 export const PlayerSides: SideIndex[] = [
-  { Bottom: 0 },
-  { Bottom: 7 },
-  { Left: 0 },
-  { Left: 7 },
-  { Top: 0 },
-  { Top: 7 },
-  { Top: 0 },
-  { Top: 7 },
+  { side: "Top", index: 0 },
+  { side: "Right", index: 0 },
+  { side: "Bottom", index: 7 },
+  { side: "Left", index: 7 },
+  { side: "Top", index: 0 },
+  { side: "Right", index: 0 },
+  { side: "Bottom", index: 7 },
+  { side: "Left", index: 7 },
 ];

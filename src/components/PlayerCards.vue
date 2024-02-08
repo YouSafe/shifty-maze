@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { Items, getItem } from "../items";
+import { getItem } from "../items";
 import { PlayerColors } from "../players";
-import type { Item, PlayerId } from "game-core/pkg/wasm";
+import type { Item, PlayerId, Side } from "game-core/pkg/wasm";
 const props = defineProps<{
-  side: "Top" | "Bottom" | "Left" | "Right";
+  side: Side;
   id: PlayerId;
   isActive: boolean;
   hasPlayer: boolean;

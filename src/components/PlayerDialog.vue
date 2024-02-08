@@ -47,53 +47,32 @@ function close() {
 </script>
 
 <template open>
-  <n-modal
-    :show="show"
-    @update:show="
-      (v) => {
-        if (!v) close();
-        else show = v;
-      }
-    "
-    preset="card"
-    :title="`Player ${props.id} - ${props.playerMode ?? 'Choose a mode'}`"
-    :bordered="false"
-    size="huge"
-    :segmented="{
+  <n-modal :show="show" @update:show="(v) => {
+      if (!v) close();
+      else show = v;
+    }
+    " preset="card" :title="`Player ${props.id} - ${props.playerMode ?? 'Choose a mode'}`" :bordered="false"
+    size="huge" :segmented="{
       content: 'soft',
       footer: 'soft',
-    }"
-    :style="{
-      width: '80%',
-      maxWidth: '600px',
-      border: `2px solid ${playerColor}`,
-    }"
-  >
+    }" :style="{
+  width: '80%',
+  maxWidth: '600px',
+  border: `2px solid ${playerColor}`,
+}">
     <p v-if="!hasPlayer">Choose a player mode</p>
     <p v-else>Switch to</p>
     <n-space>
-      <n-button
-        strong
-        round
-        type="primary"
-        :disabled="props.playerMode === 'local'"
-        @click="joinLocal"
-      >
+      <n-button strong round type="primary" :disabled="props.playerMode === 'local'" @click="joinLocal">
         Local
       </n-button>
-      <n-button
-        strong
-        round
-        :disabled="props.playerMode === 'online'"
-        @click="joinOnline"
-      >
+      <n-button strong round :disabled="props.playerMode === 'online'" @click="joinOnline">
         Online
-      </n-button></n-space
-    >
+      </n-button></n-space>
     <template #footer>
       <div v-if="hasPlayer">
-        <n-button strong secondary round type="error" @click="remove()"
-          ><p v-if="!isTryingToRemove">Remove Player</p>
+        <n-button strong secondary round type="error" @click="remove()">
+          <p v-if="!isTryingToRemove">Remove Player</p>
           <p v-else>Are you sure?</p>
         </n-button>
       </div>

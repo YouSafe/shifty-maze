@@ -51,21 +51,13 @@ const isSearchingFor = computed(() => {
 <template>
   <div class="tile-container">
     <div class="tile">
-      <img
-        :src="dungeonTile.img"
-        alt="Tile"
-        :style="{
-          transform: `rotate(${rotation ?? 0}deg)`,
-        }"
-      />
+      <img :src="dungeonTile.img" alt="Tile" :style="{
+        transform: `rotate(${rotation ?? 0}deg)`,
+      }" />
     </div>
-    <div
-      v-if="item !== null"
-      class="item"
-      :class="{
-        highlight: isSearchingFor,
-      }"
-    >
+    <div v-if="item !== null" class="item" :class="{
+      highlight: isSearchingFor,
+    }">
       {{ item }}
     </div>
   </div>
@@ -75,6 +67,7 @@ const isSearchingFor = computed(() => {
 img {
   image-rendering: pixelated;
 }
+
 .tile-container {
   width: 100%;
   height: 100%;
@@ -84,6 +77,7 @@ img {
   position: relative;
   --edge: 5px;
 }
+
 .tile {
   position: absolute;
   top: var(--edge);
@@ -94,9 +88,11 @@ img {
   background-color: rgb(6, 6, 17);
   display: flex;
 }
+
 .tile:hover {
   outline: 6px solid rgb(6, 6, 17);
 }
+
 .item {
   position: absolute;
   top: var(--edge);
@@ -115,6 +111,7 @@ img {
   pointer-events: none;
   z-index: 1;
 }
+
 .highlight {
   font-size: 3vmin;
   filter: none;

@@ -69,7 +69,7 @@ export function useGame() {
     }
   );
 
-  const game = new GameCore(callbacks);
+  const game = new GameCore(callbacks, 10);
 
   function startGame(settings: GameStartSettings) {
     reset();
