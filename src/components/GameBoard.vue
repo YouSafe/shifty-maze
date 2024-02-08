@@ -275,7 +275,6 @@ function startGame() {
                 class="tile"
                 :style="tileStyle(id - 1)"
               >
-                {{ id - 1 }}
                 <GameTile
                   v-if="tilesMap.has(id - 1)"
                   :tile="tilesMap.get(id - 1)?.tile ?? null"
