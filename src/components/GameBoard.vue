@@ -232,6 +232,20 @@ function startShiftTiles(side_index: SideIndex) {
 function startGame() {
   emits("start-game", gameSettings.value);
 }
+function isTileArrowDisabled(side_index: SideIndex) {
+  if (props.board === null) {
+    return true;
+  }
+  let freeTile = props.board.free_tile;
+  if (
+    (freeTile.side_with_index ?? null) !== null &&
+    freeTile.side_with_index?.side === side_index.side &&
+    freeTile.side_with_index?.index === side_index.index
+  ) {
+    return true;
+  }
+  return false;
+}
 </script>
 
 <template>
@@ -321,6 +335,7 @@ function startGame() {
                 :class="{
                   [arrow.side_index.side]: true,
                   'is-active': props.phase === 'MoveTiles',
+                  disabled: isTileArrowDisabled(arrow.side_index),
                 }"
                 :style="{
                   top: arrow.top,
@@ -424,6 +439,11 @@ function startGame() {
 
 .arrow-wrapper.is-active {
   pointer-events: auto;
+}
+
+/* TODO: Make this a disabled icon */
+.arrow-wrapper.disabled {
+  display: none;
 }
 
 .arrow {
