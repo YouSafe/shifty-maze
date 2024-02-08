@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 use game::{
     board::Board,
     game::{Game, GamePhase, GameStartSettings},
@@ -29,46 +31,104 @@ fn main() {
 
 #[wasm_bindgen]
 pub struct GameCore {
-    history: Vec<Game>,
+    history: VecDeque<Game>,
     callbacks: GameCoreCallbacks,
+}
+
+impl GameCore {
+    fn update_board(&self, board: Board) {
+        self.callbacks.update_board(board);
+    }
+
+    fn update_players(&self, players: Players) {
+        self.callbacks.update_players(players)
+    }
+
+    fn update_phase(&self, phase: GamePhase) {
+        self.callbacks.update_phase(phase);
+    }
+
+    fn do_action(&mut self, action: impl FnOnce(&mut Game)) -> Option<Game> {
+        if let Some(mut current) = self.history.back().cloned() {
+            action(&mut current);
+            if self.history.len() < self.history.capacity() {
+                self.history.push_back(current);
+            } else {
+                self.history.rotate_left(1);
+                *self.history.back_mut().unwrap() = current;
+            }
+            self.history.back().cloned()
+        } else {
+            None
+        }
+    }
 }
 
 #[wasm_bindgen]
 impl GameCore {
     #[wasm_bindgen(constructor)]
     pub fn new(callbacks: GameCoreCallbacks, history_size: usize) -> Self {
-        todo!()
+        Self {
+            history: VecDeque::with_capacity(history_size),
+            callbacks,
+        }
     }
 
     pub fn get_current_game(&self) -> Option<Game> {
-        todo!()
+        self.history.back().cloned()
     }
 
     pub fn set_game(&mut self, game: Game) {
-        todo!()
+        self.history.clear();
+        self.history.push_back(game);
     }
 
     pub fn start_game(&mut self, settings: GameStartSettings) {
-        todo!()
+        let game = Game::new(settings);
+        let (board, players, phase) = game.clone().into_parts();
+        self.update_board(board);
+        self.update_players(players);
+        self.update_phase(phase);
+        self.set_game(game);
     }
 
     pub fn rotate_free_tile(&mut self, rotation: Rotation) {
-        todo!()
+        if let Some(game) = self.do_action(|game| game.rotate_free_tile(rotation)) {
+            self.update_board(game.into_parts().0);
+        }
     }
 
     pub fn shift_tiles(&mut self, side_index: SideIndex) {
-        todo!()
+        if let Some(game) = self.do_action(|game| game.shift_tiles(side_index)) {
+            let (board, players, phase) = game.into_parts();
+            self.update_board(board);
+            self.update_players(players);
+            self.update_phase(phase);
+        }
     }
 
     pub fn remove_player(&mut self, player_id: PlayerId) {
-        todo!()
+        if let Some(game) = self.do_action(|game| game.remove_player(player_id)) {
+            self.update_players(game.into_parts().1);
+        }
     }
 
-    pub fn move_player(&mut self, player_id: PlayerId, position: Position) {
-        todo!()
+    pub fn move_player(&mut self, player_id: PlayerId, position: Position) -> Option<PlayerId> {
+        let mut winner = None;
+        if let Some(game) = self.do_action(|game| winner = game.move_player(player_id, position)) {
+            let (_, players, phase) = game.into_parts();
+            self.update_players(players);
+            self.update_phase(phase);
+        }
+        winner
     }
 
     pub fn undo_move(&mut self) {
-        todo!()
+        self.history.pop_back();
+        if let Some(game) = self.history.back() {
+            self.update_board(game.get_board().clone());
+            self.update_players(game.get_players().clone());
+            self.update_phase(game.get_phase());
+        }
     }
 }
