@@ -9,7 +9,8 @@ const props = defineProps<{
   searchingFor: Item | null;
 }>();
 const dungeonTile = computed(() => {
-  if (!props.tile) {
+  if (props.tile === null) {
+    console.warn("Tile is null");
     return DungeonTiles.Empty;
   } else if (props.tile.variant === "IShape") {
     return DungeonTiles.Abyss.IShape;
@@ -23,7 +24,7 @@ const dungeonTile = computed(() => {
   }
 });
 const rotation = computed(() => {
-  if (!props.tile) {
+  if (props.tile === null) {
     return 0;
   }
   if (props.tile.rotation === "Zero") {
@@ -51,13 +52,21 @@ const isSearchingFor = computed(() => {
 <template>
   <div class="tile-container">
     <div class="tile">
-      <img :src="dungeonTile.img" alt="Tile" :style="{
-        transform: `rotate(${rotation ?? 0}deg)`,
-      }" />
+      <img
+        :src="dungeonTile.img"
+        alt="Tile"
+        :style="{
+          transform: `rotate(${rotation ?? 0}deg)`,
+        }"
+      />
     </div>
-    <div v-if="item !== null" class="item" :class="{
-      highlight: isSearchingFor,
-    }">
+    <div
+      v-if="item !== null"
+      class="item"
+      :class="{
+        highlight: isSearchingFor,
+      }"
+    >
       {{ item }}
     </div>
   </div>
