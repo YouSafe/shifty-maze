@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 use game::{
     board::Board,
     game::{Game, GamePhase, GameStartSettings},
@@ -29,7 +31,7 @@ fn main() {
 
 #[wasm_bindgen]
 pub struct GameCore {
-    history: Vec<Game>,
+    history: VecDeque<Game>,
     callbacks: GameCoreCallbacks,
 }
 
@@ -47,15 +49,15 @@ impl GameCore {
     }
 
     fn do_action(&mut self, action: impl FnOnce(&mut Game)) -> Option<Game> {
-        if let Some(mut current) = self.history.last().cloned() {
+        if let Some(mut current) = self.history.back().cloned() {
             action(&mut current);
             if self.history.len() < self.history.capacity() {
-                self.history.push(current);
+                self.history.push_back(current);
             } else {
                 self.history.rotate_left(1);
-                *self.history.last_mut().unwrap() = current;
+                *self.history.back_mut().unwrap() = current;
             }
-            self.history.last().cloned()
+            self.history.back().cloned()
         } else {
             None
         }
@@ -67,18 +69,18 @@ impl GameCore {
     #[wasm_bindgen(constructor)]
     pub fn new(callbacks: GameCoreCallbacks, history_size: usize) -> Self {
         Self {
-            history: Vec::with_capacity(history_size),
+            history: VecDeque::with_capacity(history_size),
             callbacks,
         }
     }
 
     pub fn get_current_game(&self) -> Option<Game> {
-        self.history.last().cloned()
+        self.history.back().cloned()
     }
 
     pub fn set_game(&mut self, game: Game) {
         self.history.clear();
-        self.history.push(game);
+        self.history.push_back(game);
     }
 
     pub fn start_game(&mut self, settings: GameStartSettings) {
@@ -122,8 +124,8 @@ impl GameCore {
     }
 
     pub fn undo_move(&mut self) {
-        self.history.pop();
-        if let Some(game) = self.history.last() {
+        self.history.pop_back();
+        if let Some(game) = self.history.back() {
             self.update_board(game.get_board().clone());
             self.update_players(game.get_players().clone());
             self.update_phase(game.get_phase());
