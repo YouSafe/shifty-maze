@@ -1,11 +1,11 @@
-use std::{collections::HashMap, iter};
+use std::{collections::HashMap, iter, mem};
 
 use rand::seq::{IteratorRandom, SliceRandom};
 use ts_interop::ts_interop;
 
 use crate::{
     player::Position,
-    tile::{FreeTile, Item, Rotation, SideIndex, Tile, TileVariant},
+    tile::{FreeTile, Item, Rotation, Side, SideIndex, Tile, TileVariant},
 };
 
 #[ts_interop]
@@ -105,8 +105,81 @@ impl Board {
         self.free_tile.set_rotation(rotation);
     }
 
-    pub fn shift_tiles(&mut self, _side_index: SideIndex) -> HashMap<Position, Position> {
-        todo!()
+    pub fn shift_tiles(&mut self, side_index: SideIndex) -> HashMap<Position, Position> {
+        assert!(side_index.get_index() % 2 == 1);
+        assert!(side_index.get_index() < self.side_length);
+        use Side::*;
+
+        let to_next = |r: usize| (r + 1) % self.side_length;
+        let to_last = |r: usize| r.checked_sub(1).unwrap_or(self.side_length - 1);
+
+        let (last, map) = match side_index.get_side() {
+            side @ (Top | Bottom) => {
+                let start = side_index.get_index();
+
+                let mut range = 0..self.side_length - 1;
+                let mut rev = range.clone().rev();
+
+                let (range, to_fn, last): (&mut dyn Iterator<Item = _>, &dyn Fn(usize) -> _, _) =
+                    if side == Bottom {
+                        (
+                            &mut range,
+                            &to_last,
+                            start + self.tiles.len() - self.side_length,
+                        )
+                    } else {
+                        (&mut rev, &to_next, start)
+                    };
+
+                let mut map = HashMap::new();
+                let mut insert = |col| {
+                    map.insert(
+                        Position::new(side_index.get_index(), col),
+                        Position::new(side_index.get_index(), to_fn(col)),
+                    )
+                };
+
+                for i in range.into_iter() {
+                    let current = start + i * self.side_length;
+                    let next = current + self.side_length;
+                    let [current, next] = self.tiles.get_many_mut([current, next]).unwrap();
+                    mem::swap(current, next);
+                    insert(i);
+                }
+
+                insert(self.side_length - 1);
+                (last, map)
+            }
+            side @ (Right | Left) => {
+                let start = side_index.get_index() * self.side_length;
+                let end = start + self.side_length - 1;
+                let row = &mut self.tiles[start..=end];
+
+                let (last, to_fn): (_, &dyn Fn(usize) -> _) = if side == Right {
+                    row.rotate_left(1);
+                    (end, &to_last)
+                } else {
+                    row.rotate_right(1);
+                    (start, &to_next)
+                };
+
+                (
+                    last,
+                    (0..self.side_length)
+                        .map(|row| {
+                            (
+                                Position::new(row, side_index.get_index()),
+                                Position::new(to_fn(row), side_index.get_index()),
+                            )
+                        })
+                        .collect(),
+                )
+            }
+        };
+
+        mem::swap(&mut self.tiles[last], self.free_tile.tile_mut());
+
+        map
     }
 
     fn get(&self, position: Position) -> &Tile {
