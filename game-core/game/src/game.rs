@@ -58,7 +58,12 @@ impl Game {
 
     pub fn shift_tiles(&mut self, side_index: SideIndex) {
         assert!(self.phase == GamePhase::MoveTiles);
-        self.board.shift_tiles(side_index);
+        let changes = self.board.shift_tiles(side_index);
+        for player in self.players.iter_mut() {
+            if let Some(new_pos) = changes.get(&player.get_position()) {
+                player.set_position(*new_pos);
+            }
+        }
         self.phase = GamePhase::MovePlayer;
     }
 
