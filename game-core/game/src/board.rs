@@ -120,13 +120,20 @@ fn get_tile_assortment(side_length: usize) -> Vec<TileVariant> {
     const L_RATIO: f64 = 15. / 34.;
 
     let num_moveable = side_length.pow(2) - (side_length / 2 + 1).pow(2) + 1;
-    let num_t_tiles = (num_moveable as f64 * T_RATIO) as usize; // flooring
-    let num_i_tiles = (num_moveable as f64 * I_RATIO) as usize;
+    let num_i_tiles = (num_moveable as f64 * I_RATIO) as usize; // flooring
+    let mut num_t_tiles = (num_moveable as f64 * T_RATIO) as usize;
     let mut num_l_tiles = (num_moveable as f64 * L_RATIO) as usize;
 
-    if num_t_tiles + num_i_tiles + num_l_tiles != num_moveable {
-        num_l_tiles += 1;
+    match num_moveable - (num_t_tiles + num_i_tiles + num_l_tiles) {
+        diff @ (1 | 2) => {
+            num_l_tiles += 1;
+            if diff == 2 {
+                num_t_tiles += 1;
+            }
+        }
+        _ => {}
     }
+
     assert!(num_t_tiles + num_i_tiles + num_l_tiles == num_moveable);
 
     let mut movable_tiles = Vec::with_capacity(num_moveable);

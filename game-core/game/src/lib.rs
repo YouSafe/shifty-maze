@@ -17,6 +17,13 @@ mod tests {
     }
 
     #[test]
+    fn big_boards() {
+        for i in 4..30 {
+            Board::new(2 * i + 1);
+        }
+    }
+
+    #[test]
     fn new_players() {
         Players::new(vec![0, 1, 2, 3], 6, &Board::new(7));
     }
