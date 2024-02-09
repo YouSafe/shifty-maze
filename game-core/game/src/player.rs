@@ -27,7 +27,7 @@ pub struct Player {
 }
 
 #[ts_interop]
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Position {
     x: usize,
     y: usize,
@@ -69,6 +69,10 @@ impl Players {
             players,
             player_turn,
         }
+    }
+
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Player> {
+        self.players.values_mut()
     }
 
     pub fn remove_player(&mut self, player_id: PlayerId) {
@@ -115,6 +119,10 @@ impl Player {
         }
     }
 
+    pub fn get_position(&self) -> Position {
+        self.position
+    }
+
     pub fn get_next_to_collect(&self) -> Option<Item> {
         self.to_collect.last().copied()
     }
@@ -124,6 +132,7 @@ impl Player {
     }
 
     pub fn set_position(&mut self, position: Position) {
+        assert!(position != self.position);
         self.position = position;
     }
 
