@@ -1,4 +1,5 @@
 #![feature(get_many_mut)]
+
 pub mod board;
 pub mod game;
 pub mod player;
@@ -15,6 +16,13 @@ mod tests {
     #[test]
     fn new_board() {
         Board::new(7);
+    }
+
+    #[test]
+    fn big_boards() {
+        for i in 4..30 {
+            Board::new(2 * i + 1);
+        }
     }
 
     #[test]

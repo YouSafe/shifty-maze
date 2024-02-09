@@ -132,6 +132,7 @@ impl Player {
     }
 
     pub fn set_position(&mut self, position: Position) {
+        assert!(position != self.position);
         self.position = position;
     }
 
