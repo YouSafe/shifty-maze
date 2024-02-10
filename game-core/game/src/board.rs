@@ -142,8 +142,7 @@ impl Board {
                 for i in range.into_iter() {
                     let current = start + i * self.side_length;
                     let next = current + self.side_length;
-                    let [current, next] = self.tiles.get_many_mut([current, next]).unwrap();
-                    mem::swap(current, next);
+                    self.tiles.swap(current, next);
                     insert(i);
                 }
 
