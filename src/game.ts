@@ -10,7 +10,9 @@ import init, {
   type SideIndex,
   type GamePhase,
   type Players,
+  type Game,
 } from "../game-core/pkg";
+import { useLocalStorage } from "./local-storage";
 
 await init();
 
@@ -49,12 +51,14 @@ export function useGame() {
   const board = ref<Board | null>(null);
   const phase = ref<GamePhase>("MoveTiles");
   const hasStarted = computed(() => board.value !== null);
+  const storage = useLocalStorage<Game>();
 
   function reset() {
     players.value.players.clear();
     players.value.player_turn = 0;
     board.value = null;
     phase.value = "MoveTiles";
+    storage.newGame();
   }
 
   const callbacks = new GameCoreCallbacks(
@@ -71,6 +75,13 @@ export function useGame() {
 
   const game = new GameCore(callbacks, 10);
 
+  {
+    const state = storage.load();
+    if (state) {
+      setGame(state);
+    }
+  }
+
   function startGame(settings: GameStartSettings) {
     reset();
     game.start_game(settings);
@@ -82,18 +93,42 @@ export function useGame() {
 
   function shiftTiles(side_index: SideIndex) {
     game.shift_tiles(side_index);
+    saveState();
   }
 
   function removePlayer(id: PlayerId) {
     game.remove_player(id);
+    saveState();
   }
 
   function movePlayer(id: PlayerId, x: number, y: number) {
     game.move_player(id, { x, y });
+    saveState();
+  }
+
+  function getCurrentGame(): Game | null {
+    return game.get_current_game() ?? null;
+  }
+
+  function setGame(g: Game) {
+    game.set_game(g);
+  }
+
+  function saveState() {
+    let current = getCurrentGame();
+    if (current) {
+      storage.save(current);
+    }
+  }
+
+  function undo() {
+    game.undo_move();
+    saveState();
   }
 
   function finishGame() {
     reset();
+    storage.newGame();
   }
 
   const playerHelper = {
