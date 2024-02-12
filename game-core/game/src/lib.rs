@@ -13,23 +13,23 @@ mod tests {
 
     #[test]
     fn new_board() {
-        Board::new(7);
+        Board::new(7).unwrap();
     }
 
     #[test]
     fn big_boards() {
         for i in 4..30 {
-            Board::new(2 * i + 1);
+            Board::new(2 * i + 1).unwrap();
         }
     }
 
     #[test]
     fn new_players() {
-        Players::new(vec![0, 1, 2, 3], 6, &Board::new(7));
+        Players::new(vec![0, 1, 2, 3], 6, &Board::new(7).unwrap()).unwrap();
     }
 
     #[test]
     fn new_game() {
-        Game::new(GameStartSettings::new(vec![0, 1, 2, 3], 7, 6));
+        Game::new(GameStartSettings::new(vec![0, 1, 2, 3], 7, 6)).unwrap();
     }
 }

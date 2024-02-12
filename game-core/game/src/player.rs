@@ -34,13 +34,17 @@ pub struct Position {
 }
 
 pub enum MoveResult<'a> {
-    Won(PlayerId),
     Moved(&'a mut Player),
+    Won(PlayerId),
+    InvalidPlayer,
 }
 
 impl Players {
-    pub fn new(mut ids: Vec<PlayerId>, items_per_player: usize, board: &Board) -> Self {
-        assert!(ids.len() > 1);
+    pub fn new(mut ids: Vec<PlayerId>, items_per_player: usize, board: &Board) -> Option<Self> {
+        if ids.len() < 2 {
+            return None;
+        }
+
         ids.sort();
 
         let player_turn = *ids.first().unwrap();
@@ -65,21 +69,30 @@ impl Players {
 
         assert!(items.is_empty());
 
-        Self {
+        Some(Self {
             players,
             player_turn,
-        }
+        })
     }
 
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Player> {
         self.players.values_mut()
     }
 
-    pub fn remove_player(&mut self, player_id: PlayerId) {
-        self.players.remove(&player_id);
+    pub fn remove_player(&mut self, player_id: PlayerId) -> Result<Option<PlayerId>, ()> {
+        if self.players.remove(&player_id).is_none() {
+            return Err(());
+        }
+
+        if self.players.len() == 1 {
+            return Ok(self.players.first_key_value().map(|(id, _)| *id));
+        }
+
         if player_id == self.player_turn {
             self.next_player_turn();
         }
+
+        return Ok(None);
     }
 
     pub fn next_player_turn(&mut self) {
@@ -87,24 +100,22 @@ impl Players {
             .players
             .range(self.player_turn..)
             .next()
-            .or_else(|| self.players.iter().next())
+            .or_else(|| self.players.first_key_value())
             .map(|(id, _)| *id)
-            .unwrap_or_default();
+            .unwrap();
     }
 
     pub fn move_player(&mut self, player_id: PlayerId, position: Position) -> MoveResult {
-        let player = self.get_mut(player_id);
-        player.set_position(position);
-
-        if player.get_next_to_collect().is_none() && player.is_at_start() {
-            MoveResult::Won(player_id)
+        if let Some(player) = self.players.get_mut(&player_id) {
+            player.set_position(position);
+            if player.get_next_to_collect().is_none() && player.is_at_start() {
+                MoveResult::Won(player_id)
+            } else {
+                MoveResult::Moved(player)
+            }
         } else {
-            MoveResult::Moved(player)
+            MoveResult::InvalidPlayer
         }
-    }
-
-    fn get_mut(&mut self, player_id: PlayerId) -> &mut Player {
-        self.players.get_mut(&player_id).unwrap()
     }
 }
 
@@ -132,13 +143,12 @@ impl Player {
     }
 
     pub fn set_position(&mut self, position: Position) {
-        assert!(position != self.position);
         self.position = position;
     }
 
     pub fn try_collect_item(&mut self, board: &Board) {
         let next = self.get_next_to_collect();
-        if next.is_some() && next == board.get_item(self.position) {
+        if next.is_some() && next == board[self.position].get_item() {
             self.collected.push(self.to_collect.pop().unwrap());
         }
     }
