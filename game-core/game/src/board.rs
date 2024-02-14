@@ -1,4 +1,4 @@
-use std::{collections::HashMap, iter, mem};
+use std::{collections::HashMap, iter, mem, ops::Index};
 
 use rand::seq::{IteratorRandom, SliceRandom};
 use ts_interop::ts_interop;
@@ -16,11 +16,33 @@ pub struct Board {
     free_tile: FreeTile,
 }
 
+pub type PositionMap = HashMap<Position, Position>;
+
+#[derive(Debug)]
+pub enum NewBoardError {
+    TooSmall,
+    EvenLength,
+}
+
+#[derive(Debug)]
+pub enum ShiftTileError {
+    OutOfBounds,
+    UnMovable,
+    UndoMove,
+}
+
 impl Board {
-    pub fn new(side_length: usize) -> Self {
-        assert!(side_length % 2 == 1 && side_length > 2);
+    pub fn new(side_length: usize) -> Result<Self, NewBoardError> {
         use Rotation::*;
         use TileVariant::*;
+
+        if side_length < 3 {
+            return Err(NewBoardError::TooSmall);
+        }
+
+        if side_length % 2 == 0 {
+            return Err(NewBoardError::EvenLength);
+        }
 
         let rotations = [Ninety, TwoSeventy, Zero, OneEighty];
 
@@ -82,11 +104,11 @@ impl Board {
         };
         let free_tile = FreeTile::new(Tile::new(side_length.pow(2), free_tile, Zero, item));
 
-        Self {
+        Ok(Self {
             tiles,
             side_length,
             free_tile,
-        }
+        })
     }
 
     pub fn get_side_length(&self) -> usize {
@@ -97,26 +119,40 @@ impl Board {
         calculate_number_of_items(self.side_length)
     }
 
-    pub fn get_item(&self, position: Position) -> Option<Item> {
-        self.get(position).get_item()
+    pub fn get_tile(&self, position: Position) -> Option<&Tile> {
+        let x = position.get_x();
+        let y = position.get_y();
+        if x >= self.side_length || y >= self.side_length {
+            return None;
+        }
+        self.tiles.get(x * self.side_length + y)
     }
 
     pub fn rotate_free_tile(&mut self, rotation: Rotation) {
         self.free_tile.set_rotation(rotation);
     }
 
-    pub fn shift_tiles(&mut self, side_index: SideIndex) -> HashMap<Position, Position> {
-        assert!(side_index.get_index() % 2 == 1);
-        assert!(side_index.get_index() < self.side_length);
+    pub fn shift_tiles(&mut self, side_index: SideIndex) -> Result<PositionMap, ShiftTileError> {
         use Side::*;
+        let index = side_index.get_index();
+
+        if index >= self.side_length {
+            return Err(ShiftTileError::OutOfBounds);
+        }
+
+        if index % 2 == 0 {
+            return Err(ShiftTileError::UnMovable);
+        }
+
+        if self.free_tile.get_side_index() == Some(side_index) {
+            return Err(ShiftTileError::UndoMove);
+        }
 
         let to_next = |r: usize| (r + 1) % self.side_length;
         let to_last = |r: usize| r.checked_sub(1).unwrap_or(self.side_length - 1);
 
         let (last, map) = match side_index.get_side() {
             side @ (Top | Bottom) => {
-                let start = side_index.get_index();
-
                 let mut range = 0..self.side_length - 1;
                 let mut rev = range.clone().rev();
 
@@ -125,22 +161,18 @@ impl Board {
                         (
                             &mut range,
                             &to_last,
-                            start + self.tiles.len() - self.side_length,
+                            index + self.tiles.len() - self.side_length,
                         )
                     } else {
-                        (&mut rev, &to_next, start)
+                        (&mut rev, &to_next, index)
                     };
 
                 let mut map = HashMap::new();
-                let mut insert = |col| {
-                    map.insert(
-                        Position::new(side_index.get_index(), col),
-                        Position::new(side_index.get_index(), to_fn(col)),
-                    )
-                };
+                let mut insert =
+                    |col| map.insert(Position::new(index, col), Position::new(index, to_fn(col)));
 
                 for i in range.into_iter() {
-                    let current = start + i * self.side_length;
+                    let current = index + i * self.side_length;
                     let next = current + self.side_length;
                     self.tiles.swap(current, next);
                     insert(i);
@@ -150,7 +182,7 @@ impl Board {
                 (last, map)
             }
             side @ (Right | Left) => {
-                let start = side_index.get_index() * self.side_length;
+                let start = index * self.side_length;
                 let end = start + self.side_length - 1;
                 let row = &mut self.tiles[start..=end];
 
@@ -165,12 +197,7 @@ impl Board {
                 (
                     last,
                     (0..self.side_length)
-                        .map(|row| {
-                            (
-                                Position::new(row, side_index.get_index()),
-                                Position::new(to_fn(row), side_index.get_index()),
-                            )
-                        })
+                        .map(|row| (Position::new(row, index), Position::new(to_fn(row), index)))
                         .collect(),
                 )
             }
@@ -179,11 +206,15 @@ impl Board {
         mem::swap(&mut self.tiles[last], self.free_tile.tile_mut());
         self.free_tile.set_side_index(side_index.shift());
 
-        map
+        Ok(map)
     }
+}
 
-    fn get(&self, position: Position) -> &Tile {
-        &self.tiles[position.get_x() * self.side_length + position.get_y()]
+impl Index<Position> for Board {
+    type Output = Tile;
+
+    fn index(&self, index: Position) -> &Self::Output {
+        self.get_tile(index).unwrap()
     }
 }
 
