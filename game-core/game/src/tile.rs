@@ -108,6 +108,10 @@ impl FreeTile {
     pub fn tile_mut(&mut self) -> &mut Tile {
         &mut self.tile
     }
+
+    pub fn set_side_index(&mut self, side_index: SideIndex) {
+        self.side_with_index = Some(side_index);
+    }
 }
 
 impl SideIndex {
@@ -117,5 +121,19 @@ impl SideIndex {
 
     pub fn get_index(&self) -> usize {
         self.index
+    }
+
+    pub fn shift(&self) -> Self {
+        let side = match self.side {
+            Side::Top => Side::Bottom,
+            Side::Right => Side::Left,
+            Side::Bottom => Side::Top,
+            Side::Left => Side::Right,
+        };
+
+        Self {
+            side,
+            index: self.index,
+        }
     }
 }

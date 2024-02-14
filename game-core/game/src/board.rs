@@ -177,6 +177,7 @@ impl Board {
         };
 
         mem::swap(&mut self.tiles[last], self.free_tile.tile_mut());
+        self.free_tile.set_side_index(side_index.shift());
 
         map
     }
