@@ -12,6 +12,7 @@ pub struct Game {
     board: Board,
     players: Players,
     phase: GamePhase,
+    winner: Option<PlayerId>,
 }
 
 #[ts_interop]
@@ -37,6 +38,7 @@ impl Game {
             board,
             players,
             phase: GamePhase::MoveTiles,
+            winner: None,
         }
     }
 
@@ -53,10 +55,12 @@ impl Game {
     }
 
     pub fn rotate_free_tile(&mut self, rotation: Rotation) {
+        assert!(self.winner.is_none());
         self.board.rotate_free_tile(rotation);
     }
 
     pub fn shift_tiles(&mut self, side_index: SideIndex) {
+        assert!(self.winner.is_none());
         assert!(self.phase == GamePhase::MoveTiles);
         let changes = self.board.shift_tiles(side_index);
         for player in self.players.iter_mut() {
@@ -68,21 +72,25 @@ impl Game {
     }
 
     pub fn remove_player(&mut self, player_id: PlayerId) {
+        assert!(self.winner.is_none());
         self.players.remove_player(player_id);
     }
 
     pub fn move_player(&mut self, player_id: PlayerId, position: Position) -> Option<PlayerId> {
+        assert!(self.winner.is_none());
         assert!(self.phase == GamePhase::MovePlayer);
 
         // TODO: check validity
         match self.players.move_player(player_id, position) {
-            MoveResult::Won(id) => return Some(id),
-            MoveResult::Moved(player) => player.try_collect_item(&self.board),
+            MoveResult::Won(id) => self.winner = Some(id),
+            MoveResult::Moved(player) => {
+                player.try_collect_item(&self.board);
+                self.players.next_player_turn();
+            }
         }
 
-        self.players.next_player_turn();
         self.phase = GamePhase::MoveTiles;
-        None
+        self.winner
     }
 
     pub fn into_parts(self) -> (Board, Players, GamePhase) {
