@@ -98,7 +98,7 @@ impl Players {
     pub fn next_player_turn(&mut self) {
         self.player_turn = self
             .players
-            .range(self.player_turn..)
+            .range(self.player_turn + 1..)
             .next()
             .or_else(|| self.players.first_key_value())
             .map(|(id, _)| *id)
