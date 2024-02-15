@@ -98,7 +98,7 @@ impl Players {
     pub fn next_player_turn(&mut self) {
         self.player_turn = self
             .players
-            .range((self.player_turn + 1)..)
+            .range(self.player_turn + 1..)
             .next()
             .or_else(|| self.players.first_key_value())
             .map(|(id, _)| *id)
@@ -171,9 +171,9 @@ impl Position {
 fn get_start_position(index: usize, side_length: usize) -> Position {
     match index % 4 {
         0 => Position::new(0, 0),
-        1 => Position::new(0, side_length - 1),
+        1 => Position::new(side_length - 1, 0),
         2 => Position::new(side_length - 1, side_length - 1),
-        _ => Position::new(side_length - 1, 0),
+        _ => Position::new(0, side_length - 1),
     }
 }
 
