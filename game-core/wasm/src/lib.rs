@@ -9,10 +9,17 @@ use game::{
 use log::Level;
 use wasm_bindgen::prelude::wasm_bindgen;
 
-#[wasm_bindgen(start)]
-fn main() {
-    console_error_panic_hook::set_once();
-    let _ = console_log::init_with_level(Level::Debug);
+type ActionResult = Result<Game, String>;
+
+#[wasm_bindgen]
+extern "C" {
+    pub type Observer;
+
+    #[wasm_bindgen(method)]
+    fn next(this: &Observer, game: Game);
+
+    #[wasm_bindgen(method)]
+    fn error(this: &Observer, error: String);
 }
 
 #[wasm_bindgen]
@@ -20,7 +27,26 @@ pub struct GameCore {
     history: VecDeque<Game>,
 }
 
-pub type ActionResult = Result<Game, String>;
+#[wasm_bindgen]
+pub struct Observable {
+    result: ActionResult,
+}
+
+impl From<Result<Game, String>> for Observable {
+    fn from(result: Result<Game, String>) -> Self {
+        Self { result }
+    }
+}
+
+#[wasm_bindgen]
+impl Observable {
+    pub fn subscribe(self, observer: Observer) {
+        match self.result {
+            Ok(value) => observer.next(value),
+            Err(err) => observer.error(err),
+        };
+    }
+}
 
 impl GameCore {
     fn do_action(&mut self, action: impl FnOnce(&mut Game) -> Result<(), String>) -> ActionResult {
@@ -36,6 +62,13 @@ impl GameCore {
         } else {
             Err("Cannot complete action: Game not started".into())
         }
+    }
+
+    fn do_action_observable(
+        &mut self,
+        action: impl FnOnce(&mut Game) -> Result<(), String>,
+    ) -> Observable {
+        self.do_action(action).into()
     }
 }
 
@@ -53,7 +86,7 @@ impl GameCore {
         self.history.push_back(game);
     }
 
-    pub fn start_game(&mut self, settings: GameStartSettings) -> ActionResult {
+    pub fn start_game(&mut self, settings: GameStartSettings) -> Observable {
         Game::new(settings)
             .map_err(|err| {
                 match err {
@@ -71,10 +104,11 @@ impl GameCore {
                 self.set_game(game.clone());
                 game
             })
+            .into()
     }
 
-    pub fn rotate_free_tile(&mut self, rotation: Rotation) -> ActionResult {
-        self.do_action(|game| {
+    pub fn rotate_free_tile(&mut self, rotation: Rotation) -> Observable {
+        self.do_action_observable(|game| {
             if game.rotate_free_tile(rotation) {
                 Ok(())
             } else {
@@ -83,8 +117,8 @@ impl GameCore {
         })
     }
 
-    pub fn shift_tiles(&mut self, side_index: SideIndex) -> ActionResult {
-        self.do_action(|game| {
+    pub fn shift_tiles(&mut self, side_index: SideIndex) -> Observable {
+        self.do_action_observable(|game| {
             game.shift_tiles(side_index).map_err(|err| {
                 match err {
                     GameError::GameOver => "Cannot shift tiles: Game has ended",
@@ -106,8 +140,8 @@ impl GameCore {
         })
     }
 
-    pub fn remove_player(&mut self, player_id: PlayerId) -> ActionResult {
-        self.do_action(|game| {
+    pub fn remove_player(&mut self, player_id: PlayerId) -> Observable {
+        self.do_action_observable(|game| {
             game.remove_player(player_id).map_err(|err| {
                 match err {
                     GameError::GameOver => "Cannot remove player: Game has ended",
@@ -118,8 +152,8 @@ impl GameCore {
         })
     }
 
-    pub fn move_player(&mut self, player_id: PlayerId, position: Position) -> ActionResult {
-        self.do_action(|game| {
+    pub fn move_player(&mut self, player_id: PlayerId, position: Position) -> Observable {
+        self.do_action_observable(|game| {
             game.move_player(player_id, position).map_err(|err| {
                 match err {
                     GameError::GameOver => "Cannot move player: Game has ended",
@@ -136,12 +170,19 @@ impl GameCore {
         })
     }
 
-    pub fn undo_move(&mut self) -> ActionResult {
+    pub fn undo_move(&mut self) -> Observable {
         if self.history.len() > 1 {
             self.history.pop_back();
             Ok(self.history.back().cloned().unwrap())
         } else {
             Err("Cannot undo move: Last state in history".into())
         }
+        .into()
     }
+}
+
+#[wasm_bindgen(start)]
+fn main() {
+    console_error_panic_hook::set_once();
+    let _ = console_log::init_with_level(Level::Debug);
 }
