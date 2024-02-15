@@ -283,19 +283,19 @@ function isTileArrowDisabled(side_index: SideIndex) {
           <template v-else>
             <div class="tiles-wrapper">
               <!-- Vue.js v-for is freaking cursed and counts like Lua -->
-              <div
-                v-for="id in maxTileId"
-                :key="id - 1"
-                class="tile"
-                :style="tileStyle(id - 1)"
-              >
-                <GameTile
+              <template v-for="id in maxTileId" :key="id - 1">
+                <div
                   v-if="tilesMap.has(id - 1)"
-                  :tile="tilesMap.get(id - 1)?.tile ?? null"
-                  :searching-for="props.activePlayerItem"
-                  @click="() => tryMovePlayer(id - 1)"
-                />
-              </div>
+                  class="tile"
+                  :style="tileStyle(id - 1)"
+                >
+                  <GameTile
+                    :tile="tilesMap.get(id - 1)?.tile ?? null"
+                    :searching-for="props.activePlayerItem"
+                    @click="() => tryMovePlayer(id - 1)"
+                  />
+                </div>
+              </template>
             </div>
             <div class="tiles-wrapper">
               <div
