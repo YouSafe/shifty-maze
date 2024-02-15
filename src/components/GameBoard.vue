@@ -149,15 +149,15 @@ const startPositionPlayersMap = computed(() =>
 );
 
 const playerRenderOffsets = [
-  { x: -1, y: -1 },
-  { x: 0, y: -1 },
-  { x: 1, y: -1 },
-  { x: -1, y: 0 },
+  { x: 0.5, y: -1 },
+  { x: -1, y: -0.5 },
+  { x: 1, y: -0.5 },
+  { x: -0.5, y: -1 },
   //
-  { x: -1, y: 0 },
-  { x: -1, y: 1 },
-  { x: 0, y: 1 },
-  { x: 1, y: 1 },
+  { x: -1, y: 0.5 },
+  { x: 0.5, y: 1 },
+  { x: -0.5, y: 1 },
+  { x: 1, y: 0.5 },
 ];
 
 function playerStyle(id: PlayerId) {
@@ -184,6 +184,18 @@ function playerStyle(id: PlayerId) {
   };
 }
 
+const startPositionRenderOffsets = [
+  { x: 0, y: -1 },
+  { x: -1, y: 0 },
+  { x: 1, y: 0 },
+  { x: 0, y: -1 },
+  //
+  { x: -1, y: 0 },
+  { x: 0, y: 1 },
+  { x: 0, y: 1 },
+  { x: 1, y: 0 },
+];
+
 function startCircleStyle(id: PlayerId) {
   const board = props.board;
   const player = props.players.get(id) ?? null;
@@ -192,14 +204,10 @@ function startCircleStyle(id: PlayerId) {
       display: "none",
     };
   }
-  const hasMultiplePlayers =
-    (startPositionPlayersMap.value.get(positionToMapKey(player.start_position))
-      ?.length ?? 0) > 1;
-  const transform = hasMultiplePlayers
-    ? `scale(0.9) translate(${30 * (playerRenderOffsets[id]?.x ?? 0)}%, ${
-        30 * (playerRenderOffsets[id]?.y ?? 0)
-      }%)`
-    : "";
+
+  const transform = `translate(${
+    30 * (startPositionRenderOffsets[id]?.x ?? 0)
+  }%, ${30 * (startPositionRenderOffsets[id]?.y ?? 0)}%)`;
   return {
     top: (player.start_position.y / board.side_length) * 100 + "%",
     left: (player.start_position.x / board.side_length) * 100 + "%",
@@ -384,8 +392,8 @@ function isTileArrowDisabled(side_index: SideIndex) {
 }
 
 .start-circle div {
-  width: 40%;
-  height: 40%;
+  width: 30%;
+  height: 30%;
   border-radius: 50%;
 }
 
