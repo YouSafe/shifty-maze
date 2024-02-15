@@ -1,4 +1,5 @@
 export const Items = [
+  "Invalid Item",
   "🐈",
   "🐈‍⬛",
   "😺",

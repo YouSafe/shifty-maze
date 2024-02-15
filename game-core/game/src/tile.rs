@@ -42,7 +42,7 @@ pub enum Rotation {
 
 #[ts_interop]
 #[repr(transparent)]
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct Item(#[cfg_attr(feature = "wasm", tsify(type = "number"))] NonZeroUsize);
 
 #[ts_interop]
