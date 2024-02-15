@@ -35,17 +35,27 @@ function close() {
 </script>
 
 <template open>
-  <n-modal :show="show" @update:show="(v) => {
-    if (!v) close();
-    else show = v;
-  }
-    " preset="card" title="Game Settings" :bordered="false" size="huge" :segmented="{
-    content: 'soft',
-    footer: 'soft',
-  }" :style="{
-  width: '80%',
-  maxWidth: '600px',
-}">
+  <n-modal
+    :show="show"
+    @update:show="
+      (v) => {
+        if (!v) close();
+        else show = v;
+      }
+    "
+    preset="card"
+    title="Game Settings"
+    :bordered="false"
+    size="huge"
+    :segmented="{
+      content: 'soft',
+      footer: 'soft',
+    }"
+    :style="{
+      width: '80%',
+      maxWidth: '600px',
+    }"
+  >
     <p>Undo move</p>
     <NButton :disabled="!props.hasGameStarted" round @click="undo()">
       ⟲ Undo

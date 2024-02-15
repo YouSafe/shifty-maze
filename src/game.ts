@@ -1,79 +1,37 @@
 import { computed, ref } from "vue";
 import init, {
   GameCore,
-  type Board,
   type GameStartSettings,
   type Item,
-  type Player,
   type PlayerId,
   type Rotation,
   type SideIndex,
-  type GamePhase,
-  type Players,
   type Game,
 } from "../game-core/pkg";
 import { useLocalStorage } from "./local-storage";
 
 await init();
 
-class GameCoreCallbacks {
-  constructor(
-    public boardCallback: (board: Board) => void,
-    public playersCallback: (players: Players) => void,
-    public phaseCallback: (phase: GamePhase) => void,
-  ) { }
-
-  update_board(board: Board) {
-    this.boardCallback(board);
-  }
-
-  update_players(players: Players) {
-    this.playersCallback(players);
-  }
-
-  update_phase(phase: GamePhase) {
-    this.phaseCallback(phase);
-  }
-}
-
 export type PlayerMode = "local" | "online";
 
 export function DefaultGameStartSettings(): GameStartSettings {
   return {
-    items_per_player: 6,
-    side_length: 7,
     players: [],
+    side_length: 7,
+    items_per_player: 6,
   };
 }
 
 export function useGame() {
-  const players = ref<Players>({ players: new Map<PlayerId, Player>(), player_turn: 0 });
-  const board = ref<Board | null>(null);
-  const phase = ref<GamePhase>("MoveTiles");
-  const hasStarted = computed(() => board.value !== null);
+  const game = ref<Game | null>(null);
   const storage = useLocalStorage<Game>();
 
   function reset() {
-    players.value.players.clear();
-    players.value.player_turn = 0;
-    board.value = null;
-    phase.value = "MoveTiles";
+    game.value = null;
     storage.newGame();
   }
 
-  const callbacks = new GameCoreCallbacks(
-    (v) => {
-      board.value = v;
-    },
-    (v) => {
-      players.value = v;
-    },
-    (v) => {
-      phase.value = v;
-    }
-  );
-
-  const game = new GameCore(callbacks, 10);
+  const core = new GameCore(10);
 
   {
     const state = storage.load();
@@ -82,48 +40,50 @@ export function useGame() {
     }
   }
 
+  const observer = {
+    next(g: Game) {
+      game.value = g;
+      saveState();
+    },
+    error(err: string) {
+      alert(err);
+    },
+  };
+
   function startGame(settings: GameStartSettings) {
     reset();
-    game.start_game(settings);
+    core.start_game(settings).subscribe(observer);
   }
 
   function rotate_free_tile(rotation: Rotation) {
-    game.rotate_free_tile(rotation);
+    core.rotate_free_tile(rotation).subscribe(observer);
   }
 
   function shiftTiles(side_index: SideIndex) {
-    game.shift_tiles(side_index);
-    saveState();
+    core.shift_tiles(side_index).subscribe(observer);
   }
 
   function removePlayer(id: PlayerId) {
-    game.remove_player(id);
-    saveState();
+    core.remove_player(id).subscribe(observer);
   }
 
   function movePlayer(id: PlayerId, x: number, y: number) {
-    game.move_player(id, { x, y });
-    saveState();
-  }
-
-  function getCurrentGame(): Game | null {
-    return game.get_current_game() ?? null;
+    core.move_player(id, { x, y }).subscribe(observer);
   }
 
   function setGame(g: Game) {
-    game.set_game(g);
+    game.value = g;
+    core.set_game(g);
   }
 
   function saveState() {
-    let current = getCurrentGame();
-    if (current) {
-      storage.save(current);
+    if (game.value) {
+      storage.save(game.value);
     }
   }
 
-  function undo() {
-    game.undo_move();
-    saveState();
+  function undoMove() {
+    core.undo_move().subscribe(observer);
   }
 
   function finishGame() {
@@ -133,40 +93,42 @@ export function useGame() {
 
   const playerHelper = {
     hasPlayer: (id: PlayerId) => {
-      return players.value.players.has(id);
+      return game.value?.players.players.has(id) ?? false;
     },
     itemCount: (id: PlayerId) => {
-      const player = players.value.players.get(id);
+      const player = game.value?.players.players.get(id);
       if (!player) return 0;
       return player.to_collect.length;
     },
     currentItem: (id: PlayerId): Item | null => {
-      const player = players.value.players.get(id);
+      const player = game.value?.players.players.get(id);
       if (!player) return 0;
       return player.to_collect.at(-1) ?? null;
     },
   };
 
   return {
-    hasStarted: computed(() => hasStarted.value),
-    playersMap: computed(() => players.value.players),
+    hasStarted: computed(() => game.value !== null),
+    playersMap: computed(() => game.value?.players.players ?? new Map()),
     playerHelper,
-    activePlayer: computed(() => players.value.player_turn),
+    activePlayer: computed(() => game.value?.players.player_turn ?? null),
     activePlayerItem: computed(() => {
-      if (players.value.player_turn) {
-        return playerHelper.currentItem(players.value.player_turn);
+      let turn = game.value?.players.player_turn;
+      if (turn !== undefined) {
+        return playerHelper.currentItem(turn);
       } else {
         return 0;
       }
     }),
-    board: computed(() => board.value),
-    phase: computed(() => phase.value),
+    board: computed(() => game.value?.board ?? null),
+    phase: computed(() => game.value?.phase ?? "MoveTiles"),
 
     startGame,
     rotate_free_tile,
     shiftTiles,
     removePlayer,
     movePlayer,
+    undoMove,
     finishGame,
   };
 }

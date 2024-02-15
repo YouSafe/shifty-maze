@@ -17,10 +17,13 @@ const playerColor = computed(() => PlayerColors[props.player.id]);
 
 <template>
   <div class="tile" :class="{ active: props.isActive }">
-    <div class="indicator-circle" :style="{
-      backgroundColor: playerColor,
-      opacity: props.isActive ? 0.8 : 0.4,
-    }"></div>
+    <div
+      class="indicator-circle"
+      :style="{
+        backgroundColor: playerColor,
+        opacity: props.isActive ? 0.8 : 0.4,
+      }"
+    ></div>
     <img :src="dungeonTile.img" alt="Player" />
   </div>
 </template>

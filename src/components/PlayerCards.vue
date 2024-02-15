@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { getItem } from "../items";
-import { PlayerColors } from "../players";
+import { getItem } from "@/items";
+import { PlayerColors } from "@/players";
 import type { Item, PlayerId, Side } from "game-core/pkg/wasm";
 const props = defineProps<{
   side: Side;
@@ -20,10 +20,13 @@ const item = computed(() => getItem(props.item));
 </script>
 
 <template>
-  <div class="player-cards" :class="{
-    'is-active': props.isActive,
-    horizontal: orientation === 'horizontal',
-  }">
+  <div
+    class="player-cards"
+    :class="{
+      'is-active': props.isActive,
+      horizontal: orientation === 'horizontal',
+    }"
+  >
     <div class="card">
       <div class="card-inner">
         {{ hasPlayer ? props.count : "" }}
@@ -76,16 +79,20 @@ const item = computed(() => getItem(props.item));
   height: calc(100% - 8px);
 
   --blue: rgba(255, 255, 255, 0);
-  background-image: repeating-linear-gradient(45deg,
+  background-image: repeating-linear-gradient(
+      45deg,
       transparent,
       transparent 12px,
       var(--red) 12px,
-      var(--red) 14px),
-    repeating-linear-gradient(-45deg,
+      var(--red) 14px
+    ),
+    repeating-linear-gradient(
+      -45deg,
       transparent,
       transparent 12px,
       var(--red) 12px,
-      var(--red) 14px),
+      var(--red) 14px
+    ),
     linear-gradient(0deg, var(--blue), var(--blue) 100%);
 }
 
@@ -120,7 +127,7 @@ const item = computed(() => getItem(props.item));
   }
 }
 
-.is-active>* {
+.is-active > * {
   animation: pulse 1s infinite;
 }
 </style>
