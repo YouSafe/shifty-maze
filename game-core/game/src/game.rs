@@ -3,7 +3,7 @@ use ts_interop::ts_interop;
 use crate::{
     board::{Board, NewBoardError, ShiftTileError},
     player::{MoveResult, PlayerId, Players, Position},
-    tile::{FreeTile, Rotation, SideIndex},
+    tile::{Rotation, SideIndex},
 };
 
 #[ts_interop]
@@ -12,6 +12,7 @@ pub struct Game {
     board: Board,
     players: Players,
     phase: GamePhase,
+    winner: Option<PlayerId>,
 }
 
 #[ts_interop]
@@ -34,7 +35,10 @@ pub enum NewGameError {
     PlayerError,
 }
 
+pub type ActionResult<E> = Result<(), GameError<E>>;
+
 pub enum GameError<T> {
+    GameOver,
     StateError,
     ActionError(T),
 }
@@ -54,26 +58,24 @@ impl Game {
             board,
             players,
             phase: GamePhase::MoveTiles,
+            winner: None,
         })
     }
 
-    pub fn get_board(&self) -> &Board {
-        &self.board
+    pub fn rotate_free_tile(&mut self, rotation: Rotation) -> bool {
+        if self.winner.is_some() {
+            false
+        } else {
+            self.board.rotate_free_tile(rotation);
+            true
+        }
     }
 
-    pub fn get_players(&self) -> &Players {
-        &self.players
-    }
+    pub fn shift_tiles(&mut self, side_index: SideIndex) -> ActionResult<ShiftTileError> {
+        if self.winner.is_some() {
+            return Err(GameError::GameOver);
+        }
 
-    pub fn get_phase(&self) -> GamePhase {
-        self.phase
-    }
-
-    pub fn rotate_free_tile(&mut self, rotation: Rotation) -> FreeTile {
-        self.board.rotate_free_tile(rotation)
-    }
-
-    pub fn shift_tiles(&mut self, side_index: SideIndex) -> Result<(), GameError<ShiftTileError>> {
         if self.phase != GamePhase::MoveTiles {
             return Err(GameError::StateError);
         }
@@ -89,15 +91,25 @@ impl Game {
         Ok(())
     }
 
-    pub fn remove_player(&mut self, player_id: PlayerId) -> Result<Option<PlayerId>, ()> {
-        self.players.remove_player(player_id)
+    pub fn remove_player(&mut self, player_id: PlayerId) -> ActionResult<()> {
+        if self.winner.is_some() {
+            return Err(GameError::GameOver);
+        }
+
+        self.winner = self.players.remove_player(player_id)?;
+
+        Ok(())
     }
 
     pub fn move_player(
         &mut self,
         player_id: PlayerId,
         position: Position,
-    ) -> Result<Option<PlayerId>, GameError<MovePlayerError>> {
+    ) -> ActionResult<MovePlayerError> {
+        if self.winner.is_some() {
+            return Err(GameError::GameOver);
+        }
+
         if self.phase != GamePhase::MovePlayer {
             return Err(GameError::StateError);
         }
@@ -108,14 +120,16 @@ impl Game {
 
         // TODO: check validity
         match self.players.move_player(player_id, position) {
-            MoveResult::Moved(player) => player.try_collect_item(&self.board),
-            MoveResult::Won(id) => return Ok(Some(id)),
+            MoveResult::Moved(player) => {
+                player.try_collect_item(&self.board);
+                self.players.next_player_turn();
+            }
+            MoveResult::Won(id) => self.winner = Some(id),
             MoveResult::InvalidPlayer => return Err(MovePlayerError::InvalidPlayer.into()),
         }
 
-        self.players.next_player_turn();
         self.phase = GamePhase::MoveTiles;
-        Ok(None)
+        Ok(())
     }
 }
 

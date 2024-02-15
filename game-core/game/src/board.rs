@@ -24,9 +24,11 @@ pub enum NewBoardError {
     EvenLength,
 }
 
+#[derive(Debug)]
 pub enum ShiftTileError {
     OutOfBounds,
     UnMovable,
+    UndoMove,
 }
 
 impl Board {
@@ -143,6 +145,10 @@ impl Board {
             return Err(ShiftTileError::UnMovable);
         }
 
+        if self.free_tile.get_side_index() == Some(side_index) {
+            return Err(ShiftTileError::UndoMove);
+        }
+
         let to_next = |r: usize| (r + 1) % self.side_length;
         let to_last = |r: usize| r.checked_sub(1).unwrap_or(self.side_length - 1);
 
@@ -199,6 +205,7 @@ impl Board {
         };
 
         mem::swap(&mut self.tiles[last], self.free_tile.tile_mut());
+        self.free_tile.set_side_index(side_index.shift());
 
         Ok(map)
     }

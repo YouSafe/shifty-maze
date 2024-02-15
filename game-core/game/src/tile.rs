@@ -54,7 +54,7 @@ pub struct FreeTile {
 
 /// The index always goes from left to right or from top to bottom.
 #[ts_interop]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct SideIndex {
     side: Side,
     index: usize,
@@ -101,6 +101,10 @@ impl FreeTile {
         }
     }
 
+    pub fn get_side_index(&self) -> Option<SideIndex> {
+        self.side_with_index
+    }
+
     pub fn set_rotation(&mut self, rotation: Rotation) {
         self.tile.rotation = rotation;
     }
@@ -108,14 +112,36 @@ impl FreeTile {
     pub fn tile_mut(&mut self) -> &mut Tile {
         &mut self.tile
     }
+
+    pub fn set_side_index(&mut self, side_index: SideIndex) {
+        self.side_with_index = Some(side_index);
+    }
 }
 
 impl SideIndex {
+    pub fn new(side: Side, index: usize) -> Self {
+        Self { side, index }
+    }
+
     pub fn get_side(&self) -> Side {
         self.side
     }
 
     pub fn get_index(&self) -> usize {
         self.index
+    }
+
+    pub fn shift(&self) -> Self {
+        let side = match self.side {
+            Side::Top => Side::Bottom,
+            Side::Right => Side::Left,
+            Side::Bottom => Side::Top,
+            Side::Left => Side::Right,
+        };
+
+        Self {
+            side,
+            index: self.index,
+        }
     }
 }

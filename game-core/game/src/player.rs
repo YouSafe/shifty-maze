@@ -92,7 +92,7 @@ impl Players {
             self.next_player_turn();
         }
 
-        return Ok(None);
+        Ok(None)
     }
 
     pub fn next_player_turn(&mut self) {
