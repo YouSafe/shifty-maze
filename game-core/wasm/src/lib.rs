@@ -1,27 +1,13 @@
 use std::collections::VecDeque;
 
 use game::{
-    board::Board,
-    game::{Game, GamePhase, GameStartSettings},
-    player::{PlayerId, Players, Position},
+    board::{NewBoardError, ShiftTileError},
+    game::{Game, GameError, GameStartSettings, MovePlayerError, NewGameError},
+    player::{PlayerId, Position},
     tile::{Rotation, SideIndex},
 };
 use log::Level;
 use wasm_bindgen::prelude::wasm_bindgen;
-
-#[wasm_bindgen]
-extern "C" {
-    pub type GameCoreCallbacks;
-
-    #[wasm_bindgen(method)]
-    fn update_board(this: &GameCoreCallbacks, board: Board);
-
-    #[wasm_bindgen(method)]
-    fn update_players(this: &GameCoreCallbacks, players: Players);
-
-    #[wasm_bindgen(method)]
-    fn update_phase(this: &GameCoreCallbacks, phase: GamePhase);
-}
 
 #[wasm_bindgen(start)]
 fn main() {
@@ -32,34 +18,23 @@ fn main() {
 #[wasm_bindgen]
 pub struct GameCore {
     history: VecDeque<Game>,
-    callbacks: GameCoreCallbacks,
 }
 
+pub type ActionResult = Result<Game, String>;
+
 impl GameCore {
-    fn update_board(&self, board: Board) {
-        self.callbacks.update_board(board);
-    }
-
-    fn update_players(&self, players: Players) {
-        self.callbacks.update_players(players)
-    }
-
-    fn update_phase(&self, phase: GamePhase) {
-        self.callbacks.update_phase(phase);
-    }
-
-    fn do_action(&mut self, action: impl FnOnce(&mut Game)) -> Option<Game> {
+    fn do_action(&mut self, action: impl FnOnce(&mut Game) -> Result<(), String>) -> ActionResult {
         if let Some(mut current) = self.history.back().cloned() {
-            action(&mut current);
+            action(&mut current)?;
             if self.history.len() < self.history.capacity() {
-                self.history.push_back(current);
+                self.history.push_back(current.clone());
             } else {
                 self.history.rotate_left(1);
-                *self.history.back_mut().unwrap() = current;
+                *self.history.back_mut().unwrap() = current.clone();
             }
-            self.history.back().cloned()
+            Ok(current)
         } else {
-            None
+            Err("Cannot complete action: Game not started".into())
         }
     }
 }
@@ -67,15 +42,10 @@ impl GameCore {
 #[wasm_bindgen]
 impl GameCore {
     #[wasm_bindgen(constructor)]
-    pub fn new(callbacks: GameCoreCallbacks, history_size: usize) -> Self {
+    pub fn new(history_size: usize) -> Self {
         Self {
             history: VecDeque::with_capacity(history_size),
-            callbacks,
         }
-    }
-
-    pub fn get_current_game(&self) -> Option<Game> {
-        self.history.back().cloned()
     }
 
     pub fn set_game(&mut self, game: Game) {
@@ -83,52 +53,95 @@ impl GameCore {
         self.history.push_back(game);
     }
 
-    pub fn start_game(&mut self, settings: GameStartSettings) {
-        let game = Game::new(settings);
-        let (board, players, phase) = game.clone().into_parts();
-        self.update_board(board);
-        self.update_players(players);
-        self.update_phase(phase);
-        self.set_game(game);
+    pub fn start_game(&mut self, settings: GameStartSettings) -> ActionResult {
+        Game::new(settings)
+            .map_err(|err| {
+                match err {
+                    NewGameError::PlayerError => "Cannot start game: Not enough players",
+                    NewGameError::BoardError(NewBoardError::TooSmall) => {
+                        "Cannot start game: Side length too small"
+                    }
+                    NewGameError::BoardError(NewBoardError::EvenLength) => {
+                        "Cannot start game: Invalid to side length"
+                    }
+                }
+                .into()
+            })
+            .map(|game| {
+                self.set_game(game.clone());
+                game
+            })
     }
 
-    pub fn rotate_free_tile(&mut self, rotation: Rotation) {
-        if let Some(game) = self.do_action(|game| game.rotate_free_tile(rotation)) {
-            self.update_board(game.into_parts().0);
-        }
+    pub fn rotate_free_tile(&mut self, rotation: Rotation) -> ActionResult {
+        self.do_action(|game| {
+            if game.rotate_free_tile(rotation) {
+                Ok(())
+            } else {
+                Err("Cannot rotate tile: Game has ended".into())
+            }
+        })
     }
 
-    pub fn shift_tiles(&mut self, side_index: SideIndex) {
-        if let Some(game) = self.do_action(|game| game.shift_tiles(side_index)) {
-            let (board, players, phase) = game.into_parts();
-            self.update_board(board);
-            self.update_players(players);
-            self.update_phase(phase);
-        }
+    pub fn shift_tiles(&mut self, side_index: SideIndex) -> ActionResult {
+        self.do_action(|game| {
+            game.shift_tiles(side_index).map_err(|err| {
+                match err {
+                    GameError::GameOver => "Cannot shift tiles: Game has ended",
+                    GameError::StateError => {
+                        "Cannot shift tiles: Player has to end turn by moving figure"
+                    }
+                    GameError::ActionError(ShiftTileError::OutOfBounds) => {
+                        "Cannot shift tiles: No such row/column exists"
+                    }
+                    GameError::ActionError(ShiftTileError::UnMovable) => {
+                        "Cannot shift tiles: Specified row/column is not movable"
+                    }
+                    GameError::ActionError(ShiftTileError::UndoMove) => {
+                        "Cannot shift tiles: Tile cannot be pushed back in where it was previously pushed out"
+                    }
+                }
+                .into()
+            })
+        })
     }
 
-    pub fn remove_player(&mut self, player_id: PlayerId) {
-        if let Some(game) = self.do_action(|game| game.remove_player(player_id)) {
-            self.update_players(game.into_parts().1);
-        }
+    pub fn remove_player(&mut self, player_id: PlayerId) -> ActionResult {
+        self.do_action(|game| {
+            game.remove_player(player_id).map_err(|err| {
+                match err {
+                    GameError::GameOver => "Cannot remove player: Game has ended",
+                    _ => "Cannot remove player: No such player exists",
+                }
+                .into()
+            })
+        })
     }
 
-    pub fn move_player(&mut self, player_id: PlayerId, position: Position) -> Option<PlayerId> {
-        let mut winner = None;
-        if let Some(game) = self.do_action(|game| winner = game.move_player(player_id, position)) {
-            let (_, players, phase) = game.into_parts();
-            self.update_players(players);
-            self.update_phase(phase);
-        }
-        winner
+    pub fn move_player(&mut self, player_id: PlayerId, position: Position) -> ActionResult {
+        self.do_action(|game| {
+            game.move_player(player_id, position).map_err(|err| {
+                match err {
+                    GameError::GameOver => "Cannot move player: Game has ended",
+                    GameError::StateError => "Cannot move player: Player has to shift tiles first",
+                    GameError::ActionError(MovePlayerError::InvalidPosition) => {
+                        "Cannot move player: Position is not on the board"
+                    }
+                    GameError::ActionError(MovePlayerError::InvalidPlayer) => {
+                        "Cannot move player: No such player exists"
+                    }
+                }
+                .into()
+            })
+        })
     }
 
-    pub fn undo_move(&mut self) {
-        self.history.pop_back();
-        if let Some(game) = self.history.back() {
-            self.update_board(game.get_board().clone());
-            self.update_players(game.get_players().clone());
-            self.update_phase(game.get_phase());
+    pub fn undo_move(&mut self) -> ActionResult {
+        if self.history.len() > 1 {
+            self.history.pop_back();
+            Ok(self.history.back().cloned().unwrap())
+        } else {
+            Err("Cannot undo move: Last state in history".into())
         }
     }
 }

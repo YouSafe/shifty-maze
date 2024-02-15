@@ -1,7 +1,7 @@
 use ts_interop::ts_interop;
 
 use crate::{
-    board::Board,
+    board::{Board, NewBoardError, ShiftTileError},
     player::{MoveResult, PlayerId, Players, Position},
     tile::{Rotation, SideIndex},
 };
@@ -29,72 +29,107 @@ pub struct GameStartSettings {
     items_per_player: usize,
 }
 
-impl Game {
-    pub fn new(settings: GameStartSettings) -> Self {
-        let board = Board::new(settings.side_length);
-        let players = Players::new(settings.players, settings.items_per_player, &board);
+#[derive(Debug)]
+pub enum NewGameError {
+    BoardError(NewBoardError),
+    PlayerError,
+}
 
-        Self {
+pub type ActionResult<E> = Result<(), GameError<E>>;
+
+pub enum GameError<T> {
+    GameOver,
+    StateError,
+    ActionError(T),
+}
+
+pub enum MovePlayerError {
+    InvalidPosition,
+    InvalidPlayer,
+}
+
+impl Game {
+    pub fn new(settings: GameStartSettings) -> Result<Self, NewGameError> {
+        let board = Board::new(settings.side_length)?;
+        let players = Players::new(settings.players, settings.items_per_player, &board)
+            .ok_or(NewGameError::PlayerError)?;
+
+        Ok(Self {
             board,
             players,
             phase: GamePhase::MoveTiles,
             winner: None,
+        })
+    }
+
+    pub fn rotate_free_tile(&mut self, rotation: Rotation) -> bool {
+        if self.winner.is_some() {
+            false
+        } else {
+            self.board.rotate_free_tile(rotation);
+            true
         }
     }
 
-    pub fn get_board(&self) -> &Board {
-        &self.board
-    }
+    pub fn shift_tiles(&mut self, side_index: SideIndex) -> ActionResult<ShiftTileError> {
+        if self.winner.is_some() {
+            return Err(GameError::GameOver);
+        }
 
-    pub fn get_players(&self) -> &Players {
-        &self.players
-    }
+        if self.phase != GamePhase::MoveTiles {
+            return Err(GameError::StateError);
+        }
 
-    pub fn get_phase(&self) -> GamePhase {
-        self.phase
-    }
-
-    pub fn rotate_free_tile(&mut self, rotation: Rotation) {
-        assert!(self.winner.is_none());
-        self.board.rotate_free_tile(rotation);
-    }
-
-    pub fn shift_tiles(&mut self, side_index: SideIndex) {
-        assert!(self.winner.is_none());
-        assert!(self.phase == GamePhase::MoveTiles);
-        let changes = self.board.shift_tiles(side_index);
+        let changes = self.board.shift_tiles(side_index)?;
         for player in self.players.iter_mut() {
             if let Some(new_pos) = changes.get(&player.get_position()) {
                 player.set_position(*new_pos);
             }
         }
         self.phase = GamePhase::MovePlayer;
+
+        Ok(())
     }
 
-    pub fn remove_player(&mut self, player_id: PlayerId) {
-        assert!(self.winner.is_none());
-        self.players.remove_player(player_id);
+    pub fn remove_player(&mut self, player_id: PlayerId) -> ActionResult<()> {
+        if self.winner.is_some() {
+            return Err(GameError::GameOver);
+        }
+
+        self.winner = self.players.remove_player(player_id)?;
+
+        Ok(())
     }
 
-    pub fn move_player(&mut self, player_id: PlayerId, position: Position) -> Option<PlayerId> {
-        assert!(self.winner.is_none());
-        assert!(self.phase == GamePhase::MovePlayer);
+    pub fn move_player(
+        &mut self,
+        player_id: PlayerId,
+        position: Position,
+    ) -> ActionResult<MovePlayerError> {
+        if self.winner.is_some() {
+            return Err(GameError::GameOver);
+        }
+
+        if self.phase != GamePhase::MovePlayer {
+            return Err(GameError::StateError);
+        }
+
+        if self.board.get_tile(position).is_none() {
+            return Err(MovePlayerError::InvalidPosition.into());
+        }
 
         // TODO: check validity
         match self.players.move_player(player_id, position) {
-            MoveResult::Won(id) => self.winner = Some(id),
             MoveResult::Moved(player) => {
                 player.try_collect_item(&self.board);
                 self.players.next_player_turn();
             }
+            MoveResult::Won(id) => self.winner = Some(id),
+            MoveResult::InvalidPlayer => return Err(MovePlayerError::InvalidPlayer.into()),
         }
 
         self.phase = GamePhase::MoveTiles;
-        self.winner
-    }
-
-    pub fn into_parts(self) -> (Board, Players, GamePhase) {
-        (self.board, self.players, self.phase)
+        Ok(())
     }
 }
 
@@ -105,5 +140,17 @@ impl GameStartSettings {
             side_length,
             items_per_player,
         }
+    }
+}
+
+impl From<NewBoardError> for NewGameError {
+    fn from(value: NewBoardError) -> Self {
+        NewGameError::BoardError(value)
+    }
+}
+
+impl<E> From<E> for GameError<E> {
+    fn from(value: E) -> Self {
+        GameError::ActionError(value)
     }
 }
