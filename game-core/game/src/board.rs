@@ -1,4 +1,8 @@
-use std::{collections::HashMap, iter, mem, ops::Index};
+use std::{
+    collections::{HashMap, HashSet},
+    iter, mem,
+    ops::Index,
+};
 
 use rand::seq::{IteratorRandom, SliceRandom};
 use ts_interop::ts_interop;
@@ -128,6 +132,29 @@ impl Board {
         self.tiles.get(x + y * self.side_length)
     }
 
+    pub fn is_reachable(&self, start: Position, goal: Position) -> bool {
+        if start == goal {
+            return true;
+        }
+
+        let mut visited = HashSet::new();
+        let mut to_visit = self.neighbours(start);
+        visited.insert(start);
+
+        while let Some(next) = to_visit.pop() {
+            if next == goal {
+                return true;
+            }
+            for neighbour in self.neighbours(next) {
+                if visited.insert(neighbour) {
+                    to_visit.push(neighbour);
+                }
+            }
+        }
+
+        false
+    }
+
     pub fn rotate_free_tile(&mut self, rotation: Rotation) {
         self.free_tile.set_rotation(rotation);
     }
@@ -207,6 +234,45 @@ impl Board {
         self.free_tile.set_side_index(side_index.shift());
 
         Ok(map)
+    }
+
+    fn neighbours(&self, position: Position) -> Vec<Position> {
+        let mut neighbours = Vec::new();
+
+        for side in self[position].get_connection() {
+            match side {
+                Side::Top => {
+                    if let Some(top) = position.top(&self) {
+                        if self[top].get_connection().contains(&Side::Bottom) {
+                            neighbours.push(top);
+                        }
+                    }
+                }
+                Side::Right => {
+                    if let Some(right) = position.right(&self) {
+                        if self[right].get_connection().contains(&Side::Left) {
+                            neighbours.push(right);
+                        }
+                    }
+                }
+                Side::Bottom => {
+                    if let Some(bottom) = position.bottom(&self) {
+                        if self[bottom].get_connection().contains(&Side::Top) {
+                            neighbours.push(bottom);
+                        }
+                    }
+                }
+                Side::Left => {
+                    if let Some(left) = position.left(&self) {
+                        if self[left].get_connection().contains(&Side::Right) {
+                            neighbours.push(left);
+                        }
+                    }
+                }
+            }
+        }
+
+        neighbours
     }
 }
 

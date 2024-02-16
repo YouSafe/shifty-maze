@@ -57,7 +57,10 @@ mod tests {
     #[test]
     fn move_player() {
         let new_pos = Position::new(0, 0);
-        match new_players().unwrap().move_player(0, new_pos) {
+        match new_players()
+            .unwrap()
+            .move_player(0, new_pos, &new_board().unwrap())
+        {
             MoveResult::Moved(player) => assert!(player.get_position() == new_pos),
             _ => panic!("Wrong result"),
         };
@@ -73,6 +76,6 @@ mod tests {
         let mut game = new_game().unwrap();
         assert!(game.shift_tiles(SideIndex::new(Side::Top, 1)).is_ok());
         assert!(game.remove_player(0).is_ok());
-        assert!(game.move_player(1, Position::new(0, 6)).is_ok());
+        assert!(game.move_player(1, Position::new(6, 0)).is_ok());
     }
 }
