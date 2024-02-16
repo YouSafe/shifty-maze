@@ -13,6 +13,5 @@ tsify =  { version = "0.4", optional = true, default-features = false, features 
 ts-interop = { path = "../ts-interop" }
 wasm-bindgen = { version = "0.2", optional = true }
 
-
 [features]
 wasm = ["dep:wasm-bindgen", "dep:tsify"]

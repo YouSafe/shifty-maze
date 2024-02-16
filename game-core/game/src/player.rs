@@ -108,7 +108,6 @@ impl Players {
     pub fn move_player(&mut self, player_id: PlayerId, position: Position) -> MoveResult {
         if let Some(player) = self.players.get_mut(&player_id) {
             player.set_position(position);
-
             if player.get_next_to_collect().is_none() && player.is_at_start() {
                 MoveResult::Won(player_id)
             } else {

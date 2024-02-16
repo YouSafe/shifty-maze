@@ -13,7 +13,8 @@
     "type-check": "vue-tsc --build --force"
   },
   "dependencies": {
-    "pinia": "^2.1.7",
+    "json-safe-stringify": "^1.0.3",
+    "peerjs": "^1.5.2",
     "vue": "^3.4.15"
   },
   "devDependencies": {
