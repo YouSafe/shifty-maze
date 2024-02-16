@@ -128,9 +128,8 @@ impl Board {
         self.tiles.get(x + y * self.side_length)
     }
 
-    pub fn rotate_free_tile(&mut self, rotation: Rotation) -> FreeTile {
+    pub fn rotate_free_tile(&mut self, rotation: Rotation) {
         self.free_tile.set_rotation(rotation);
-        self.free_tile
     }
 
     pub fn shift_tiles(&mut self, side_index: SideIndex) -> Result<PositionMap, ShiftTileError> {

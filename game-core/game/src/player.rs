@@ -27,7 +27,7 @@ pub struct Player {
 }
 
 #[ts_interop]
-#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Position {
     x: usize,
     y: usize,
@@ -171,9 +171,9 @@ impl Position {
 fn get_start_position(index: usize, side_length: usize) -> Position {
     match index % 4 {
         0 => Position::new(0, 0),
-        1 => Position::new(side_length - 1, 0),
+        1 => Position::new(0, side_length - 1),
         2 => Position::new(side_length - 1, side_length - 1),
-        _ => Position::new(0, side_length - 1),
+        _ => Position::new(side_length - 1, 0),
     }
 }
 
