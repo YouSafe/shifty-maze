@@ -57,8 +57,7 @@ impl Board {
         let mut rng = rand::thread_rng();
         movable_tiles.shuffle(&mut rng);
 
-        let movable_item_indices =
-            (0..movable_tiles.len()).choose_multiple(&mut rng, number_of_items / 2);
+        let movable_item_indices = (0..movable_tiles.len()).choose_multiple(&mut rng, number_of_items / 2);
 
         let mut items: Vec<_> = (1..=number_of_items).map(Item::new).collect();
         items.shuffle(&mut rng);
@@ -83,11 +82,7 @@ impl Board {
                         (TShape, rotations[index], true)
                     }
                     // Movables
-                    _ => (
-                        movable_tiles.pop().unwrap(),
-                        *rotations.choose(&mut rng).unwrap(),
-                        movable_item_indices.contains(&movable_tiles.len()),
-                    ),
+                    _ => (movable_tiles.pop().unwrap(), *rotations.choose(&mut rng).unwrap(), movable_item_indices.contains(&movable_tiles.len())),
                 };
 
                 let item = if add_item { items.pop() } else { None };
@@ -98,18 +93,10 @@ impl Board {
 
         let free_tile = movable_tiles.pop().unwrap();
         assert!(movable_tiles.is_empty());
-        let item = if movable_item_indices.contains(&0) {
-            items.pop()
-        } else {
-            None
-        };
+        let item = if movable_item_indices.contains(&0) { items.pop() } else { None };
         let free_tile = FreeTile::new(Tile::new(side_length.pow(2), free_tile, Zero, item));
 
-        Ok(Self {
-            tiles,
-            side_length,
-            free_tile,
-        })
+        Ok(Self { tiles, side_length, free_tile })
     }
 
     pub fn get_side_length(&self) -> usize {
@@ -180,20 +167,14 @@ impl Board {
                 let mut range = 0..self.side_length - 1;
                 let mut rev = range.clone().rev();
 
-                let (range, to_fn, last): (&mut dyn Iterator<Item = _>, &dyn Fn(usize) -> _, _) =
-                    if side == Bottom {
-                        (
-                            &mut range,
-                            &to_last,
-                            index + self.tiles.len() - self.side_length,
-                        )
-                    } else {
-                        (&mut rev, &to_next, index)
-                    };
+                let (range, to_fn, last): (&mut dyn Iterator<Item = _>, &dyn Fn(usize) -> _, _) = if side == Bottom {
+                    (&mut range, &to_last, index + self.tiles.len() - self.side_length)
+                } else {
+                    (&mut rev, &to_next, index)
+                };
 
                 let mut map = HashMap::new();
-                let mut insert =
-                    |col| map.insert(Position::new(index, col), Position::new(index, to_fn(col)));
+                let mut insert = |col| map.insert(Position::new(index, col), Position::new(index, to_fn(col)));
 
                 for i in range.into_iter() {
                     let current = index + i * self.side_length;

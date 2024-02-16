@@ -51,8 +51,7 @@ pub enum MovePlayerError {
 impl Game {
     pub fn new(settings: GameStartSettings) -> Result<Self, NewGameError> {
         let board = Board::new(settings.side_length)?;
-        let players = Players::new(settings.players, settings.items_per_player, &board)
-            .ok_or(NewGameError::PlayerError)?;
+        let players = Players::new(settings.players, settings.items_per_player, &board).ok_or(NewGameError::PlayerError)?;
 
         Ok(Self {
             board,
@@ -101,11 +100,7 @@ impl Game {
         Ok(())
     }
 
-    pub fn move_player(
-        &mut self,
-        player_id: PlayerId,
-        position: Position,
-    ) -> ActionResult<MovePlayerError> {
+    pub fn move_player(&mut self, player_id: PlayerId, position: Position) -> ActionResult<MovePlayerError> {
         if self.winner.is_some() {
             return Err(GameError::GameOver);
         }

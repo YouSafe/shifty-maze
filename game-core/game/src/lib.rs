@@ -31,10 +31,7 @@ mod tests {
 
     #[test]
     fn shift_tiles() {
-        assert!(new_board()
-            .unwrap()
-            .shift_tiles(SideIndex::new(Side::Top, 1))
-            .is_ok());
+        assert!(new_board().unwrap().shift_tiles(SideIndex::new(Side::Top, 1)).is_ok());
     }
 
     #[test]
@@ -57,10 +54,7 @@ mod tests {
     #[test]
     fn move_player() {
         let new_pos = Position::new(0, 0);
-        match new_players()
-            .unwrap()
-            .move_player(0, new_pos, &new_board().unwrap())
-        {
+        match new_players().unwrap().move_player(0, new_pos, &new_board().unwrap()) {
             MoveResult::Moved(player) => assert!(player.get_position() == new_pos),
             _ => panic!("Wrong result"),
         };

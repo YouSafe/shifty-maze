@@ -1,0 +1,3 @@
+max_width = 160
+attr_fn_like_width = 140
+fn_call_width = 140

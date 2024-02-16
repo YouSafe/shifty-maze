@@ -51,34 +51,18 @@ impl Players {
 
         let player_turn = *ids.first().unwrap();
         let mut rng = rand::thread_rng();
-        let mut items = get_items_to_collect(
-            board.get_number_of_items(),
-            ids.len() * items_per_player,
-            &mut rng,
-        );
+        let mut items = get_items_to_collect(board.get_number_of_items(), ids.len() * items_per_player, &mut rng);
         items.shuffle(&mut rng);
 
         let players = ids
             .into_iter()
             .enumerate()
-            .map(|(index, id)| {
-                (
-                    id,
-                    Player::new(
-                        id,
-                        get_start_position(index, board.get_side_length()),
-                        items.drain(0..items_per_player).collect(),
-                    ),
-                )
-            })
+            .map(|(index, id)| (id, Player::new(id, get_start_position(index, board.get_side_length()), items.drain(0..items_per_player).collect())))
             .collect();
 
         assert!(items.is_empty());
 
-        Some(Self {
-            players,
-            player_turn,
-        })
+        Some(Self { players, player_turn })
     }
 
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Player> {
@@ -111,12 +95,7 @@ impl Players {
             .unwrap();
     }
 
-    pub fn move_player(
-        &mut self,
-        player_id: PlayerId,
-        position: Position,
-        board: &Board,
-    ) -> MoveResult {
+    pub fn move_player(&mut self, player_id: PlayerId, position: Position, board: &Board) -> MoveResult {
         if let Some(player) = self.players.get_mut(&player_id) {
             if !board.is_reachable(player.get_position(), position) {
                 return MoveResult::Unreachable;
@@ -185,40 +164,28 @@ impl Position {
         if self.y == 0 {
             return None;
         }
-        Some(Self {
-            y: self.y - 1,
-            ..*self
-        })
+        Some(Self { y: self.y - 1, ..*self })
     }
 
     pub fn bottom(&self, board: &Board) -> Option<Self> {
         if self.y > board.get_side_length() - 2 {
             return None;
         }
-        Some(Self {
-            y: self.y + 1,
-            ..*self
-        })
+        Some(Self { y: self.y + 1, ..*self })
     }
 
     pub fn left(&self, _: &Board) -> Option<Self> {
         if self.x == 0 {
             return None;
         }
-        Some(Self {
-            x: self.x - 1,
-            ..*self
-        })
+        Some(Self { x: self.x - 1, ..*self })
     }
 
     pub fn right(&self, board: &Board) -> Option<Self> {
         if self.x > board.get_side_length() - 2 {
             return None;
         }
-        Some(Self {
-            x: self.x + 1,
-            ..*self
-        })
+        Some(Self { x: self.x + 1, ..*self })
     }
 }
 
@@ -231,22 +198,12 @@ fn get_start_position(index: usize, side_length: usize) -> Position {
     }
 }
 
-fn get_items_to_collect(
-    num_board_items: usize,
-    num_item_cards: usize,
-    rng: &mut impl Rng,
-) -> Vec<Item> {
+fn get_items_to_collect(num_board_items: usize, num_item_cards: usize, rng: &mut impl Rng) -> Vec<Item> {
     let mut items: Vec<_> = (1..=num_board_items).map(Item::new).collect();
 
-    let extra = num_item_cards
-        .checked_sub(num_board_items)
-        .unwrap_or_default();
+    let extra = num_item_cards.checked_sub(num_board_items).unwrap_or_default();
 
-    items.extend(
-        (0..extra)
-            .map(|_| rng.gen_range(1..=num_board_items))
-            .map(Item::new),
-    );
+    items.extend((0..extra).map(|_| rng.gen_range(1..=num_board_items)).map(Item::new));
     items.shuffle(rng);
     items.into_iter().choose_multiple(rng, num_item_cards)
 }

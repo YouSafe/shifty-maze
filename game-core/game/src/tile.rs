@@ -72,12 +72,7 @@ pub enum Side {
 
 impl Tile {
     pub fn new(id: usize, variant: TileVariant, rotation: Rotation, item: Option<Item>) -> Self {
-        Self {
-            id,
-            variant,
-            rotation,
-            item,
-        }
+        Self { id, variant, rotation, item }
     }
 
     pub fn get_connection(&self) -> Vec<Side> {
@@ -114,10 +109,7 @@ impl Item {
 
 impl FreeTile {
     pub fn new(tile: Tile) -> Self {
-        Self {
-            tile,
-            side_with_index: None,
-        }
+        Self { tile, side_with_index: None }
     }
 
     pub fn get_side_index(&self) -> Option<SideIndex> {
@@ -158,9 +150,6 @@ impl SideIndex {
             Side::Left => Side::Right,
         };
 
-        Self {
-            side,
-            index: self.index,
-        }
+        Self { side, index: self.index }
     }
 }
