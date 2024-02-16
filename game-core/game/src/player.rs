@@ -1,9 +1,10 @@
-use std::{collections::BTreeMap, iter};
-
-use rand::seq::SliceRandom;
-use ts_interop::ts_interop;
-
 use crate::{board::Board, tile::Item};
+use rand::{
+    seq::{IteratorRandom, SliceRandom},
+    Rng,
+};
+use std::collections::BTreeMap;
+use ts_interop::ts_interop;
 
 #[cfg_attr(feature = "wasm", tsify::declare)]
 pub type PlayerId = usize;
@@ -48,9 +49,13 @@ impl Players {
         ids.sort();
 
         let player_turn = *ids.first().unwrap();
-        let mut items =
-            get_items_to_collect(board.get_number_of_items(), ids.len() * items_per_player);
-        items.shuffle(&mut rand::thread_rng());
+        let mut rng = rand::thread_rng();
+        let mut items = get_items_to_collect(
+            board.get_number_of_items(),
+            ids.len() * items_per_player,
+            &mut rng,
+        );
+        items.shuffle(&mut rng);
 
         let players = ids
             .into_iter()
@@ -177,15 +182,22 @@ fn get_start_position(index: usize, side_length: usize) -> Position {
     }
 }
 
-fn get_items_to_collect(num_board_items: usize, num_item_cards: usize) -> Vec<Item> {
-    let num_repeats = num_item_cards / num_board_items;
-    let num_remainder = num_item_cards % num_board_items;
-    let mut items: Vec<_> = iter::repeat(1..=num_board_items)
-        .take(num_repeats)
-        .flatten()
-        .map(Item::new)
-        .collect();
-    items.extend((1..=num_remainder).map(Item::new));
+fn get_items_to_collect(
+    num_board_items: usize,
+    num_item_cards: usize,
+    rng: &mut impl Rng,
+) -> Vec<Item> {
+    let mut items: Vec<_> = (1..=num_board_items).map(Item::new).collect();
 
-    items
+    let extra = num_item_cards
+        .checked_sub(num_board_items)
+        .unwrap_or_default();
+
+    items.extend(
+        (0..extra)
+            .map(|_| rng.gen_range(1..=num_board_items))
+            .map(Item::new),
+    );
+    items.shuffle(rng);
+    items.into_iter().choose_multiple(rng, num_item_cards)
 }

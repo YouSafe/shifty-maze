@@ -45,6 +45,7 @@ impl Board {
         }
 
         let rotations = [Ninety, TwoSeventy, Zero, OneEighty];
+        let number_of_items = calculate_number_of_items(side_length);
 
         let mut tiles = Vec::with_capacity(side_length.pow(2));
         let mut movable_tiles = get_tile_assortment(side_length);
@@ -52,12 +53,13 @@ impl Board {
         let mut rng = rand::thread_rng();
         movable_tiles.shuffle(&mut rng);
 
-        let num_movable_items = calculate_number_of_items(side_length) / 2;
         let movable_item_indices =
-            (0..movable_tiles.len()).choose_multiple(&mut rng, num_movable_items);
+            (0..movable_tiles.len()).choose_multiple(&mut rng, number_of_items / 2);
+
+        let mut items: Vec<_> = (1..=number_of_items).map(Item::new).collect();
+        items.shuffle(&mut rng);
 
         let mut index = 0;
-        let mut item_id = 0;
         for row in 0..side_length {
             for col in 0..side_length {
                 let (variant, rotation, add_item) = match (row, col) {
@@ -84,12 +86,7 @@ impl Board {
                     ),
                 };
 
-                let item = if add_item {
-                    item_id += 1;
-                    Some(Item::new(item_id))
-                } else {
-                    None
-                };
+                let item = if add_item { items.pop() } else { None };
 
                 tiles.push(Tile::new(row * side_length + col, variant, rotation, item));
             }
@@ -98,7 +95,7 @@ impl Board {
         let free_tile = movable_tiles.pop().unwrap();
         assert!(movable_tiles.is_empty());
         let item = if movable_item_indices.contains(&0) {
-            Some(Item::new(item_id + 1))
+            items.pop()
         } else {
             None
         };
