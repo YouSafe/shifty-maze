@@ -125,7 +125,7 @@ impl Board {
         if x >= self.side_length || y >= self.side_length {
             return None;
         }
-        self.tiles.get(x * self.side_length + y)
+        self.tiles.get(x + y * self.side_length)
     }
 
     pub fn rotate_free_tile(&mut self, rotation: Rotation) {
