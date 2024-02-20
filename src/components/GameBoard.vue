@@ -35,7 +35,7 @@ const props = defineProps<{
 const emits = defineEmits<{
   (e: "player-move", player: PlayerId, x: number, y: number): void;
   (e: "start-game", settings: GameStartSettings): void;
-  (e: "shift-tiles", side_index: SideIndex, insertRotation: Rotation): void;
+  (e: "shift-tiles", side_index: SideIndex): void;
 }>();
 
 // Free tile + 1
@@ -142,11 +142,6 @@ const positionPlayersMap = computed(() =>
     positionToMapKey(player.position)
   )
 );
-const startPositionPlayersMap = computed(() =>
-  groupBy([...props.players.values()], (player) =>
-    positionToMapKey(player.start_position)
-  )
-);
 
 const playerRenderOffsets = [
   { x: 0.5, y: -1 },
@@ -234,7 +229,7 @@ function tryMovePlayer(tileId: number) {
 }
 
 function startShiftTiles(side_index: SideIndex) {
-  emits("shift-tiles", side_index, "Zero");
+  emits("shift-tiles", side_index);
 }
 
 function startGame() {

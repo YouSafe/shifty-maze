@@ -87,7 +87,7 @@ OnePlayerCard.props = {
             v-model:start-settings="gameSettings"
             @start-game="(v) => game.startGame(v)"
             @player-move="(player, x, y) => game.movePlayer(player, x, y)"
-            @shift-tiles="(side_index, rotation) => game.shiftTiles(side_index)"
+            @shift-tiles="(side_index) => game.shiftTiles(side_index)"
           />
           <div class="right space-between">
             <OnePlayerCard :id="3"></OnePlayerCard>
