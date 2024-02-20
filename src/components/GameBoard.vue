@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 import GameTile from "./GameTile.vue";
 import PlayerPiece from "./PlayerPiece.vue";
 import type {
@@ -19,6 +19,7 @@ import GameSettings from "./GameSettings.vue";
 import { NButton } from "naive-ui";
 import { groupBy } from "@/array-utils";
 import { PlayerColors } from "@/players";
+import SideArrows from "./GameBoard/SideArrows.vue";
 
 const gameSettings = defineModel<GameStartSettings>("startSettings", {
   required: true,
@@ -71,56 +72,6 @@ const tilesMap = computed(() => {
       },
     ])
   );
-});
-
-interface SideArrow {
-  id: string;
-  side_index: SideIndex;
-  top?: string;
-  left?: string;
-  right?: string;
-  bottom?: string;
-}
-
-const sideArrows = computed(() => {
-  const board = props.board;
-  if (board === null) {
-    return [];
-  }
-  const sideLength = board.side_length;
-  return (
-    [
-      (index: number, percent: string) => ({
-        side_index: { side: "Top" as Side, index },
-        top: "0",
-        left: percent,
-      }),
-      (index: number, percent: string) => ({
-        side_index: { side: "Bottom" as Side, index },
-        bottom: "0",
-        left: percent,
-      }),
-      (index: number, percent: string) => ({
-        side_index: { side: "Left" as Side, index },
-        left: "0",
-        top: percent,
-      }),
-      (index: number, percent: string) => ({
-        side_index: { side: "Right" as Side, index },
-        right: "0",
-        top: percent,
-      }),
-    ] as const
-  ).flatMap((position, mainIndex) => {
-    const arrows: SideArrow[] = [];
-    for (let i = 1; i < sideLength; i += 2) {
-      arrows.push({
-        id: `${mainIndex}-${i}`,
-        ...position(i, (i / sideLength) * 100 + "%"),
-      });
-    }
-    return arrows;
-  });
 });
 
 function tileStyle(id: number) {
@@ -228,27 +179,17 @@ function tryMovePlayer(tileId: number) {
   emits("player-move", props.activePlayer, tile.x, tile.y);
 }
 
-function startShiftTiles(side_index: SideIndex) {
-  emits("shift-tiles", side_index);
-}
-
 function startGame() {
   emits("start-game", gameSettings.value);
 }
-function isTileArrowDisabled(side_index: SideIndex) {
-  if (props.board === null) {
-    return true;
+
+const animatedBoard = ref<Board | null>(null);
+watch(
+  () => props.board,
+  (board) => {
+    console.log("a");
   }
-  let freeTile = props.board.free_tile;
-  if (
-    (freeTile.side_with_index ?? null) !== null &&
-    freeTile.side_with_index?.side === side_index.side &&
-    freeTile.side_with_index?.index === side_index.index
-  ) {
-    return true;
-  }
-  return false;
-}
+);
 </script>
 
 <template>
@@ -331,31 +272,11 @@ function isTileArrowDisabled(side_index: SideIndex) {
               </div>
             </div>
             <div class="tiles-wrapper">
-              <div
-                v-for="arrow in sideArrows"
-                :key="arrow.id"
-                class="arrow-wrapper"
-                :class="{
-                  [arrow.side_index.side]: true,
-                  'is-active': props.phase === 'MoveTiles',
-                  disabled: isTileArrowDisabled(arrow.side_index),
-                }"
-                :style="{
-                  top: arrow.top,
-                  left: arrow.left,
-                  right: arrow.right,
-                  bottom: arrow.bottom,
-                }"
-                @click="() => startShiftTiles(arrow.side_index)"
-              >
-                <div
-                  class="arrow"
-                  :class="{
-                    [arrow.side_index.side]: true,
-                    highlight: props.phase === 'MoveTiles',
-                  }"
-                ></div>
-              </div>
+              <SideArrows
+                :board="props.board"
+                :phase="props.phase"
+                @shift-tiles="($event) => emits('shift-tiles', $event)"
+              ></SideArrows>
             </div>
           </template>
         </div>
