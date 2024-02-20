@@ -122,6 +122,7 @@ export function useGame() {
     }),
     board: computed(() => game.value?.board ?? null),
     phase: computed(() => game.value?.phase ?? "MoveTiles"),
+    winner: computed(() => game.value?.winner ?? null),
 
     startGame,
     rotate_free_tile,

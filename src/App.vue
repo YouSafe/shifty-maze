@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { h, ref } from "vue";
+import { h, ref, watch } from "vue";
 import GameBoard from "@/components/GameBoard.vue";
 import PlayerCards from "@/components/PlayerCards.vue";
 import PlayerDialog from "@/components/PlayerDialog.vue";
 import SettingsDialog from "@/components/SettingsDialog.vue";
+import WinnerDialog from "@/components/WinnerDialog.vue";
 import GameTile from "@/components/GameTile.vue";
 import { useGame, type PlayerMode, DefaultGameStartSettings } from "@/game";
 import { NButton } from "naive-ui";
@@ -16,9 +17,18 @@ const showDialogFor = ref({
 });
 
 const showSettingsDialog = ref(false);
+const showWinnerDialog = ref(false);
 
 const gameSettings = ref(DefaultGameStartSettings());
 const game = useGame();
+
+watch(game.winner, (v) => {
+  if (v !== null) {
+    showWinnerDialog.value = true;
+  } else {
+    showWinnerDialog.value = false;
+  }
+});
 
 function addPlayer(id: number, mode: PlayerMode) {
   if (game.hasStarted.value === false) {
@@ -128,6 +138,12 @@ OnePlayerCard.props = {
       @join="(id, mode) => addPlayer(id, mode)"
       @remove="(v) => removePlayer(v)"
     ></PlayerDialog>
+    <WinnerDialog
+      v-if="game.winner"
+      :id="game.winner.value!"
+      v-model:show="showWinnerDialog"
+      @new-game="game.finishGame()"
+    ></WinnerDialog>
     <SettingsDialog
       v-model:show="showSettingsDialog"
       :has-game-started="game.hasStarted.value"

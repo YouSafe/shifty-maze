@@ -26,7 +26,7 @@ function remove() {
   if (isTryingToRemove.value) {
     isTryingToRemove.value = false;
     emit("remove", props.id);
-    close();
+    show.value = false;
   } else {
     isTryingToRemove.value = true;
   }
@@ -34,15 +34,11 @@ function remove() {
 
 function joinLocal() {
   emit("join", props.id, "local");
-  close();
+  show.value = false;
 }
 function joinOnline() {
   // TODO:
   //emit("join", props.id, "online");
-}
-
-function close() {
-  show.value = false;
 }
 </script>
 
@@ -51,8 +47,7 @@ function close() {
     :show="show"
     @update:show="
       (v) => {
-        if (!v) close();
-        else show = v;
+        show = v;
       }
     "
     preset="card"
