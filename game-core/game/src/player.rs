@@ -37,6 +37,7 @@ pub enum MoveResult<'a> {
     Moved(&'a mut Player),
     Won(PlayerId),
     InvalidPlayer,
+    Unreachable,
 }
 
 impl Players {
@@ -105,17 +106,25 @@ impl Players {
             .unwrap();
     }
 
-    pub fn move_player(&mut self, player_id: PlayerId, position: Position) -> MoveResult {
+    pub fn move_player(
+        &mut self,
+        player_id: PlayerId,
+        position: Position,
+        board: &Board,
+    ) -> MoveResult {
         if let Some(player) = self.players.get_mut(&player_id) {
+            if !board.is_reachable(player.get_position(), position) {
+                return MoveResult::Unreachable;
+            }
+
             player.set_position(position);
-            if player.get_next_to_collect().is_none() && player.is_at_start() {
+            return if player.get_next_to_collect().is_none() && player.is_at_start() {
                 MoveResult::Won(player_id)
             } else {
                 MoveResult::Moved(player)
-            }
-        } else {
-            MoveResult::InvalidPlayer
+            };
         }
+        MoveResult::InvalidPlayer
     }
 }
 
@@ -165,6 +174,46 @@ impl Position {
 
     pub fn get_y(&self) -> usize {
         self.y
+    }
+
+    pub fn top(&self, _: &Board) -> Option<Self> {
+        if self.y == 0 {
+            return None;
+        }
+        Some(Self {
+            y: self.y - 1,
+            ..*self
+        })
+    }
+
+    pub fn bottom(&self, board: &Board) -> Option<Self> {
+        if self.y > board.get_side_length() - 2 {
+            return None;
+        }
+        Some(Self {
+            y: self.y + 1,
+            ..*self
+        })
+    }
+
+    pub fn left(&self, _: &Board) -> Option<Self> {
+        if self.x == 0 {
+            return None;
+        }
+        Some(Self {
+            x: self.x - 1,
+            ..*self
+        })
+    }
+
+    pub fn right(&self, board: &Board) -> Option<Self> {
+        if self.x > board.get_side_length() - 2 {
+            return None;
+        }
+        Some(Self {
+            x: self.x + 1,
+            ..*self
+        })
     }
 }
 

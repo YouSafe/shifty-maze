@@ -1,10 +1,9 @@
-use ts_interop::ts_interop;
-
 use crate::{
     board::{Board, NewBoardError, ShiftTileError},
     player::{MoveResult, PlayerId, Players, Position},
     tile::{Rotation, SideIndex},
 };
+use ts_interop::ts_interop;
 
 #[ts_interop]
 #[derive(Clone)]
@@ -46,6 +45,7 @@ pub enum GameError<T> {
 pub enum MovePlayerError {
     InvalidPosition,
     InvalidPlayer,
+    UnreachablePosition,
 }
 
 impl Game {
@@ -118,14 +118,14 @@ impl Game {
             return Err(MovePlayerError::InvalidPosition.into());
         }
 
-        // TODO: check validity
-        match self.players.move_player(player_id, position) {
+        match self.players.move_player(player_id, position, &self.board) {
             MoveResult::Moved(player) => {
                 player.try_collect_item(&self.board);
                 self.players.next_player_turn();
             }
             MoveResult::Won(id) => self.winner = Some(id),
             MoveResult::InvalidPlayer => return Err(MovePlayerError::InvalidPlayer.into()),
+            MoveResult::Unreachable => return Err(MovePlayerError::UnreachablePosition.into()),
         }
 
         self.phase = GamePhase::MoveTiles;

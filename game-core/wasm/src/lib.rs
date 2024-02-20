@@ -1,11 +1,11 @@
-use std::collections::VecDeque;
-
 use game::{
     board::{NewBoardError, ShiftTileError},
     game::{Game, GameError, GameStartSettings, MovePlayerError, NewGameError},
     player::{PlayerId, Position},
     tile::{Rotation, SideIndex},
 };
+use std::collections::VecDeque;
+
 use log::Level;
 use wasm_bindgen::prelude::wasm_bindgen;
 
@@ -163,6 +163,9 @@ impl GameCore {
                     }
                     GameError::ActionError(MovePlayerError::InvalidPlayer) => {
                         "Cannot move player: No such player exists"
+                    }
+                    GameError::ActionError(MovePlayerError::UnreachablePosition) => {
+                        "Cannot move player: Position is not reachable by player"
                     }
                 }
                 .into()

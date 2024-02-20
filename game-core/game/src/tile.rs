@@ -80,6 +80,25 @@ impl Tile {
         }
     }
 
+    pub fn get_connection(&self) -> Vec<Side> {
+        use Rotation as R;
+        use Side::*;
+        use TileVariant as V;
+
+        match (self.variant, self.rotation) {
+            (V::LShape, R::Zero) => vec![Top, Right],
+            (V::LShape, R::Ninety) => vec![Bottom, Right],
+            (V::LShape, R::OneEighty) => vec![Bottom, Left],
+            (V::LShape, R::TwoSeventy) => vec![Top, Left],
+            (V::TShape, R::Zero) => vec![Bottom, Left, Right],
+            (V::TShape, R::Ninety) => vec![Top, Bottom, Left],
+            (V::TShape, R::OneEighty) => vec![Top, Left, Right],
+            (V::TShape, R::TwoSeventy) => vec![Top, Bottom, Right],
+            (V::IShape, R::Zero | R::OneEighty) => vec![Top, Bottom],
+            (V::IShape, R::Ninety | R::TwoSeventy) => vec![Left, Right],
+        }
+    }
+
     pub fn get_item(&self) -> Option<Item> {
         self.item
     }
