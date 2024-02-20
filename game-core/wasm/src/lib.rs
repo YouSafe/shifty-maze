@@ -1,3 +1,5 @@
+mod result;
+
 use game::{
     board::{NewBoardError, ShiftTileError},
     game::{Game, GameError, GameStartSettings, MovePlayerError, NewGameError},
@@ -9,47 +11,18 @@ use std::collections::VecDeque;
 use log::Level;
 use wasm_bindgen::prelude::wasm_bindgen;
 
-type ActionResult = Result<Game, String>;
-
-#[wasm_bindgen]
-extern "C" {
-    pub type Observer;
-
-    #[wasm_bindgen(method)]
-    fn next(this: &Observer, game: Game);
-
-    #[wasm_bindgen(method)]
-    fn error(this: &Observer, error: String);
-}
+type ActionResult = result::Result<Game, String>;
 
 #[wasm_bindgen]
 pub struct GameCore {
     history: VecDeque<Game>,
 }
 
-#[wasm_bindgen]
-pub struct Observable {
-    result: ActionResult,
-}
-
-impl From<Result<Game, String>> for Observable {
-    fn from(result: Result<Game, String>) -> Self {
-        Self { result }
-    }
-}
-
-#[wasm_bindgen]
-impl Observable {
-    pub fn subscribe(self, observer: Observer) {
-        match self.result {
-            Ok(value) => observer.next(value),
-            Err(err) => observer.error(err),
-        };
-    }
-}
-
 impl GameCore {
-    fn do_action(&mut self, action: impl FnOnce(&mut Game) -> Result<(), String>) -> ActionResult {
+    fn do_action(
+        &mut self,
+        action: impl FnOnce(&mut Game) -> Result<(), String>,
+    ) -> Result<Game, String> {
         if let Some(mut current) = self.history.back().cloned() {
             action(&mut current)?;
             if self.history.len() < self.history.capacity() {
@@ -64,10 +37,10 @@ impl GameCore {
         }
     }
 
-    fn do_action_observable(
+    fn do_action_result(
         &mut self,
         action: impl FnOnce(&mut Game) -> Result<(), String>,
-    ) -> Observable {
+    ) -> ActionResult {
         self.do_action(action).into()
     }
 }
@@ -86,7 +59,7 @@ impl GameCore {
         self.history.push_back(game);
     }
 
-    pub fn start_game(&mut self, settings: GameStartSettings) -> Observable {
+    pub fn start_game(&mut self, settings: GameStartSettings) -> ActionResult {
         Game::new(settings)
             .map_err(|err| {
                 match err {
@@ -107,8 +80,8 @@ impl GameCore {
             .into()
     }
 
-    pub fn rotate_free_tile(&mut self, rotation: Rotation) -> Observable {
-        self.do_action_observable(|game| {
+    pub fn rotate_free_tile(&mut self, rotation: Rotation) -> ActionResult {
+        self.do_action_result(|game| {
             if game.rotate_free_tile(rotation) {
                 Ok(())
             } else {
@@ -117,8 +90,8 @@ impl GameCore {
         })
     }
 
-    pub fn shift_tiles(&mut self, side_index: SideIndex) -> Observable {
-        self.do_action_observable(|game| {
+    pub fn shift_tiles(&mut self, side_index: SideIndex) -> ActionResult {
+        self.do_action_result(|game| {
             game.shift_tiles(side_index).map_err(|err| {
                 match err {
                     GameError::GameOver => "Cannot shift tiles: Game has ended",
@@ -140,8 +113,8 @@ impl GameCore {
         })
     }
 
-    pub fn remove_player(&mut self, player_id: PlayerId) -> Observable {
-        self.do_action_observable(|game| {
+    pub fn remove_player(&mut self, player_id: PlayerId) -> ActionResult {
+        self.do_action_result(|game| {
             game.remove_player(player_id).map_err(|err| {
                 match err {
                     GameError::GameOver => "Cannot remove player: Game has ended",
@@ -152,8 +125,8 @@ impl GameCore {
         })
     }
 
-    pub fn move_player(&mut self, player_id: PlayerId, position: Position) -> Observable {
-        self.do_action_observable(|game| {
+    pub fn move_player(&mut self, player_id: PlayerId, position: Position) -> ActionResult {
+        self.do_action_result(|game| {
             game.move_player(player_id, position).map_err(|err| {
                 match err {
                     GameError::GameOver => "Cannot move player: Game has ended",
@@ -173,7 +146,7 @@ impl GameCore {
         })
     }
 
-    pub fn undo_move(&mut self) -> Observable {
+    pub fn undo_move(&mut self) -> ActionResult {
         if self.history.len() > 1 {
             self.history.pop_back();
             Ok(self.history.back().cloned().unwrap())
