@@ -135,8 +135,8 @@ OnePlayerCard.props = {
       @remove="(v) => removePlayer(v)"
     ></PlayerDialog>
     <WinnerDialog
-      v-if="game.winner"
-      :id="game.winner.value!"
+      v-if="game.winner.value !== null"
+      :id="game.winner.value"
       v-model:show="showWinnerDialog"
       @new-game="game.finishGame()"
     ></WinnerDialog>
