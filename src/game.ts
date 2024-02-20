@@ -33,12 +33,7 @@ export function useGame() {
 
   const core = new GameCore(10);
 
-  {
-    const state = storage.load();
-    if (state) {
-      setGame(state);
-    }
-  }
+  storage.load().map((state) => setGame(state));
 
   const observer = {
     next(g: Game) {

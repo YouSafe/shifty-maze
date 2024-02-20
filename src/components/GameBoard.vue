@@ -19,6 +19,7 @@ import GameSettings from "./GameSettings.vue";
 import { NButton } from "naive-ui";
 import { groupBy } from "@/array-utils";
 import { PlayerColors } from "@/players";
+import { fromNullable } from "@/result";
 
 const gameSettings = defineModel<GameStartSettings>("startSettings", {
   required: true,
@@ -47,31 +48,30 @@ interface TileData {
   y: number;
 }
 
-const tileSize = computed(() => {
-  const board = props.board;
-  if (board === null) {
-    return "0";
-  }
-  return 100 / board.side_length + "cqw";
-});
+const tileSize = computed(() =>
+  fromNullable(props.board)
+    .map((b) => 100 / b.side_length + "cqw")
+    .unwrapOr("0")
+);
 
-const tilesMap = computed(() => {
-  const board = props.board;
-  if (board === null) {
-    return new Map<number, TileData>();
-  }
-
-  return new Map(
-    board.tiles.map((tile, index) => [
-      tile.id,
-      {
-        tile,
-        x: index % board.side_length,
-        y: Math.floor(index / board.side_length),
-      },
-    ])
-  );
-});
+const tilesMap = computed(() =>
+  fromNullable(props.board)
+    .map((board) =>
+      board.tiles.map(
+        (tile, index) =>
+          [
+            tile.id,
+            {
+              tile,
+              x: index % board.side_length,
+              y: Math.floor(index / board.side_length),
+            } as TileData,
+          ] as const
+      )
+    )
+    .map((tiles) => new Map(tiles))
+    .unwrapOr(new Map<number, TileData>())
+);
 
 interface SideArrow {
   id: string;
