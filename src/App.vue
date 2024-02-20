@@ -44,7 +44,7 @@ function removePlayer(id: number) {
 // See also https://vuejs.org/guide/extras/render-function#typing-functional-components
 function OnePlayerCard(props: { id: number }) {
   return h(PlayerCards, {
-    side: PlayerSides[props.id]?.side ?? "Top",
+    side: PlayerSides[props.id] ?? "Top",
     id: props.id,
     isActive: game.activePlayer.value === props.id,
     hasPlayer: game.playerHelper.hasPlayer(props.id),
@@ -70,13 +70,13 @@ OnePlayerCard.props = {
     <div class="constrain-width">
       <div class="constrain-height container">
         <div class="top space-between">
-          <OnePlayerCard :id="4"></OnePlayerCard>
-          <OnePlayerCard :id="5"></OnePlayerCard>
+          <OnePlayerCard :id="1"></OnePlayerCard>
+          <OnePlayerCard :id="2"></OnePlayerCard>
         </div>
         <div class="middle">
           <div class="left space-between">
-            <OnePlayerCard :id="3"></OnePlayerCard>
-            <OnePlayerCard :id="2"></OnePlayerCard>
+            <OnePlayerCard :id="0"></OnePlayerCard>
+            <OnePlayerCard :id="7"></OnePlayerCard>
           </div>
           <GameBoard
             :board="game.board.value"
@@ -90,13 +90,13 @@ OnePlayerCard.props = {
             @shift-tiles="(side_index, rotation) => game.shiftTiles(side_index)"
           />
           <div class="right space-between">
-            <OnePlayerCard :id="6"></OnePlayerCard>
-            <OnePlayerCard :id="7"></OnePlayerCard>
+            <OnePlayerCard :id="3"></OnePlayerCard>
+            <OnePlayerCard :id="4"></OnePlayerCard>
           </div>
         </div>
         <div class="bottom space-between">
-          <OnePlayerCard :id="1"></OnePlayerCard>
-          <OnePlayerCard :id="0"></OnePlayerCard>
+          <OnePlayerCard :id="6"></OnePlayerCard>
+          <OnePlayerCard :id="5"></OnePlayerCard>
         </div>
         <GameTile
           v-if="game.board.value?.free_tile"
