@@ -23,11 +23,7 @@ const gameSettings = ref(DefaultGameStartSettings());
 const game = useGame();
 
 watch(game.winner, (v) => {
-  if (v !== null) {
-    showWinnerDialog.value = true;
-  } else {
-    showWinnerDialog.value = false;
-  }
+  showWinnerDialog.value = v !== null;
 });
 
 function addPlayer(id: number, mode: PlayerMode) {
