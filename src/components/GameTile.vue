@@ -110,7 +110,7 @@ img {
   bottom: var(--edge);
   display: flex;
   container-type: size;
-  font-size: 4cqw;
+  font-size: 2.5vmin;
   align-items: center;
   justify-content: center;
   color: white;
