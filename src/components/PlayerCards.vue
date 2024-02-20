@@ -113,21 +113,7 @@ const item = computed(() => getItem(props.item));
   filter: sepia(25%);
 }
 
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 8px 2px var(--red);
-  }
-
-  50% {
-    box-shadow: 0 0 8px 4px var(--red);
-  }
-
-  100% {
-    box-shadow: 0 0 8px 2px var(--red);
-  }
-}
-
 .is-active > * {
-  animation: pulse 1s infinite;
+  box-shadow: 0 0 8px 4px var(--red);
 }
 </style>

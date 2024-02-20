@@ -55,8 +55,13 @@ export function useGame() {
     core.start_game(settings).subscribe(observer);
   }
 
-  function rotate_free_tile(rotation: Rotation) {
-    core.rotate_free_tile(rotation).subscribe(observer);
+  function rotateFreeTile() {
+    if (game.value !== null) {
+      const rotation = nextRotation(
+        game.value.board.free_tile.tile.rotation ?? "OneEighty"
+      );
+      core.rotate_free_tile(rotation).subscribe(observer);
+    }
   }
 
   function shiftTiles(side_index: SideIndex) {
@@ -125,11 +130,18 @@ export function useGame() {
     winner: computed(() => game.value?.winner ?? null),
 
     startGame,
-    rotate_free_tile,
+    rotateFreeTile,
     shiftTiles,
     removePlayer,
     movePlayer,
     undoMove,
     finishGame,
   };
+}
+
+function nextRotation(rotation: Rotation) {
+  if (rotation === "Zero") return "Ninety";
+  if (rotation === "Ninety") return "OneEighty";
+  if (rotation === "OneEighty") return "TwoSeventy";
+  return "Zero";
 }

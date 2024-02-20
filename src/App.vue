@@ -104,12 +104,17 @@ OnePlayerCard.props = {
           <OnePlayerCard :id="6"></OnePlayerCard>
           <OnePlayerCard :id="5"></OnePlayerCard>
         </div>
-        <GameTile
+        <div
           v-if="game.board.value?.free_tile"
-          :tile="game.board.value?.free_tile?.tile ?? null"
-          :searching-for="game.activePlayerItem.value"
           class="free-tile"
-        ></GameTile>
+          @click="game.rotateFreeTile()"
+        >
+          <GameTile
+            :tile="game.board.value?.free_tile?.tile ?? null"
+            :searching-for="game.activePlayerItem.value"
+          ></GameTile>
+          <div>Rotate ⟳</div>
+        </div>
         <NButton
           round
           size="small"
