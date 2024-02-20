@@ -16,3 +16,7 @@ npm run dev
 ```
 
 And remember to `npm run build` the `game-core` when you make changes to it.
+
+## Credits
+
+Tilemap is from https://opengameart.org/content/a-blocky-dungeon , credits to [Buch](https://opengameart.org/users/buch)
