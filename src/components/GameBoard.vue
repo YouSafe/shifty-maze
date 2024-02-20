@@ -290,17 +290,17 @@ function isTileArrowDisabled(side_index: SideIndex) {
           </div>
           <template v-else>
             <div class="tiles-wrapper">
-              <!-- Vue.js v-for is freaking cursed and counts like Lua -->
-              <template v-for="id in maxTileId" :key="id - 1">
+              <!-- Vue.js v-for is freaking cursed and counts like Lua. But we're smart and use the index. -->
+              <template v-for="(_, id) in maxTileId" :key="id">
                 <div
-                  v-if="tilesMap.has(id - 1)"
+                  v-if="tilesMap.has(id)"
                   class="tile"
-                  :style="tileStyle(id - 1)"
+                  :style="tileStyle(id)"
                 >
                   <GameTile
-                    :tile="tilesMap.get(id - 1)?.tile ?? null"
+                    :tile="tilesMap.get(id)?.tile ?? null"
                     :searching-for="props.activePlayerItem"
-                    @click="() => tryMovePlayer(id - 1)"
+                    @click="() => tryMovePlayer(id)"
                   />
                 </div>
               </template>
