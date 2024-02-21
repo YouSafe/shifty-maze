@@ -101,7 +101,6 @@ function startShiftTiles(side_index: SideIndex) {
       class="arrow"
       :class="{
         [arrow.side_index.side]: true,
-        highlight: props.phase === 'MoveTiles',
       }"
     ></div>
   </div>
@@ -132,43 +131,43 @@ function startShiftTiles(side_index: SideIndex) {
   transform: rotate(-90deg) translateY(-2vmin);
 }
 
-.arrow-wrapper.is-active {
-  pointer-events: auto;
-}
-
 /* TODO: Make this a disabled icon */
 .arrow-wrapper.disabled {
   display: none;
+}
+
+.arrow-wrapper.is-active {
+  pointer-events: auto;
 }
 
 .arrow {
   width: 100%;
   height: 2vmin;
   margin-top: 0vmin;
-  background-color: #7c7c7c;
+  background-color: #7c7c7c79;
   clip-path: polygon(50% 100%, 100% 0%, 0 0%);
+}
+.arrow-wrapper.is-active .arrow {
+  background-color: #7c7c7c;
+  animation: pulse 2s infinite;
 }
 
 .arrow-wrapper:hover .arrow {
   background-color: #4c4c4c;
 }
 
-.arrow-wrapper:has(.arrow.highlight) {
-  animation: pulse 1.2s infinite;
-}
-
 /* animation for drop shadow */
 @keyframes pulse {
   0% {
-    filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0));
+    background-color: #7c7c7c;
   }
 
   70% {
-    filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.5));
+    background-color: #5f5f5f;
   }
 
   100% {
-    filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0));
+    background-color: #7c7c7c;
   }
 }
 </style>
