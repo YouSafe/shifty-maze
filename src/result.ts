@@ -1,6 +1,13 @@
+import type { Result as R } from "game-core/pkg/wasm";
+
+export type NoneError = "NoneError";
+export type Option<T> = Result<T, NoneError>;
+export type SplitResult<T, E> = R<T, E>;
+
 export function Ok<T, E = never>(value: T): Result<T, E> {
   return Result.ok(value);
 }
+
 export function Err<T, E>(error: E): Result<T, E> {
   return Result.err(error);
 }
@@ -8,9 +15,11 @@ export function Err<T, E>(error: E): Result<T, E> {
 export function Some<T>(value: T): Option<T> {
   return Result.ok(value);
 }
+
 export function None<T>(): Option<T> {
   return Result.err("NoneError");
 }
+
 export function fromNullable<T>(value: T | null | undefined): Option<T> {
   if (value === null || value === undefined) {
     return None();
@@ -18,26 +27,21 @@ export function fromNullable<T>(value: T | null | undefined): Option<T> {
   return Some(value);
 }
 
-export type NoneError = "NoneError";
-export type Option<T> = Result<T, NoneError>;
-
-export type SplittedResult<T, E> =
-  | {
-      t: "ok";
-      v: T;
-    }
-  | {
-      t: "err";
-      v: E;
-    };
-
 export class Result<T, E> {
-  constructor(private _value: T | E, private _isOk: boolean) {}
+  constructor(private _value: T | E, private _isOk: boolean) { }
   static ok<T, E = never>(value: T): Result<T, E> {
     return new Result<T, E>(value, true);
   }
   static err<T, E>(error: E): Result<T, E> {
     return new Result<T, E>(error, false);
+  }
+
+  static fromSplitResult<T, E>(split: SplitResult<T, E>): Result<T, E> {
+    if (split.type === "Ok") {
+      return Result.ok(split.value);
+    }
+
+    return Result.err(split.value);
   }
 
   isErr(): boolean {
@@ -47,11 +51,11 @@ export class Result<T, E> {
     return this._isOk;
   }
 
-  split(): SplittedResult<T, E> {
+  split(): SplitResult<T, E> {
     if (this.isOk()) {
-      return { t: "ok", v: this._value as T };
+      return { type: "Ok", value: this._value as T };
     }
-    return { t: "err", v: this._value as E };
+    return { type: "Err", value: this._value as E };
   }
 
   unwrap(): T {
