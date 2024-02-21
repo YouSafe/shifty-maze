@@ -113,7 +113,7 @@ OnePlayerCard.props = {
             :tile="game.board.value?.free_tile?.tile ?? null"
             :searching-for="game.activePlayerItem.value"
           ></GameTile>
-          <div v-if="game.phase.value === 'MoveTiles'">Rotate ⟳</div>
+          <div v-if="game.phase.value === 'MoveTiles'">Rotate&nbsp;⟳</div>
         </div>
         <NButton
           round
