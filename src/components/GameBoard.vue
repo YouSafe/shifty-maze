@@ -44,7 +44,9 @@ const emits = defineEmits<{
 const maxTileId = computed(() => (props.board?.tiles.length ?? 0) + 1);
 const sideLength = computed(() => props.board?.side_length ?? 1);
 
-const { tiles, tileStyle } = useTilesMap(computed(() => props.board));
+const { tiles, animatedTiles, tileStyle } = useTilesMap(
+  computed(() => props.board)
+);
 
 const tileSize = computed(() => 100 / sideLength.value + "cqw");
 
@@ -104,9 +106,8 @@ const startPositionRenderOffsets = [
 ];
 
 function startCircleStyle(id: PlayerId) {
-  const board = props.board;
   const player = props.players.get(id) ?? null;
-  if (board === null || player === null) {
+  if (player === null) {
     return {
       display: "none",
     };
@@ -116,8 +117,8 @@ function startCircleStyle(id: PlayerId) {
     30 * (startPositionRenderOffsets[id]?.x ?? 0)
   }%, ${30 * (startPositionRenderOffsets[id]?.y ?? 0)}%)`;
   return {
-    top: (player.start_position.y / board.side_length) * 100 + "%",
-    left: (player.start_position.x / board.side_length) * 100 + "%",
+    top: (player.start_position.y / sideLength.value) * 100 + "%",
+    left: (player.start_position.x / sideLength.value) * 100 + "%",
     transform,
   };
 }
@@ -143,25 +144,6 @@ function tryMovePlayer(tileId: number) {
 function startGame() {
   emits("start-game", gameSettings.value);
 }
-
-const animatedBoard = ref<Board | null>(null);
-watchEffect(() => {
-  const board = props.board;
-  const freeTile = board?.free_tile ?? null;
-  if (board === null || freeTile === null) {
-    animatedBoard.value = null;
-    return;
-  }
-
-  const tiles = board.tiles.map((t) => t);
-  // tiles.push(freeTile.tile);
-
-  animatedBoard.value = {
-    tiles,
-    side_length: board.side_length,
-    free_tile: freeTile,
-  };
-});
 </script>
 
 <template>
@@ -200,9 +182,13 @@ watchEffect(() => {
             <div class="tiles-wrapper">
               <!-- Vue.js v-for is freaking cursed and counts like Lua. But we're smart and use the index. -->
               <template v-for="(_, id) in maxTileId" :key="id">
-                <div v-if="tiles.has(id)" class="tile" :style="tileStyle(id)">
+                <div
+                  v-if="animatedTiles.has(id)"
+                  class="tile"
+                  :style="tileStyle(id)"
+                >
                   <GameTile
-                    :tile="tiles.get(id)?.tile ?? null"
+                    :tile="animatedTiles.get(id)?.tile ?? null"
                     :searching-for="props.activePlayerItem"
                     @click="() => tryMovePlayer(id)"
                   />
