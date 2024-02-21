@@ -7,6 +7,7 @@ import init, {
   type Rotation,
   type SideIndex,
   type Game,
+  type Result,
 } from "../game-core/pkg";
 import { useLocalStorage } from "./local-storage";
 
@@ -40,19 +41,18 @@ export function useGame() {
     }
   }
 
-  const observer = {
-    next(g: Game) {
-      game.value = g;
+  function handleResult(result: Result<Game, string>) {
+    if (result.type === "Ok") {
+      game.value = result.value;
       saveState();
-    },
-    error(err: string) {
-      alert(err);
-    },
-  };
+    } else {
+      alert(result.value);
+    }
+  }
 
   function startGame(settings: GameStartSettings) {
     reset();
-    core.start_game(settings).subscribe(observer);
+    handleResult(core.start_game(settings));
   }
 
   function rotateFreeTile() {
@@ -60,20 +60,20 @@ export function useGame() {
       const rotation = nextRotation(
         game.value.board.free_tile.tile.rotation ?? "OneEighty"
       );
-      core.rotate_free_tile(rotation).subscribe(observer);
+      handleResult(core.rotate_free_tile(rotation));
     }
   }
 
   function shiftTiles(side_index: SideIndex) {
-    core.shift_tiles(side_index).subscribe(observer);
+    handleResult(core.shift_tiles(side_index));
   }
 
   function removePlayer(id: PlayerId) {
-    core.remove_player(id).subscribe(observer);
+    handleResult(core.remove_player(id));
   }
 
   function movePlayer(id: PlayerId, x: number, y: number) {
-    core.move_player(id, { x, y }).subscribe(observer);
+    handleResult(core.move_player(id, { x, y }));
   }
 
   function setGame(g: Game) {
@@ -88,7 +88,7 @@ export function useGame() {
   }
 
   function undoMove() {
-    core.undo_move().subscribe(observer);
+    handleResult(core.undo_move());
   }
 
   function finishGame() {
