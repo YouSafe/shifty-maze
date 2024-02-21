@@ -19,22 +19,28 @@ pub struct GameCore {
 }
 
 impl GameCore {
+    fn get_last_mut(&mut self) -> Result<&mut Game, String> {
+        self.history
+            .back_mut()
+            .ok_or_else(|| "Cannot complete action: Game not started".into())
+    }
+
     fn do_action(
         &mut self,
         action: impl FnOnce(&mut Game) -> Result<(), String>,
     ) -> Result<Game, String> {
-        if let Some(mut current) = self.history.back().cloned() {
-            action(&mut current)?;
-            if self.history.len() < self.history.capacity() {
-                self.history.push_back(current.clone());
-            } else {
-                self.history.rotate_left(1);
-                *self.history.back_mut().unwrap() = current.clone();
-            }
-            Ok(current)
-        } else {
-            Err("Cannot complete action: Game not started".into())
-        }
+        self.get_last_mut()
+            .map(|game| game.clone())
+            .and_then(|mut game| {
+                action(&mut game)?;
+                if self.history.len() < self.history.capacity() {
+                    self.history.push_back(game.clone());
+                } else {
+                    self.history.rotate_left(1);
+                    *self.history.back_mut().unwrap() = game.clone();
+                }
+                Ok(game)
+            })
     }
 
     fn do_action_result(
@@ -81,13 +87,15 @@ impl GameCore {
     }
 
     pub fn rotate_free_tile(&mut self, rotation: Rotation) -> ActionResult {
-        self.do_action_result(|game| {
-            if game.rotate_free_tile(rotation) {
-                Ok(())
-            } else {
-                Err("Cannot rotate tile: Game has ended".into())
-            }
-        })
+        self.get_last_mut()
+            .and_then(|game| {
+                if game.rotate_free_tile(rotation) {
+                    Ok(game.clone())
+                } else {
+                    Err("Cannot rotate tile: Game has ended".into())
+                }
+            })
+            .into()
     }
 
     pub fn shift_tiles(&mut self, side_index: SideIndex) -> ActionResult {
