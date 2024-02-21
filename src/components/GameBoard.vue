@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, ref, watch, watchEffect } from "vue";
 import GameTile from "./GameTile.vue";
 import PlayerPiece from "./PlayerPiece.vue";
 import type {
@@ -20,6 +20,7 @@ import { NButton } from "naive-ui";
 import { groupBy } from "@/array-utils";
 import { PlayerColors } from "@/players";
 import SideArrows from "./GameBoard/SideArrows.vue";
+import { useTilesMap } from "./GameBoard/tiles-map";
 
 const gameSettings = defineModel<GameStartSettings>("startSettings", {
   required: true,
@@ -41,50 +42,11 @@ const emits = defineEmits<{
 
 // Free tile + 1
 const maxTileId = computed(() => (props.board?.tiles.length ?? 0) + 1);
+const sideLength = computed(() => props.board?.side_length ?? 1);
 
-interface TileData {
-  tile: Tile;
-  x: number;
-  y: number;
-}
+const { tiles, tileStyle } = useTilesMap(computed(() => props.board));
 
-const tileSize = computed(() => {
-  const board = props.board;
-  if (board === null) {
-    return "0";
-  }
-  return 100 / board.side_length + "cqw";
-});
-
-const tilesMap = computed(() => {
-  const board = props.board;
-  if (board === null) {
-    return new Map<number, TileData>();
-  }
-
-  return new Map(
-    board.tiles.map((tile, index) => [
-      tile.id,
-      {
-        tile,
-        x: index % board.side_length,
-        y: Math.floor(index / board.side_length),
-      },
-    ])
-  );
-});
-
-function tileStyle(id: number) {
-  const board = props.board;
-  const tile = tilesMap.value.get(id) ?? null;
-  if (board === null || tile === null) {
-    return {};
-  }
-  return {
-    top: (tile.y / board.side_length) * 100 + "%",
-    left: (tile.x / board.side_length) * 100 + "%",
-  };
-}
+const tileSize = computed(() => 100 / sideLength.value + "cqw");
 
 const positionToMapKey = (position: Position) =>
   `${position.x} - ${position.y}`;
@@ -107,9 +69,8 @@ const playerRenderOffsets = [
 ];
 
 function playerStyle(id: PlayerId) {
-  const board = props.board;
   const player = props.players.get(id) ?? null;
-  if (board === null || player === null) {
+  if (player === null) {
     return {
       display: "none",
     };
@@ -124,8 +85,8 @@ function playerStyle(id: PlayerId) {
       }%)`
     : "";
   return {
-    top: (player.position.y / board.side_length) * 100 + "%",
-    left: (player.position.x / board.side_length) * 100 + "%",
+    top: (player.position.y / sideLength.value) * 100 + "%",
+    left: (player.position.x / sideLength.value) * 100 + "%",
     transform,
   };
 }
@@ -172,7 +133,7 @@ function tryMovePlayer(tileId: number) {
   if (props.activePlayer === null) {
     return;
   }
-  const tile = tilesMap.value.get(tileId);
+  const tile = tiles.value.get(tileId);
   if (tile === undefined) {
     return;
   }
@@ -184,12 +145,23 @@ function startGame() {
 }
 
 const animatedBoard = ref<Board | null>(null);
-watch(
-  () => props.board,
-  (board) => {
-    console.log("a");
+watchEffect(() => {
+  const board = props.board;
+  const freeTile = board?.free_tile ?? null;
+  if (board === null || freeTile === null) {
+    animatedBoard.value = null;
+    return;
   }
-);
+
+  const tiles = board.tiles.map((t) => t);
+  // tiles.push(freeTile.tile);
+
+  animatedBoard.value = {
+    tiles,
+    side_length: board.side_length,
+    free_tile: freeTile,
+  };
+});
 </script>
 
 <template>
@@ -228,13 +200,9 @@ watch(
             <div class="tiles-wrapper">
               <!-- Vue.js v-for is freaking cursed and counts like Lua. But we're smart and use the index. -->
               <template v-for="(_, id) in maxTileId" :key="id">
-                <div
-                  v-if="tilesMap.has(id)"
-                  class="tile"
-                  :style="tileStyle(id)"
-                >
+                <div v-if="tiles.has(id)" class="tile" :style="tileStyle(id)">
                   <GameTile
-                    :tile="tilesMap.get(id)?.tile ?? null"
+                    :tile="tiles.get(id)?.tile ?? null"
                     :searching-for="props.activePlayerItem"
                     @click="() => tryMovePlayer(id)"
                   />
