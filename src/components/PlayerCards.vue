@@ -29,12 +29,23 @@ const item = computed(() => getItem(props.item));
   >
     <div class="card">
       <div class="card-inner">
-        {{ hasPlayer ? props.count : "" }}
+        <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+          <text
+            x="50%"
+            y="50%"
+            dominant-baseline="central"
+            text-anchor="middle"
+          >
+            {{ hasPlayer ? props.count : "" }}
+          </text>
+        </svg>
       </div>
     </div>
 
     <div v-if="hasPlayer" class="card item-card">
-      <div class="card-inner">{{ item }}</div>
+      <div class="card-inner">
+        {{ item }}
+      </div>
     </div>
   </div>
 </template>
@@ -103,6 +114,15 @@ const item = computed(() => getItem(props.item));
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.card-inner svg text {
+  stroke-linejoin: round;
+  text-anchor: middle;
+  fill: black;
+  stroke: white;
+  stroke-width: 6px;
+  paint-order: stroke;
 }
 
 .card.item-card .card-inner {
