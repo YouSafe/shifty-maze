@@ -30,7 +30,7 @@ export function useTilesMap(board: Ref<Board | null>) {
   const animationTimeouts = ref<number[]>([]);
   watch(
     () => board.value?.free_tile?.tile?.id,
-    (freeTileId) => {
+    (_) => {
       const b = board.value;
       const freeTile = b?.free_tile;
       // Free tile, if it exists, is the newly freed up tile

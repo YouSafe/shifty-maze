@@ -127,9 +127,10 @@ const item = computed(() => getItem(props.item));
 }
 
 .card.item-card .card-inner {
+  color: #422b0d;
+  font-family: "Noto Color Emoji", sans-serif;
   font-size: 5vmin;
   background-image: none;
-  color: white;
   font-weight: bold;
   filter: sepia(25%);
 }
