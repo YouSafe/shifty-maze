@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch, watchEffect } from "vue";
+import SquareContainer from "./SquareContainer.vue";
 import GameTile from "./GameTile.vue";
 import PlayerPiece from "./PlayerPiece.vue";
 import type {
@@ -147,96 +148,94 @@ function startGame() {
 </script>
 
 <template>
-  <div class="max-size">
-    <div class="constrain-width">
-      <div class="constrain-height board-container">
-        <div class="board">
-          <div v-if="props.board === null" class="start-game">
-            <n-button
-              secondary
-              round
-              size="large"
-              type="primary"
-              :disabled="gameSettings.players.length < 2"
-              @click="startGame"
-            >
-              <h1>Press Start</h1>
-            </n-button>
-            <GameSettings
-              v-model:cards-per-player="gameSettings.items_per_player"
-              v-model:side-length="gameSettings.side_length"
-            ></GameSettings>
-            <h2>
-              <span>{{ gameSettings.players.length }}</span>
-              <span>&nbsp;</span>
-              <span v-if="gameSettings.players.length !== 1">Players</span
-              ><span v-else>Player</span>
-            </h2>
-            <ul>
-              <li v-for="playerId in gameSettings.players" :key="playerId">
-                Player {{ playerId }}
-              </li>
-            </ul>
-          </div>
-          <template v-else>
-            <div class="tiles-wrapper">
-              <!-- Vue.js v-for is freaking cursed and counts like Lua. But we're smart and use the index. -->
-              <template v-for="(_, id) in maxTileId" :key="id">
-                <div
-                  v-if="animatedTiles.has(id)"
-                  class="tile"
-                  :style="tileStyle(id)"
-                >
-                  <GameTile
-                    :tile="animatedTiles.get(id)?.tile ?? null"
-                    :searching-for="props.activePlayerItem"
-                    @click="() => tryMovePlayer(id)"
-                  />
-                </div>
-              </template>
-            </div>
-            <div class="tiles-wrapper">
+  <SquareContainer>
+    <div class="board-container">
+      <div class="board">
+        <div v-if="props.board === null" class="start-game">
+          <n-button
+            secondary
+            round
+            size="large"
+            type="primary"
+            :disabled="gameSettings.players.length < 2"
+            @click="startGame"
+          >
+            <h1>Press Start</h1>
+          </n-button>
+          <GameSettings
+            v-model:cards-per-player="gameSettings.items_per_player"
+            v-model:side-length="gameSettings.side_length"
+          ></GameSettings>
+          <h2>
+            <span>{{ gameSettings.players.length }}</span>
+            <span>&nbsp;</span>
+            <span v-if="gameSettings.players.length !== 1">Players</span
+            ><span v-else>Player</span>
+          </h2>
+          <ul>
+            <li v-for="playerId in gameSettings.players" :key="playerId">
+              Player {{ playerId }}
+            </li>
+          </ul>
+        </div>
+        <template v-else>
+          <div class="tiles-wrapper">
+            <!-- Vue.js v-for is freaking cursed and counts like Lua. But we're smart and use the index. -->
+            <template v-for="(_, id) in maxTileId" :key="id">
               <div
-                v-for="[id, player] of props.players.entries()"
-                :key="id"
-                class="start-circle"
-                :style="startCircleStyle(id)"
+                v-if="animatedTiles.has(id)"
+                class="tile"
+                :style="tileStyle(id)"
               >
-                <div
-                  :style="{
-                    backgroundColor: playerColors[id],
-                  }"
-                ></div>
-              </div>
-            </div>
-            <div class="tiles-wrapper">
-              <div
-                v-for="[id, player] of props.players.entries()"
-                :key="id"
-                class="player"
-                :style="playerStyle(id)"
-              >
-                <PlayerPiece
-                  :player="player"
-                  :is-active="
-                    props.phase === 'MovePlayer' &&
-                    player.id === props.activePlayer
-                  "
+                <GameTile
+                  :tile="animatedTiles.get(id)?.tile ?? null"
+                  :searching-for="props.activePlayerItem"
+                  @click="() => tryMovePlayer(id)"
                 />
               </div>
+            </template>
+          </div>
+          <div class="tiles-wrapper">
+            <div
+              v-for="[id, player] of props.players.entries()"
+              :key="id"
+              class="start-circle"
+              :style="startCircleStyle(id)"
+            >
+              <div
+                :style="{
+                  backgroundColor: playerColors[id],
+                }"
+              ></div>
             </div>
-            <div class="tiles-wrapper">
-              <SideArrows
-                :board="props.board"
-                :phase="props.phase"
-                @shift-tiles="($event) => emits('shift-tiles', $event)"
-              ></SideArrows>
+          </div>
+          <div class="tiles-wrapper">
+            <div
+              v-for="[id, player] of props.players.entries()"
+              :key="id"
+              class="player"
+              :style="playerStyle(id)"
+            >
+              <PlayerPiece
+                :player="player"
+                :is-active="
+                  props.phase === 'MovePlayer' &&
+                  player.id === props.activePlayer
+                "
+              />
             </div>
-          </template>
-        </div>
+          </div>
+          <div class="tiles-wrapper">
+            <SideArrows
+              :board="props.board"
+              :phase="props.phase"
+              @shift-tiles="($event) => emits('shift-tiles', $event)"
+            ></SideArrows>
+          </div>
+        </template>
       </div>
     </div>
-  </div>
+  </SquareContainer>
 </template>
 
 <style scoped>
@@ -271,6 +270,7 @@ function startGame() {
   margin: 1vmin;
   padding: 1vmin;
   background-color: #e0e0e0;
+  height: 100%;
 }
 
 .board {
