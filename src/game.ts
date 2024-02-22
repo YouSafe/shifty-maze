@@ -13,8 +13,6 @@ import { useLocalStorage } from "./local-storage";
 
 await init();
 
-export type PlayerMode = "local" | "online";
-
 export function DefaultGameStartSettings(): GameStartSettings {
   return {
     players: [],
@@ -113,6 +111,7 @@ export function useGame() {
   };
 
   return {
+    game: computed(() => game.value),
     hasStarted: computed(() => game.value !== null),
     playersMap: computed(() => game.value?.players.players ?? new Map()),
     playerHelper,
@@ -129,6 +128,7 @@ export function useGame() {
     phase: computed(() => game.value?.phase ?? "MoveTiles"),
     winner: computed(() => game.value?.winner ?? null),
 
+    setGame,
     startGame,
     rotateFreeTile,
     shiftTiles,

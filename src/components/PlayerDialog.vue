@@ -2,7 +2,7 @@
 import { computed, ref, watch } from "vue";
 import { PlayerColors } from "@/players";
 import { NModal, NButton, NSpace } from "naive-ui";
-import type { PlayerMode } from "@/game";
+import type { PlayerMode } from "@/multiplayer";
 const show = defineModel("show", { type: Boolean, required: true });
 const props = defineProps<{
   id: number;
@@ -37,8 +37,8 @@ function joinLocal() {
   show.value = false;
 }
 function joinOnline() {
-  // TODO:
-  //emit("join", props.id, "online");
+  emit("join", props.id, "online");
+  show.value = false;
 }
 </script>
 
