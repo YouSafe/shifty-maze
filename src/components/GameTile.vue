@@ -110,10 +110,11 @@ img {
   bottom: var(--edge);
   display: flex;
   container-type: size;
+  font-family: "Noto Color Emoji", sans-serif;
+  color: #422b0d;
   font-size: 2.5vmin;
   align-items: center;
   justify-content: center;
-  color: white;
   font-weight: bold;
   text-shadow: 0 0 5px black;
   filter: sepia(25%);
