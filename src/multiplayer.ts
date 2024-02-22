@@ -1,4 +1,4 @@
-import { type DataConnection, Peer } from "peerjs";
+import Peer, { type DataConnection } from "peerjs";
 import { useGame } from "./game";
 import type {
   Game,
@@ -8,7 +8,9 @@ import type {
   SideIndex,
 } from "game-core/pkg/wasm";
 import { ref, type ComputedRef, watch, type Ref } from "vue";
+import { JsonSerializer } from "json-safe-stringify";
 
+const serializer = new JsonSerializer();
 export type PlayerMode = "local" | "online";
 
 interface OnlinePlayer {
@@ -45,6 +47,9 @@ export function useServer(id: Ref<string>, game: ServerGame) {
     peer.on("error", (err) => {
       console.error("Peer error", err);
     });
+    peer.on("close", () => {
+      console.log("Server close");
+    });
     peer.on("connection", (connection) => {
       console.log("Connection", connection);
       onlinePlayers.value.set(connection.metadata as PlayerId, {
@@ -57,7 +62,7 @@ export function useServer(id: Ref<string>, game: ServerGame) {
         console.error("Connection error", err);
       });
       connection.on("data", (v) => {
-        const data: RPCFunction = v as any;
+        const data: RPCFunction = serializer.parse(v as any);
         if (data.name === "rotateFreeTile") {
           game.rotateFreeTile();
         } else if (data.name === "shiftTiles") {
@@ -93,7 +98,9 @@ export function useServer(id: Ref<string>, game: ServerGame) {
       return;
     }
     for (const player of onlinePlayers.value.values()) {
-      player.connection.send({ type: "Ok", value: g } as Result<Game, string>);
+      player.connection.send(
+        serializer.stringify({ type: "Ok", value: g } as Result<Game, string>)
+      );
     }
   }
 
@@ -152,42 +159,50 @@ export function useClientGame(
     alert(err);
     console.error("Peer error", err);
   });
-  const connection = peer.connect(serverId, {
-    metadata: playerId,
-    reliable: true,
+  let connection: DataConnection | null = null;
+
+  peer.on("open", () => {
+    connection = peer.connect(serverId, {
+      metadata: playerId,
+      reliable: true,
+    });
+    connection.on("open", () => {
+      connection!.on("data", (v) => {
+        console.log("Data", v);
+        const data: Result<Game, string> = serializer.parse(v as any);
+        if (data.type === "Ok") {
+          game.setGame(data.value);
+          clearHasLocalChange();
+        } else {
+          alert(data.value);
+          console.error("Server error", data.value);
+        }
+      });
+      send({
+        name: "requestGame",
+      });
+      console.log("Connection open");
+    });
+    connection.on("close", () => {
+      alert("Connection closed");
+    });
+    connection.on("error", (err) => {
+      alert(err);
+      console.error("Connection error", err);
+    });
   });
-  console.log("Try connection", connection);
 
   const { clearHasLocalChange, setHasLocalChange } = useLocalChangeTracker(
     () => {
-      connection.send({
+      send({
         name: "requestGame",
-      } as RPCFunction);
+      });
     }
   );
 
-  connection.on("open", () => {
-    connection.on("data", (v) => {
-      const data: Result<Game, string> = v as any;
-      if (data.type === "Ok") {
-        game.setGame(data.value);
-        clearHasLocalChange();
-      } else {
-        alert(data.value);
-      }
-    });
-    connection.send({
-      name: "requestGame",
-    } as RPCFunction);
-    console.log("Connection open");
-  });
-  connection.on("close", () => {
-    alert("Connection closed");
-  });
-  connection.on("error", (err) => {
-    alert(err);
-    console.error("Connection error", err);
-  });
+  function send(data: RPCFunction) {
+    connection!.send(serializer.stringify(data));
+  }
 
   function setGame(game: Game) {
     alert("Client cannot set game");
@@ -201,9 +216,9 @@ export function useClientGame(
     }
     game.rotateFreeTile();
     setHasLocalChange();
-    connection.send({
+    send({
       name: "rotateFreeTile",
-    } as RPCFunction);
+    });
   }
   function shiftTiles(side_index: SideIndex) {
     if (game.activePlayer.value !== playerId) {
@@ -211,10 +226,10 @@ export function useClientGame(
     }
     game.shiftTiles(side_index);
     setHasLocalChange();
-    connection.send({
+    send({
       name: "shiftTiles",
       side_index,
-    } as RPCFunction);
+    });
   }
   function removePlayer(id: PlayerId) {
     if (id === playerId) {
@@ -232,12 +247,12 @@ export function useClientGame(
     }
     game.movePlayer(id, x, y);
     setHasLocalChange();
-    connection.send({
+    send({
       name: "movePlayer",
       id,
       x,
       y,
-    } as RPCFunction);
+    });
   }
   function undoMove() {
     alert("Client cannot undo move");
