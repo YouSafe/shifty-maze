@@ -133,6 +133,7 @@ const item = computed(() => getItem(props.item));
   background-image: none;
   font-weight: bold;
   filter: sepia(25%);
+  text-shadow: 0 0 2px black;
 }
 
 .is-active > * {

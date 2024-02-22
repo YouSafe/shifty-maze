@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { h, ref, watch } from "vue";
+import SquareContainer from "@/components/SquareContainer.vue";
 import GameBoard from "@/components/GameBoard.vue";
 import PlayerCards from "@/components/PlayerCards.vue";
 import PlayerDialog from "@/components/PlayerDialog.vue";
@@ -73,8 +74,8 @@ OnePlayerCard.props = {
 
 <template>
   <div class="max-size">
-    <div class="constrain-width">
-      <div class="constrain-height container">
+    <SquareContainer>
+      <div class="container">
         <div class="top space-between">
           <OnePlayerCard :id="1"></OnePlayerCard>
           <OnePlayerCard :id="2"></OnePlayerCard>
@@ -131,7 +132,7 @@ OnePlayerCard.props = {
           Settings</NButton
         >
       </div>
-    </div>
+    </SquareContainer>
     <PlayerDialog
       v-model:show="showPlayerDialog"
       :id="showDialogFor.id"
