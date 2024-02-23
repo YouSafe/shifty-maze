@@ -36,7 +36,9 @@ export function useServer(id: Ref<string>, game: ServerGame) {
     if (peer !== null) {
       return;
     }
-    id.value = crypto.randomUUID();
+    if (id.value === "") {
+      id.value = crypto.randomUUID();
+    }
 
     peer = new Peer(id.value, {
       debug: 2,
@@ -152,7 +154,7 @@ export function useClientGame(
   playerId: number,
   disconnect: () => void
 ): ReturnType<typeof useGame> {
-  const game = useGame();
+  const game = useGame((e) => alert(e));
 
   const peer = new Peer();
   peer.on("error", (err) => {
