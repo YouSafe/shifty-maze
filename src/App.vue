@@ -19,6 +19,7 @@ import {
   ServerUrlRef,
 } from "./multiplayer-url";
 import type { PlayerId } from "game-core/pkg/wasm";
+import { Message } from "@/notification";
 
 const showPlayerDialog = ref(false);
 const showDialogFor = ref(0);
@@ -33,7 +34,9 @@ const game = isClient()
       disconnectClient();
       window.location.reload();
     })
-  : useGame();
+  : useGame((e) => {
+      Message.error(e);
+    });
 
 const server = isClient() ? null : useServer(ServerUrlRef, game);
 

@@ -21,7 +21,7 @@ export function DefaultGameStartSettings(): GameStartSettings {
   };
 }
 
-export function useGame() {
+export function useGame(errorHandler: (error: string) => void) {
   const game = ref<Game | null>(null);
   const storage = useLocalStorage<Game>();
 
@@ -44,7 +44,7 @@ export function useGame() {
       game.value = result.value;
       saveState();
     } else {
-      alert(result.value);
+      errorHandler(result.value);
     }
   }
 
