@@ -24,8 +24,8 @@ interface ServerGame {
   movePlayer: (id: PlayerId, x: number, y: number) => void;
 }
 
-const onlinePlayers = ref(new Map<PlayerId, OnlinePlayer>());
 export function useServer(id: Ref<string>, game: ServerGame) {
+  const onlinePlayers = ref(new Map<PlayerId, OnlinePlayer>());
   let peer: Peer | null = null;
 
   if (id.value !== "") {
@@ -165,7 +165,7 @@ export function useClientGame(
   let connection: DataConnection | null = null;
 
   peer.on("open", () => {
-    console.log("Client open");
+    console.log("Client open, connecting to ", serverId, " as ", playerId);
     connection = peer.connect(serverId, {
       metadata: playerId,
       reliable: true,
