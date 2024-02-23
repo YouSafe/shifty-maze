@@ -7,7 +7,7 @@ import type {
   Result,
   SideIndex,
 } from "game-core/pkg/wasm";
-import { ref, type ComputedRef, watch, type Ref } from "vue";
+import { ref, type ComputedRef, watch, type Ref, markRaw } from "vue";
 import { JsonSerializer } from "json-safe-stringify";
 
 const serializer = new JsonSerializer();
@@ -59,9 +59,12 @@ export function useServer(id: Ref<string>, game: ServerGame) {
     peer.on("connection", (connection) => {
       console.log("Connection from ", connection.peer);
       connection.on("open", () => {
-        onlinePlayers.value.set(connection.metadata as PlayerId, {
-          connection,
-        });
+        onlinePlayers.value.set(
+          connection.metadata as PlayerId,
+          markRaw({
+            connection,
+          })
+        );
       });
       connection.on("close", () => {
         onlinePlayers.value.delete(connection.metadata as PlayerId);
