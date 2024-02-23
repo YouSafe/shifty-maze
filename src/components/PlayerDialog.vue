@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { PlayerColors } from "@/players";
-import { NModal, NButton, NSpace } from "naive-ui";
+import { NModal, NButton, NSpace, NPopconfirm } from "naive-ui";
 import type { PlayerMode } from "@/multiplayer";
 const show = defineModel("show", { type: Boolean, required: true });
 const props = defineProps<{
@@ -15,21 +15,10 @@ const emit = defineEmits<{
 }>();
 const playerColor = computed(() => PlayerColors[props.id]);
 const hasPlayer = computed(() => props.playerMode !== null);
-const isTryingToRemove = ref(false);
-watch(show, (v) => {
-  if (v) {
-    isTryingToRemove.value = false;
-  }
-});
 
 function remove() {
-  if (isTryingToRemove.value) {
-    isTryingToRemove.value = false;
-    emit("remove", props.id);
-    show.value = false;
-  } else {
-    isTryingToRemove.value = true;
-  }
+  emit("remove", props.id);
+  show.value = false;
 }
 
 function joinLocal() {
@@ -87,10 +76,14 @@ function joinOnline() {
     </n-space>
     <template #footer>
       <div v-if="hasPlayer">
-        <n-button strong secondary round type="error" @click="remove()">
-          <p v-if="!isTryingToRemove">Remove Player</p>
-          <p v-else>Are you sure?</p>
-        </n-button>
+        <n-popconfirm @positive-click="remove()">
+          <template #trigger>
+            <n-button strong secondary round type="error">
+              Remove Player
+            </n-button>
+          </template>
+          Are you sure?
+        </n-popconfirm>
       </div>
     </template>
   </n-modal>

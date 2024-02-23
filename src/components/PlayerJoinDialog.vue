@@ -29,7 +29,7 @@ const serverUrl = computed(() => getServerUrl(props.playerId));
       border: `2px solid ${playerColor}`,
     }"
   >
-    <NQrCode :value="serverUrl" :size="300" level="Q" />
+    <n-qr-code :value="serverUrl" :size="300" level="Q" />
     <br />
     <span class="link">{{ serverUrl }}</span>
   </n-modal>

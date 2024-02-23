@@ -9,24 +9,14 @@ const emit = defineEmits<{
   (e: "undo"): void;
   (e: "quit-game"): void;
 }>();
-const isTryingToQuit = ref(false);
-watch(show, (v) => {
-  if (v) {
-    isTryingToQuit.value = false;
-  }
-});
+
 function undo() {
   emit("undo");
 }
 
 function quitGame() {
-  if (isTryingToQuit.value) {
-    isTryingToQuit.value = false;
-    emit("quit-game");
-    show.value = false;
-  } else {
-    isTryingToQuit.value = true;
-  }
+  emit("quit-game");
+  show.value = false;
 }
 </script>
 
@@ -57,10 +47,12 @@ function quitGame() {
     </NButton>
     <template #footer>
       <div v-if="hasGameStarted">
-        <n-button strong secondary round type="error" @click="quitGame()">
-          <p v-if="!isTryingToQuit">Quit Game</p>
-          <p v-else>Are you sure?</p>
-        </n-button>
+        <n-popconfirm @positive-click="quitGame()">
+          <template #trigger>
+            <n-button strong secondary round type="error"> Quit Game </n-button>
+          </template>
+          Are you sure?
+        </n-popconfirm>
       </div>
     </template>
   </n-modal>
