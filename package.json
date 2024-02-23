@@ -16,7 +16,6 @@
     "@vueuse/core": "^10.8.0",
     "json-safe-stringify": "^1.0.3",
     "peerjs": "^1.5.2",
-    "qrcode.vue": "^3.4.1",
     "vue": "^3.4.15"
   },
   "devDependencies": {

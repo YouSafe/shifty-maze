@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { getServerUrl } from "@/multiplayer-url";
 import { PlayerColors } from "@/players";
-import { NModal, NButton, NSpace } from "naive-ui";
-import QrcodeVue from "qrcode.vue";
+import { NModal, NQrCode } from "naive-ui";
 import { computed } from "vue";
 const show = defineModel("show", { type: Boolean, required: true });
 const props = defineProps<{
@@ -30,7 +29,7 @@ const serverUrl = computed(() => getServerUrl(props.playerId));
       border: `2px solid ${playerColor}`,
     }"
   >
-    <qrcode-vue :value="serverUrl" :size="300" level="H" />
+    <NQrCode :value="serverUrl" :size="300" level="Q" />
     <br />
     <span class="link">{{ serverUrl }}</span>
   </n-modal>
