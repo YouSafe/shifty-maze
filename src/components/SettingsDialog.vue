@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
-import { NModal, NButton } from "naive-ui";
+import { NModal, NButton, NPopconfirm } from "naive-ui";
 const show = defineModel("show", { type: Boolean, required: true });
 const props = defineProps<{
   hasGameStarted: boolean;

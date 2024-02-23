@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { getServerUrl } from "@/multiplayer-url";
 import { PlayerColors } from "@/players";
-import { NModal, NQrCode } from "naive-ui";
+import { NModal, NQrCode, useMessage } from "naive-ui";
 import { computed } from "vue";
 const show = defineModel("show", { type: Boolean, required: true });
 const props = defineProps<{
@@ -9,6 +9,12 @@ const props = defineProps<{
 }>();
 const playerColor = computed(() => PlayerColors[props.playerId]);
 const serverUrl = computed(() => getServerUrl(props.playerId));
+
+const message = useMessage();
+function copyUrl() {
+  navigator.clipboard.writeText(serverUrl.value);
+  message.success("Copied to clipboard");
+}
 </script>
 
 <template open>
@@ -31,7 +37,7 @@ const serverUrl = computed(() => getServerUrl(props.playerId));
   >
     <n-qr-code :value="serverUrl" :size="300" level="Q" />
     <br />
-    <span class="link">{{ serverUrl }}</span>
+    <span class="link" @click="copyUrl">{{ serverUrl }}</span>
   </n-modal>
 </template>
 
