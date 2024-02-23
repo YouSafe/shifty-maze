@@ -7,7 +7,7 @@ import type {
   Result,
   SideIndex,
 } from "game-core/pkg/wasm";
-import { type ComputedRef, watch, type Ref } from "vue";
+import { ref, type ComputedRef, watch, type Ref } from "vue";
 import { JsonSerializer } from "json-safe-stringify";
 
 const serializer = new JsonSerializer();
@@ -25,7 +25,7 @@ interface ServerGame {
 }
 
 export function useServer(id: Ref<string>, game: ServerGame) {
-  const onlinePlayers = new Map<PlayerId, OnlinePlayer>();
+  const onlinePlayers = ref(new Map<PlayerId, OnlinePlayer>());
   let peer: Peer | null = null;
 
   if (id.value !== "") {
@@ -33,7 +33,7 @@ export function useServer(id: Ref<string>, game: ServerGame) {
   }
 
   function isOnlinePlayer(id: PlayerId): boolean {
-    return onlinePlayers.has(id);
+    return onlinePlayers.value.has(id);
   }
 
   function startServer() {
@@ -59,12 +59,12 @@ export function useServer(id: Ref<string>, game: ServerGame) {
     peer.on("connection", (connection) => {
       console.log("Connection from ", connection.peer);
       connection.on("open", () => {
-        onlinePlayers.set(connection.metadata as PlayerId, {
+        onlinePlayers.value.set(connection.metadata as PlayerId, {
           connection,
         });
       });
       connection.on("close", () => {
-        onlinePlayers.delete(connection.metadata as PlayerId);
+        onlinePlayers.value.delete(connection.metadata as PlayerId);
       });
       connection.on("error", (err) => {
         console.error("Connection error", err);
@@ -100,7 +100,7 @@ export function useServer(id: Ref<string>, game: ServerGame) {
     if (g === null) {
       return;
     }
-    for (const player of onlinePlayers.values()) {
+    for (const player of onlinePlayers.value.values()) {
       player.connection.send(
         serializer.stringify({ type: "Ok", value: g } as Result<Game, string>)
       );
