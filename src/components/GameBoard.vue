@@ -16,6 +16,7 @@ import GameSettings from "./GameSettings.vue";
 import { NButton } from "naive-ui";
 import { groupBy } from "@/array-utils";
 import { PlayerColors } from "@/players";
+import { fromNullable } from "@/result";
 import SideArrows from "./GameBoard/SideArrows.vue";
 import { useTilesMap } from "./GameBoard/tiles-map";
 

@@ -1,4 +1,5 @@
 import { JsonSerializer } from "json-safe-stringify";
+import { None, Some, type Option } from "./result";
 
 export function useLocalStorage<T>() {
   const version = 1;
@@ -13,7 +14,7 @@ export function useLocalStorage<T>() {
     localStorage.setItem(key, serializer.stringify({ version, state }));
   };
 
-  const load = () => {
+  const load = (): Option<T> => {
     const entry = localStorage.getItem(key);
     if (entry !== null) {
       try {
@@ -22,11 +23,11 @@ export function useLocalStorage<T>() {
           state: T;
         };
         if (parsed.version === version) {
-          return parsed.state;
+          return Some(parsed.state);
         }
       } catch (e) {}
     }
-    return null;
+    return None();
   };
 
   return {
