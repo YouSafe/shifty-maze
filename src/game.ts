@@ -9,7 +9,7 @@ import init, {
   type Game,
   type Result,
 } from "../game-core/pkg";
-import { useLocalStorage } from "./local-storage";
+import { useLocalStorage } from "@/local-storage";
 
 await init();
 

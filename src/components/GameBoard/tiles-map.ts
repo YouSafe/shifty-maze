@@ -1,5 +1,5 @@
-import type { Board, Side, SideIndex, Tile } from "game-core/pkg/wasm";
-import { computed, ref, watchEffect, type Ref, watch } from "vue";
+import type { Board, Side, SideIndex, Tile } from "game-core/pkg";
+import { computed, ref, type Ref, watch } from "vue";
 
 export interface TileData {
   tile: Tile;
@@ -31,7 +31,6 @@ export function useTilesMap(board: Ref<Board | null>) {
   watch(
     () => board.value?.free_tile?.tile?.id,
     (freeTileId) => {
-      console.log("freeTileId", freeTileId);
       const b = board.value;
       const freeTile = b?.free_tile;
       // Free tile, if it exists, is the newly freed up tile

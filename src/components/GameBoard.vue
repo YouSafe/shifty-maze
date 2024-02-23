@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch, watchEffect } from "vue";
+import { computed } from "vue";
 import GameTile from "./GameTile.vue";
 import PlayerPiece from "./PlayerPiece.vue";
 import type {
@@ -10,11 +10,8 @@ import type {
   Player,
   PlayerId,
   Position,
-  Rotation,
-  Side,
   SideIndex,
-  Tile,
-} from "game-core/pkg/wasm";
+} from "game-core/pkg";
 import GameSettings from "./GameSettings.vue";
 import { NButton } from "naive-ui";
 import { groupBy } from "@/array-utils";

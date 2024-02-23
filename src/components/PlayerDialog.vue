@@ -3,6 +3,7 @@ import { computed, ref, watch } from "vue";
 import { PlayerColors } from "@/players";
 import { NModal, NButton, NSpace } from "naive-ui";
 import type { PlayerMode } from "@/game";
+
 const show = defineModel("show", { type: Boolean, required: true });
 const props = defineProps<{
   id: number;
