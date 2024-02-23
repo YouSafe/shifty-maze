@@ -1,4 +1,4 @@
-import type { Board, Side, SideIndex, Tile } from "game-core/pkg";
+import type { Board, Side, SideIndex, Tile } from "../../../game-core/pkg";
 import { computed, ref, type Ref, watch } from "vue";
 
 export interface TileData {

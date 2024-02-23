@@ -11,7 +11,7 @@ import type {
   PlayerId,
   Position,
   SideIndex,
-} from "game-core/pkg";
+} from "../../game-core/pkg";
 import GameSettings from "./GameSettings.vue";
 import { NButton } from "naive-ui";
 import { groupBy } from "@/array-utils";

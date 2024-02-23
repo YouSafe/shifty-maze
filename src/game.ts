@@ -7,10 +7,9 @@ import init, {
   type Rotation,
   type SideIndex,
   type Game,
-  type Result as ActionResult,
-} from "game-core/pkg";
+  type Result,
+} from "../game-core/pkg";
 import { useLocalStorage } from "@/local-storage";
-import { Result } from "@/result";
 
 await init();
 
@@ -35,7 +34,7 @@ export function useGame() {
 
   const core = new GameCore(10);
 
-  storage.load().map(state => setGame(state));
+  storage.load().map((state) => setGame(state));
 
   function handleResult(result: Result<Game, string>) {
     if (result.type === "Ok") {
