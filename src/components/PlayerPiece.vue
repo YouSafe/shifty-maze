@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { DungeonTiles } from "@/dungeon_tiles";
 import { PlayerColors } from "@/players";
-import type { Player } from "game-core/pkg/wasm";
+import type { Player } from "../../game-core/pkg";
 import { computed } from "vue";
 
 const props = defineProps<{

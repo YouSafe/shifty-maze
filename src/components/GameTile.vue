@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { DungeonTiles } from "@/dungeon_tiles";
 import { getItem } from "@/items";
-import type { Item, Tile } from "game-core/pkg/wasm";
+import type { Item, Tile } from "../../game-core/pkg";
 import { computed } from "vue";
 
 const props = defineProps<{
@@ -110,7 +110,7 @@ img {
   bottom: var(--edge);
   display: flex;
   container-type: size;
-  font-size: 4cqw;
+  font-size: 2.5vmin;
   align-items: center;
   justify-content: center;
   color: white;

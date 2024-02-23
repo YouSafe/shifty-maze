@@ -7,10 +7,9 @@ import init, {
   type Rotation,
   type SideIndex,
   type Game,
-  type Result as ActionResult,
-} from "game-core/pkg";
+  type Result,
+} from "../game-core/pkg";
 import { useLocalStorage } from "@/local-storage";
-import { Result } from "@/result";
 
 await init();
 
@@ -35,13 +34,15 @@ export function useGame() {
 
   const core = new GameCore(10);
 
-  storage.load().map(state => setGame(state));
+  storage.load().map((state) => setGame(state));
 
-  function handleResult(result: ActionResult<Game, string>) {
-    Result.fromSplitResult(result).map(g => {
-      game.value = g;
+  function handleResult(result: Result<Game, string>) {
+    if (result.type === "Ok") {
+      game.value = result.value;
       saveState();
-    }).mapErr(alert);
+    } else {
+      alert(result.value);
+    }
   }
 
   function startGame(settings: GameStartSettings) {
@@ -49,8 +50,13 @@ export function useGame() {
     handleResult(core.start_game(settings));
   }
 
-  function rotate_free_tile(rotation: Rotation) {
-    handleResult(core.rotate_free_tile(rotation));
+  function rotateFreeTile() {
+    if (game.value !== null) {
+      const rotation = nextRotation(
+        game.value.board.free_tile.tile.rotation ?? "OneEighty"
+      );
+      handleResult(core.rotate_free_tile(rotation));
+    }
   }
 
   function shiftTiles(side_index: SideIndex) {
@@ -116,13 +122,21 @@ export function useGame() {
     }),
     board: computed(() => game.value?.board ?? null),
     phase: computed(() => game.value?.phase ?? "MoveTiles"),
+    winner: computed(() => game.value?.winner ?? null),
 
     startGame,
-    rotate_free_tile,
+    rotateFreeTile,
     shiftTiles,
     removePlayer,
     movePlayer,
     undoMove,
     finishGame,
   };
+}
+
+function nextRotation(rotation: Rotation) {
+  if (rotation === "Zero") return "Ninety";
+  if (rotation === "Ninety") return "OneEighty";
+  if (rotation === "OneEighty") return "TwoSeventy";
+  return "Zero";
 }

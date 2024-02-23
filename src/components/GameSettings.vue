@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { reactive } from "vue";
 import { NInputNumber, NSpace, NSelect } from "naive-ui";
+
 const sideLength = defineModel("sideLength", { type: Number, required: true });
 const cardsPerPlayer = defineModel("cardsPerPlayer", {
   type: Number,

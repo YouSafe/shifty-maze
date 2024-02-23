@@ -1,10 +1,14 @@
 import TileMapImageUrl from "./assets/dungeon_tiles.png?url";
+
 const TileMapImage = new Image();
+
 await new Promise((resolve) => {
   TileMapImage.onload = resolve;
   TileMapImage.src = TileMapImageUrl;
 });
+
 const canvas = document.createElement("canvas");
+
 const makeCtx = (width: number, height: number) => {
   canvas.width = width;
   canvas.height = height;

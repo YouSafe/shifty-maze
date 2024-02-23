@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
 import { NModal, NButton } from "naive-ui";
+
 const show = defineModel("show", { type: Boolean, required: true });
 const props = defineProps<{
   hasGameStarted: boolean;
@@ -23,14 +24,10 @@ function quitGame() {
   if (isTryingToQuit.value) {
     isTryingToQuit.value = false;
     emit("quit-game");
-    close();
+    show.value = false;
   } else {
     isTryingToQuit.value = true;
   }
-}
-
-function close() {
-  show.value = false;
 }
 </script>
 
@@ -39,8 +36,7 @@ function close() {
     :show="show"
     @update:show="
       (v) => {
-        if (!v) close();
-        else show = v;
+        show = v;
       }
     "
     preset="card"

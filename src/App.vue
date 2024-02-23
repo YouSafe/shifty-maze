@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { h, ref } from "vue";
+import { h, ref, watch } from "vue";
 import GameBoard from "@/components/GameBoard.vue";
 import PlayerCards from "@/components/PlayerCards.vue";
 import PlayerDialog from "@/components/PlayerDialog.vue";
 import SettingsDialog from "@/components/SettingsDialog.vue";
+import WinnerDialog from "@/components/WinnerDialog.vue";
 import GameTile from "@/components/GameTile.vue";
 import { useGame, type PlayerMode, DefaultGameStartSettings } from "@/game";
 import { NButton } from "naive-ui";
@@ -16,9 +17,14 @@ const showDialogFor = ref({
 });
 
 const showSettingsDialog = ref(false);
+const showWinnerDialog = ref(false);
 
 const gameSettings = ref(DefaultGameStartSettings());
 const game = useGame();
+
+watch(game.winner, (v) => {
+  showWinnerDialog.value = v !== null;
+});
 
 function addPlayer(id: number, mode: PlayerMode) {
   if (game.hasStarted.value === false) {
@@ -87,7 +93,7 @@ OnePlayerCard.props = {
             v-model:start-settings="gameSettings"
             @start-game="(v) => game.startGame(v)"
             @player-move="(player, x, y) => game.movePlayer(player, x, y)"
-            @shift-tiles="(side_index, rotation) => game.shiftTiles(side_index)"
+            @shift-tiles="(side_index) => game.shiftTiles(side_index)"
           />
           <div class="right space-between">
             <OnePlayerCard :id="3"></OnePlayerCard>
@@ -98,12 +104,17 @@ OnePlayerCard.props = {
           <OnePlayerCard :id="6"></OnePlayerCard>
           <OnePlayerCard :id="5"></OnePlayerCard>
         </div>
-        <GameTile
+        <div
           v-if="game.board.value?.free_tile"
-          :tile="game.board.value?.free_tile?.tile ?? null"
-          :searching-for="game.activePlayerItem.value"
           class="free-tile"
-        ></GameTile>
+          @click="game.rotateFreeTile()"
+        >
+          <GameTile
+            :tile="game.board.value?.free_tile?.tile ?? null"
+            :searching-for="game.activePlayerItem.value"
+          ></GameTile>
+          <div v-if="game.phase.value === 'MoveTiles'">Rotate&nbsp;⟳</div>
+        </div>
         <NButton
           round
           size="small"
@@ -128,6 +139,12 @@ OnePlayerCard.props = {
       @join="(id, mode) => addPlayer(id, mode)"
       @remove="(v) => removePlayer(v)"
     ></PlayerDialog>
+    <WinnerDialog
+      v-if="game.winner.value !== null"
+      :id="game.winner.value"
+      v-model:show="showWinnerDialog"
+      @new-game="game.finishGame()"
+    ></WinnerDialog>
     <SettingsDialog
       v-model:show="showSettingsDialog"
       :has-game-started="game.hasStarted.value"

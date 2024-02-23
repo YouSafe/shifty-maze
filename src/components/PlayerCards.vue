@@ -2,7 +2,8 @@
 import { computed } from "vue";
 import { getItem } from "@/items";
 import { PlayerColors } from "@/players";
-import type { Item, PlayerId, Side } from "game-core/pkg/wasm";
+import type { Item, PlayerId, Side } from "../../game-core/pkg";
+
 const props = defineProps<{
   side: Side;
   id: PlayerId;
@@ -29,12 +30,23 @@ const item = computed(() => getItem(props.item));
   >
     <div class="card">
       <div class="card-inner">
-        {{ hasPlayer ? props.count : "" }}
+        <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+          <text
+            x="50%"
+            y="50%"
+            dominant-baseline="central"
+            text-anchor="middle"
+          >
+            {{ hasPlayer ? props.count : "" }}
+          </text>
+        </svg>
       </div>
     </div>
 
     <div v-if="hasPlayer" class="card item-card">
-      <div class="card-inner">{{ item }}</div>
+      <div class="card-inner">
+        {{ item }}
+      </div>
     </div>
   </div>
 </template>
@@ -105,6 +117,15 @@ const item = computed(() => getItem(props.item));
   align-items: center;
 }
 
+.card-inner svg text {
+  stroke-linejoin: round;
+  text-anchor: middle;
+  fill: black;
+  stroke: white;
+  stroke-width: 6px;
+  paint-order: stroke;
+}
+
 .card.item-card .card-inner {
   font-size: 5vmin;
   background-image: none;
@@ -113,21 +134,7 @@ const item = computed(() => getItem(props.item));
   filter: sepia(25%);
 }
 
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 8px 2px var(--red);
-  }
-
-  50% {
-    box-shadow: 0 0 8px 4px var(--red);
-  }
-
-  100% {
-    box-shadow: 0 0 8px 2px var(--red);
-  }
-}
-
 .is-active > * {
-  animation: pulse 1s infinite;
+  box-shadow: 0 0 8px 4px var(--red);
 }
 </style>

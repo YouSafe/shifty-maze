@@ -10,16 +10,15 @@ import type {
   Player,
   PlayerId,
   Position,
-  Rotation,
-  Side,
   SideIndex,
-  Tile,
-} from "game-core/pkg/wasm";
+} from "../../game-core/pkg";
 import GameSettings from "./GameSettings.vue";
 import { NButton } from "naive-ui";
 import { groupBy } from "@/array-utils";
 import { PlayerColors } from "@/players";
 import { fromNullable } from "@/result";
+import SideArrows from "./GameBoard/SideArrows.vue";
+import { useTilesMap } from "./GameBoard/tiles-map";
 
 const gameSettings = defineModel<GameStartSettings>("startSettings", {
   required: true,
@@ -36,115 +35,24 @@ const props = defineProps<{
 const emits = defineEmits<{
   (e: "player-move", player: PlayerId, x: number, y: number): void;
   (e: "start-game", settings: GameStartSettings): void;
-  (e: "shift-tiles", side_index: SideIndex, insertRotation: Rotation): void;
+  (e: "shift-tiles", side_index: SideIndex): void;
 }>();
 
 // Free tile + 1
 const maxTileId = computed(() => (props.board?.tiles.length ?? 0) + 1);
+const sideLength = computed(() => props.board?.side_length ?? 1);
 
-interface TileData {
-  tile: Tile;
-  x: number;
-  y: number;
-}
-
-const tileSize = computed(() =>
-  fromNullable(props.board)
-    .map((b) => 100 / b.side_length + "cqw")
-    .unwrapOr("0")
+const { tiles, animatedTiles, tileStyle } = useTilesMap(
+  computed(() => props.board)
 );
 
-const tilesMap = computed(() =>
-  fromNullable(props.board)
-    .map((board) =>
-      board.tiles.map(
-        (tile, index) =>
-          [
-            tile.id,
-            {
-              tile,
-              x: index % board.side_length,
-              y: Math.floor(index / board.side_length),
-            } as TileData,
-          ] as const
-      )
-    )
-    .map((tiles) => new Map(tiles))
-    .unwrapOr(new Map<number, TileData>())
-);
-
-interface SideArrow {
-  id: string;
-  side_index: SideIndex;
-  top?: string;
-  left?: string;
-  right?: string;
-  bottom?: string;
-}
-
-const sideArrows = computed(() => {
-  const board = props.board;
-  if (board === null) {
-    return [];
-  }
-  const sideLength = board.side_length;
-  return (
-    [
-      (index: number, percent: string) => ({
-        side_index: { side: "Top" as Side, index },
-        top: "0",
-        left: percent,
-      }),
-      (index: number, percent: string) => ({
-        side_index: { side: "Bottom" as Side, index },
-        bottom: "0",
-        left: percent,
-      }),
-      (index: number, percent: string) => ({
-        side_index: { side: "Left" as Side, index },
-        left: "0",
-        top: percent,
-      }),
-      (index: number, percent: string) => ({
-        side_index: { side: "Right" as Side, index },
-        right: "0",
-        top: percent,
-      }),
-    ] as const
-  ).flatMap((position, mainIndex) => {
-    const arrows: SideArrow[] = [];
-    for (let i = 1; i < sideLength; i += 2) {
-      arrows.push({
-        id: `${mainIndex}-${i}`,
-        ...position(i, (i / sideLength) * 100 + "%"),
-      });
-    }
-    return arrows;
-  });
-});
-
-function tileStyle(id: number) {
-  const board = props.board;
-  const tile = tilesMap.value.get(id) ?? null;
-  if (board === null || tile === null) {
-    return {};
-  }
-  return {
-    top: (tile.y / board.side_length) * 100 + "%",
-    left: (tile.x / board.side_length) * 100 + "%",
-  };
-}
+const tileSize = computed(() => 100 / sideLength.value + "cqw");
 
 const positionToMapKey = (position: Position) =>
   `${position.x} - ${position.y}`;
 const positionPlayersMap = computed(() =>
   groupBy([...props.players.values()], (player) =>
     positionToMapKey(player.position)
-  )
-);
-const startPositionPlayersMap = computed(() =>
-  groupBy([...props.players.values()], (player) =>
-    positionToMapKey(player.start_position)
   )
 );
 
@@ -161,9 +69,8 @@ const playerRenderOffsets = [
 ];
 
 function playerStyle(id: PlayerId) {
-  const board = props.board;
   const player = props.players.get(id) ?? null;
-  if (board === null || player === null) {
+  if (player === null) {
     return {
       display: "none",
     };
@@ -178,8 +85,8 @@ function playerStyle(id: PlayerId) {
       }%)`
     : "";
   return {
-    top: (player.position.y / board.side_length) * 100 + "%",
-    left: (player.position.x / board.side_length) * 100 + "%",
+    top: (player.position.y / sideLength.value) * 100 + "%",
+    left: (player.position.x / sideLength.value) * 100 + "%",
     transform,
   };
 }
@@ -197,9 +104,8 @@ const startPositionRenderOffsets = [
 ];
 
 function startCircleStyle(id: PlayerId) {
-  const board = props.board;
   const player = props.players.get(id) ?? null;
-  if (board === null || player === null) {
+  if (player === null) {
     return {
       display: "none",
     };
@@ -209,8 +115,8 @@ function startCircleStyle(id: PlayerId) {
     30 * (startPositionRenderOffsets[id]?.x ?? 0)
   }%, ${30 * (startPositionRenderOffsets[id]?.y ?? 0)}%)`;
   return {
-    top: (player.start_position.y / board.side_length) * 100 + "%",
-    left: (player.start_position.x / board.side_length) * 100 + "%",
+    top: (player.start_position.y / sideLength.value) * 100 + "%",
+    left: (player.start_position.x / sideLength.value) * 100 + "%",
     transform,
   };
 }
@@ -226,33 +132,15 @@ function tryMovePlayer(tileId: number) {
   if (props.activePlayer === null) {
     return;
   }
-  const tile = tilesMap.value.get(tileId);
+  const tile = tiles.value.get(tileId);
   if (tile === undefined) {
     return;
   }
   emits("player-move", props.activePlayer, tile.x, tile.y);
 }
 
-function startShiftTiles(side_index: SideIndex) {
-  emits("shift-tiles", side_index, "Zero");
-}
-
 function startGame() {
   emits("start-game", gameSettings.value);
-}
-function isTileArrowDisabled(side_index: SideIndex) {
-  if (props.board === null) {
-    return true;
-  }
-  let freeTile = props.board.free_tile;
-  if (
-    (freeTile.side_with_index ?? null) !== null &&
-    freeTile.side_with_index?.side === side_index.side &&
-    freeTile.side_with_index?.index === side_index.index
-  ) {
-    return true;
-  }
-  return false;
 }
 </script>
 
@@ -290,17 +178,17 @@ function isTileArrowDisabled(side_index: SideIndex) {
           </div>
           <template v-else>
             <div class="tiles-wrapper">
-              <!-- Vue.js v-for is freaking cursed and counts like Lua -->
-              <template v-for="id in maxTileId" :key="id - 1">
+              <!-- Vue.js v-for is freaking cursed and counts like Lua. But we're smart and use the index. -->
+              <template v-for="(_, id) in maxTileId" :key="id">
                 <div
-                  v-if="tilesMap.has(id - 1)"
+                  v-if="animatedTiles.has(id)"
                   class="tile"
-                  :style="tileStyle(id - 1)"
+                  :style="tileStyle(id)"
                 >
                   <GameTile
-                    :tile="tilesMap.get(id - 1)?.tile ?? null"
+                    :tile="animatedTiles.get(id)?.tile ?? null"
                     :searching-for="props.activePlayerItem"
-                    @click="() => tryMovePlayer(id - 1)"
+                    @click="() => tryMovePlayer(id)"
                   />
                 </div>
               </template>
@@ -336,31 +224,11 @@ function isTileArrowDisabled(side_index: SideIndex) {
               </div>
             </div>
             <div class="tiles-wrapper">
-              <div
-                v-for="arrow in sideArrows"
-                :key="arrow.id"
-                class="arrow-wrapper"
-                :class="{
-                  [arrow.side_index.side]: true,
-                  'is-active': props.phase === 'MoveTiles',
-                  disabled: isTileArrowDisabled(arrow.side_index),
-                }"
-                :style="{
-                  top: arrow.top,
-                  left: arrow.left,
-                  right: arrow.right,
-                  bottom: arrow.bottom,
-                }"
-                @click="() => startShiftTiles(arrow.side_index)"
-              >
-                <div
-                  class="arrow"
-                  :class="{
-                    [arrow.side_index.side]: true,
-                    highlight: props.phase === 'MoveTiles',
-                  }"
-                ></div>
-              </div>
+              <SideArrows
+                :board="props.board"
+                :phase="props.phase"
+                @shift-tiles="($event) => emits('shift-tiles', $event)"
+              ></SideArrows>
             </div>
           </template>
         </div>
@@ -419,69 +287,5 @@ function isTileArrowDisabled(side_index: SideIndex) {
   height: 100%;
   gap: 20px;
   flex-direction: column;
-}
-
-.arrow-wrapper {
-  position: absolute;
-  height: calc(var(--tile-size));
-  width: calc(var(--tile-size));
-  transform-origin: 50% 50%;
-  pointer-events: none;
-}
-
-.arrow-wrapper.Top {
-  transform: translateY(-2vmin);
-}
-
-.arrow-wrapper.Bottom {
-  transform: rotate(180deg) translateY(-2vmin);
-}
-
-.arrow-wrapper.Right {
-  transform: rotate(90deg) translateY(-2vmin);
-}
-
-.arrow-wrapper.Left {
-  transform: rotate(-90deg) translateY(-2vmin);
-}
-
-.arrow-wrapper.is-active {
-  pointer-events: auto;
-}
-
-/* TODO: Make this a disabled icon */
-.arrow-wrapper.disabled {
-  display: none;
-}
-
-.arrow {
-  width: 100%;
-  height: 2vmin;
-  margin-top: 0vmin;
-  background-color: #7c7c7c;
-  clip-path: polygon(50% 100%, 100% 0%, 0 0%);
-}
-
-.arrow-wrapper:hover .arrow {
-  background-color: #4c4c4c;
-}
-
-.arrow-wrapper:has(.arrow.highlight) {
-  animation: pulse 1.2s infinite;
-}
-
-/* animation for drop shadow */
-@keyframes pulse {
-  0% {
-    filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0));
-  }
-
-  70% {
-    filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.5));
-  }
-
-  100% {
-    filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0));
-  }
 }
 </style>
