@@ -28,6 +28,10 @@ const onlinePlayers = ref(new Map<PlayerId, OnlinePlayer>());
 export function useServer(id: Ref<string>, game: ServerGame) {
   let peer: Peer | null = null;
 
+  if (id.value !== "") {
+    startServer();
+  }
+
   function isOnlinePlayer(id: PlayerId): boolean {
     return onlinePlayers.value.has(id);
   }
@@ -53,9 +57,11 @@ export function useServer(id: Ref<string>, game: ServerGame) {
       console.log("Server close");
     });
     peer.on("connection", (connection) => {
-      console.log("Connection", connection);
-      onlinePlayers.value.set(connection.metadata as PlayerId, {
-        connection,
+      console.log("Connection from ", connection.peer);
+      connection.on("open", () => {
+        onlinePlayers.value.set(connection.metadata as PlayerId, {
+          connection,
+        });
       });
       connection.on("close", () => {
         onlinePlayers.value.delete(connection.metadata as PlayerId);
@@ -72,7 +78,7 @@ export function useServer(id: Ref<string>, game: ServerGame) {
         } else if (data.name === "movePlayer") {
           game.movePlayer(data.id, data.x, data.y);
         } else if (data.name === "requestGame") {
-          updateGame();
+          updateGame(game.game.value);
         } else {
           console.error("Unknown RPC", data);
         }
@@ -82,7 +88,7 @@ export function useServer(id: Ref<string>, game: ServerGame) {
     watch(
       game.game,
       (v) => {
-        updateGame();
+        updateGame(v);
       },
       {
         deep: true,
@@ -90,12 +96,7 @@ export function useServer(id: Ref<string>, game: ServerGame) {
     );
   }
 
-  if (id.value !== "") {
-    startServer();
-  }
-
-  function updateGame() {
-    const g = game.game.value;
+  function updateGame(g: Game | null) {
     if (g === null) {
       return;
     }
@@ -164,9 +165,17 @@ export function useClientGame(
   let connection: DataConnection | null = null;
 
   peer.on("open", () => {
+    console.log("Client open");
     connection = peer.connect(serverId, {
       metadata: playerId,
       reliable: true,
+    });
+    connection.on("close", () => {
+      alert("Connection closed");
+    });
+    connection.on("error", (err) => {
+      alert(err);
+      console.error("Connection error", err);
     });
     connection.on("open", () => {
       connection!.on("data", (v) => {
@@ -180,17 +189,10 @@ export function useClientGame(
           console.error("Server error", data.value);
         }
       });
+      console.log("Connection open");
       send({
         name: "requestGame",
       });
-      console.log("Connection open");
-    });
-    connection.on("close", () => {
-      alert("Connection closed");
-    });
-    connection.on("error", (err) => {
-      alert(err);
-      console.error("Connection error", err);
     });
   });
 
