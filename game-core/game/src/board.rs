@@ -129,27 +129,15 @@ impl Board {
         self.tiles.get(x + y * self.side_length)
     }
 
+    pub fn get_reachable(&self, start: Position) -> HashSet<Position> {
+        self.maze_dfs(start, |_| true)
+    }
+
     pub fn is_reachable(&self, start: Position, goal: Position) -> bool {
         if start == goal {
             return true;
         }
-
-        let mut visited = HashSet::new();
-        let mut to_visit = self.neighbours(start);
-        visited.insert(start);
-
-        while let Some(next) = to_visit.pop() {
-            if next == goal {
-                return true;
-            }
-            for neighbour in self.neighbours(next) {
-                if visited.insert(neighbour) {
-                    to_visit.push(neighbour);
-                }
-            }
-        }
-
-        false
+        self.maze_dfs(start, |pos| pos == goal).contains(&goal)
     }
 
     pub fn rotate_free_tile(&mut self, rotation: Rotation) {
@@ -236,33 +224,35 @@ impl Board {
     fn neighbours(&self, position: Position) -> Vec<Position> {
         let mut neighbours = Vec::new();
 
-        for side in self[position].get_connection() {
-            match side {
-                Side::Top => {
-                    if let Some(top) = position.top(&self) {
-                        if self[top].get_connection().contains(&Side::Bottom) {
-                            neighbours.push(top);
+        if let Some(tile) = self.get_tile(position) {
+            for side in tile.get_connection() {
+                match side {
+                    Side::Top => {
+                        if let Some(top) = position.top(&self) {
+                            if self[top].get_connection().contains(&Side::Bottom) {
+                                neighbours.push(top);
+                            }
                         }
                     }
-                }
-                Side::Right => {
-                    if let Some(right) = position.right(&self) {
-                        if self[right].get_connection().contains(&Side::Left) {
-                            neighbours.push(right);
+                    Side::Right => {
+                        if let Some(right) = position.right(&self) {
+                            if self[right].get_connection().contains(&Side::Left) {
+                                neighbours.push(right);
+                            }
                         }
                     }
-                }
-                Side::Bottom => {
-                    if let Some(bottom) = position.bottom(&self) {
-                        if self[bottom].get_connection().contains(&Side::Top) {
-                            neighbours.push(bottom);
+                    Side::Bottom => {
+                        if let Some(bottom) = position.bottom(&self) {
+                            if self[bottom].get_connection().contains(&Side::Top) {
+                                neighbours.push(bottom);
+                            }
                         }
                     }
-                }
-                Side::Left => {
-                    if let Some(left) = position.left(&self) {
-                        if self[left].get_connection().contains(&Side::Right) {
-                            neighbours.push(left);
+                    Side::Left => {
+                        if let Some(left) = position.left(&self) {
+                            if self[left].get_connection().contains(&Side::Right) {
+                                neighbours.push(left);
+                            }
                         }
                     }
                 }
@@ -270,6 +260,24 @@ impl Board {
         }
 
         neighbours
+    }
+
+    fn maze_dfs(&self, start: Position, goal_fn: impl Fn(Position) -> bool) -> HashSet<Position> {
+        let mut visited: HashSet<_> = [start].into();
+        let mut to_visit = self.neighbours(start);
+
+        while let Some(next) = to_visit.pop() {
+            if goal_fn(next) {
+                return visited;
+            }
+            for neighbour in self.neighbours(next) {
+                if visited.insert(neighbour) {
+                    to_visit.push(neighbour);
+                }
+            }
+        }
+
+        visited
     }
 }
 

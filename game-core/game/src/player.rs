@@ -81,6 +81,10 @@ impl Players {
         })
     }
 
+    pub fn current_player(&self) -> &Player {
+        &self.players[&self.player_turn]
+    }
+
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Player> {
         self.players.values_mut()
     }
