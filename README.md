@@ -1,6 +1,9 @@
-# shifty-maze
+# Shifty Maze!
 
-## Project Setup
+Play it at [yousafe.github.io/shifty-maze/](https://yousafe.github.io/shifty-maze/)!
+
+
+### Project Setup
 
 ```sh
 npm install
