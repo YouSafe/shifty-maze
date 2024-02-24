@@ -62,6 +62,19 @@ impl Game {
         })
     }
 
+    pub fn currently_reachable(&self) -> Option<Vec<Position>> {
+        if self.winner.is_some() {
+            return None;
+        }
+
+        Some(
+            self.board
+                .get_reachable(self.players.current_player().get_position())
+                .into_iter()
+                .collect(),
+        )
+    }
+
     pub fn rotate_free_tile(&mut self, rotation: Rotation) -> bool {
         if self.winner.is_some() {
             false

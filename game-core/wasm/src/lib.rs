@@ -19,10 +19,16 @@ pub struct GameCore {
 }
 
 impl GameCore {
+    fn get_last_error() -> String {
+        "Cannot complete action: Game not started".into()
+    }
+
+    fn get_last(&self) -> Result<&Game, String> {
+        self.history.back().ok_or_else(Self::get_last_error)
+    }
+
     fn get_last_mut(&mut self) -> Result<&mut Game, String> {
-        self.history
-            .back_mut()
-            .ok_or_else(|| "Cannot complete action: Game not started".into())
+        self.history.back_mut().ok_or_else(Self::get_last_error)
     }
 
     fn do_action(
@@ -58,6 +64,15 @@ impl GameCore {
         Self {
             history: VecDeque::with_capacity(history_size),
         }
+    }
+
+    pub fn currently_reachable(&self) -> result::Result<Vec<Position>, String> {
+        self.get_last()
+            .and_then(|game| {
+                game.currently_reachable()
+                    .ok_or_else(|| "Cannot move player: Game has ended".into())
+            })
+            .into()
     }
 
     pub fn set_game(&mut self, game: Game) {
