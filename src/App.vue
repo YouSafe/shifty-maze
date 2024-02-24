@@ -11,14 +11,14 @@ import GameTile from "@/components/GameTile.vue";
 import { useGame, DefaultGameStartSettings } from "@/game";
 import { NButton } from "naive-ui";
 import { PlayerSides } from "@/players";
-import { useClientGame, type PlayerMode, useServer } from "./multiplayer";
+import { useClientGame, type PlayerMode, useServer } from "@/multiplayer";
 import {
   PlayerIdRef,
   isClient,
   quitClient as disconnectClient,
   ServerUrlRef,
-} from "./multiplayer-url";
-import type { PlayerId } from "game-core/pkg/wasm";
+} from "@/multiplayer-url";
+import type { PlayerId } from "game-core/pkg";
 import { Message } from "@/notification";
 
 const showPlayerDialog = ref(false);

@@ -1,4 +1,5 @@
-import TileMapImageUrl from "./assets/dungeon_tiles.png?url";
+import TileMapImageUrl from "./assets/dungeon_tiles.png";
+
 const TileMapImage = new Image();
 await new Promise((resolve) => {
   TileMapImage.onload = resolve;

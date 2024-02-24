@@ -8,8 +8,8 @@ import init, {
   type SideIndex,
   type Game,
   type Result,
-} from "../game-core/pkg";
-import { useLocalStorage } from "./local-storage";
+} from "game-core/pkg";
+import { useLocalStorage } from "@/local-storage";
 
 await init();
 
@@ -134,7 +134,7 @@ export function useGame(errorHandler: (error: string) => void) {
   };
 }
 
-function nextRotation(rotation: Rotation) {
+function nextRotation(rotation: Rotation): Rotation {
   if (rotation === "Zero") return "Ninety";
   if (rotation === "Ninety") return "OneEighty";
   if (rotation === "OneEighty") return "TwoSeventy";

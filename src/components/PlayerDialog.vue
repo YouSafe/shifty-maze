@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed } from "vue";
 import { PlayerColors } from "@/players";
 import { NModal, NButton, NSpace, NPopconfirm } from "naive-ui";
 import type { PlayerMode } from "@/multiplayer";
+
 const show = defineModel("show", { type: Boolean, required: true });
 const props = defineProps<{
   id: number;

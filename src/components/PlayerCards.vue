@@ -2,7 +2,8 @@
 import { computed } from "vue";
 import { getItem } from "@/items";
 import { PlayerColors } from "@/players";
-import type { Item, PlayerId, Side } from "game-core/pkg/wasm";
+import type { Item, PlayerId, Side } from "game-core/pkg";
+
 const props = defineProps<{
   side: Side;
   id: PlayerId;

@@ -1,12 +1,12 @@
 import Peer, { type DataConnection } from "peerjs";
-import { useGame } from "./game";
+import { useGame } from "@/game";
 import type {
   Game,
   GameStartSettings,
   PlayerId,
   Result,
   SideIndex,
-} from "game-core/pkg/wasm";
+} from "game-core/pkg";
 import { ref, type ComputedRef, watch, type Ref, markRaw } from "vue";
 import { JsonSerializer } from "json-safe-stringify";
 
@@ -118,21 +118,21 @@ export function useServer(id: Ref<string>, game: ServerGame) {
 
 type RPCFunction =
   | {
-      name: "rotateFreeTile";
-    }
+    name: "rotateFreeTile";
+  }
   | {
-      name: "shiftTiles";
-      side_index: SideIndex;
-    }
+    name: "shiftTiles";
+    side_index: SideIndex;
+  }
   | {
-      name: "movePlayer";
-      id: PlayerId;
-      x: number;
-      y: number;
-    }
+    name: "movePlayer";
+    id: PlayerId;
+    x: number;
+    y: number;
+  }
   | {
-      name: "requestGame";
-    };
+    name: "requestGame";
+  };
 
 function useLocalChangeTracker(requestGame: () => void) {
   let localChangeTimeout: number | null = null;
