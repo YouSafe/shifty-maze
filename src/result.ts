@@ -1,4 +1,4 @@
-import type { Result as R } from "game-core/pkg/wasm";
+import type { Result as R } from "game-core/pkg";
 
 export type NoneError = "NoneError";
 export type Option<T> = Result<T, NoneError>;

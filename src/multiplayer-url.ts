@@ -1,4 +1,4 @@
-import { urlRef } from "./url-ref";
+import { urlRef } from "@/url-ref";
 
 export const ServerUrlRef = urlRef("server", "");
 export const PlayerIdRef = urlRef("player", -1);

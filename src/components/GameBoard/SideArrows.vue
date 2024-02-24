@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
-import type { Board, Side, SideIndex, GamePhase } from "../../../game-core/pkg";
+import { computed } from "vue";
+import type { Board, Side, SideIndex, GamePhase } from "game-core/pkg";
+
 const props = defineProps<{
   board: Board | null;
   phase: GamePhase;

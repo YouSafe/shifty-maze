@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, ref, watch, watchEffect } from "vue";
-import SquareContainer from "./SquareContainer.vue";
-import GameTile from "./GameTile.vue";
-import PlayerPiece from "./PlayerPiece.vue";
+import { computed } from "vue";
+import SquareContainer from "@/components/SquareContainer.vue";
+import GameTile from "@/components/GameTile.vue";
+import PlayerPiece from "@/components/PlayerPiece.vue";
 import type {
   Board,
   GamePhase,
@@ -11,17 +11,14 @@ import type {
   Player,
   PlayerId,
   Position,
-  Rotation,
-  Side,
   SideIndex,
-  Tile,
-} from "game-core/pkg/wasm";
-import GameSettings from "./GameSettings.vue";
+} from "game-core/pkg";
+import GameSettings from "@/components/GameSettings.vue";
 import { NButton } from "naive-ui";
 import { groupBy } from "@/array-utils";
 import { PlayerColors } from "@/players";
-import SideArrows from "./GameBoard/SideArrows.vue";
-import { useTilesMap } from "./GameBoard/tiles-map";
+import SideArrows from "@/components/GameBoard/SideArrows.vue";
+import { useTilesMap } from "@/components/GameBoard/tiles-map";
 
 const gameSettings = defineModel<GameStartSettings>("startSettings", {
   required: true,

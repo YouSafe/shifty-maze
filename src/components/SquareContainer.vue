@@ -7,6 +7,7 @@
     </div>
   </div>
 </template>
+
 <style scoped>
 .max-size {
   display: flex;
@@ -18,6 +19,7 @@
   justify-content: center;
   flex-direction: column;
 }
+
 .constrain-width {
   display: flex;
   justify-content: center;

@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
-import { NModal, NButton, NSpace } from "naive-ui";
+import { computed } from "vue";
+import { NModal, NButton } from "naive-ui";
 import { PlayerColors } from "@/players";
+
 const show = defineModel("show", { type: Boolean, required: true });
 const props = defineProps<{
   id: number;

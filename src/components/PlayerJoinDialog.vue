@@ -4,6 +4,7 @@ import { Message } from "@/notification";
 import { PlayerColors } from "@/players";
 import { NModal, NQrCode } from "naive-ui";
 import { computed } from "vue";
+
 const show = defineModel("show", { type: Boolean, required: true });
 const props = defineProps<{
   playerId: number;
