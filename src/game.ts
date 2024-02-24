@@ -9,11 +9,9 @@ import init, {
   type Game,
   type Result,
 } from "../game-core/pkg";
-import { useLocalStorage } from "@/local-storage";
+import { useLocalStorage } from "./local-storage";
 
 await init();
-
-export type PlayerMode = "local" | "online";
 
 export function DefaultGameStartSettings(): GameStartSettings {
   return {
@@ -23,7 +21,7 @@ export function DefaultGameStartSettings(): GameStartSettings {
   };
 }
 
-export function useGame() {
+export function useGame(errorHandler: (error: string) => void) {
   const game = ref<Game | null>(null);
   const storage = useLocalStorage<Game>();
 
@@ -34,14 +32,14 @@ export function useGame() {
 
   const core = new GameCore(10);
 
-  storage.load().map((state) => setGame(state));
+  storage.load().map(state => setGame(state));
 
   function handleResult(result: Result<Game, string>) {
     if (result.type === "Ok") {
       game.value = result.value;
       saveState();
     } else {
-      alert(result.value);
+      errorHandler(result.value);
     }
   }
 
@@ -108,6 +106,7 @@ export function useGame() {
   };
 
   return {
+    game: computed(() => game.value),
     hasStarted: computed(() => game.value !== null),
     playersMap: computed(() => game.value?.players.players ?? new Map()),
     playerHelper,
@@ -124,6 +123,7 @@ export function useGame() {
     phase: computed(() => game.value?.phase ?? "MoveTiles"),
     winner: computed(() => game.value?.winner ?? null),
 
+    setGame,
     startGame,
     rotateFreeTile,
     shiftTiles,

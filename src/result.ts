@@ -1,4 +1,4 @@
-import type { Result as R } from "../game-core/pkg/wasm";
+import type { Result as R } from "game-core/pkg/wasm";
 
 export type NoneError = "NoneError";
 export type Option<T> = Result<T, NoneError>;
@@ -28,7 +28,7 @@ export function fromNullable<T>(value: T | null | undefined): Option<T> {
 }
 
 export class Result<T, E> {
-  constructor(private _value: T | E, private _isOk: boolean) {}
+  constructor(private _value: T | E, private _isOk: boolean) { }
   static ok<T, E = never>(value: T): Result<T, E> {
     return new Result<T, E>(value, true);
   }

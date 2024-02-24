@@ -1,4 +1,4 @@
-export const Items = [
+const Items = [
   "<invalid>",
   "🐈",
   "🐈‍⬛",

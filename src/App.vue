@@ -1,38 +1,76 @@
 <script setup lang="ts">
 import { h, ref, watch } from "vue";
+import SquareContainer from "@/components/SquareContainer.vue";
 import GameBoard from "@/components/GameBoard.vue";
 import PlayerCards from "@/components/PlayerCards.vue";
 import PlayerDialog from "@/components/PlayerDialog.vue";
 import SettingsDialog from "@/components/SettingsDialog.vue";
 import WinnerDialog from "@/components/WinnerDialog.vue";
+import PlayerJoinDialog from "@/components/PlayerJoinDialog.vue";
 import GameTile from "@/components/GameTile.vue";
-import { useGame, type PlayerMode, DefaultGameStartSettings } from "@/game";
+import { useGame, DefaultGameStartSettings } from "@/game";
 import { NButton } from "naive-ui";
 import { PlayerSides } from "@/players";
+import { useClientGame, type PlayerMode, useServer } from "./multiplayer";
+import {
+  PlayerIdRef,
+  isClient,
+  quitClient as disconnectClient,
+  ServerUrlRef,
+} from "./multiplayer-url";
+import type { PlayerId } from "game-core/pkg/wasm";
+import { Message } from "@/notification";
 
 const showPlayerDialog = ref(false);
-const showDialogFor = ref({
-  id: 0,
-  mode: "local" as PlayerMode | null,
-});
+const showDialogFor = ref(0);
 
 const showSettingsDialog = ref(false);
 const showWinnerDialog = ref(false);
+const showPlayerJoinDialog = ref(false);
 
 const gameSettings = ref(DefaultGameStartSettings());
-const game = useGame();
+const game = isClient()
+  ? useClientGame(ServerUrlRef.value, PlayerIdRef.value, () => {
+      disconnectClient();
+      window.location.reload();
+    })
+  : useGame((e) => {
+      Message.error(e);
+    });
+
+const server = isClient() ? null : useServer(ServerUrlRef, game);
 
 watch(game.winner, (v) => {
   showWinnerDialog.value = v !== null;
 });
 
-function addPlayer(id: number, mode: PlayerMode) {
+function join(id: number, mode: PlayerMode) {
   if (game.hasStarted.value === false) {
     if (gameSettings.value.players.includes(id)) {
       return;
     }
     gameSettings.value.players.push(id);
-    // TODO: Deal with online players
+    if (mode === "online") {
+      server?.startServer();
+      showPlayerJoinDialog.value = true;
+    } else {
+      // Nothing
+    }
+  } else if (!game.playerHelper.hasPlayer(id)) {
+    alert("Cannot add player to game that has already started.");
+    return;
+  } else {
+    // We're switching player mode
+    if (mode === "online") {
+      if (server !== null) {
+        server?.startServer();
+        showPlayerJoinDialog.value = true;
+      } else {
+        alert("Cannot switch to online mode in client mode.");
+      }
+    } else {
+      game.removePlayer(id);
+    }
   }
 }
 
@@ -47,6 +85,16 @@ function removePlayer(id: number) {
   }
 }
 
+function getPlayerMode(id: PlayerId): PlayerMode | null {
+  if (server !== null && server.isOnlinePlayer(id)) {
+    return "online";
+  }
+  if (game.playerHelper.hasPlayer(id)) {
+    return "local";
+  }
+  return null;
+}
+
 // See also https://vuejs.org/guide/extras/render-function#typing-functional-components
 function OnePlayerCard(props: { id: number }) {
   return h(PlayerCards, {
@@ -57,10 +105,10 @@ function OnePlayerCard(props: { id: number }) {
     count: game.playerHelper.itemCount(props.id),
     item: game.playerHelper.currentItem(props.id),
     onClick: () => {
-      if (game.hasStarted.value === false) {
-        showDialogFor.value = { id: props.id, mode: null };
+      if (isClient()) {
+        showDialogFor.value = PlayerIdRef.value;
       } else {
-        showDialogFor.value = { id: props.id, mode: "local" };
+        showDialogFor.value = props.id;
       }
       showPlayerDialog.value = true;
     },
@@ -73,8 +121,8 @@ OnePlayerCard.props = {
 
 <template>
   <div class="max-size">
-    <div class="constrain-width">
-      <div class="constrain-height container">
+    <SquareContainer>
+      <div class="container">
         <div class="top space-between">
           <OnePlayerCard :id="1"></OnePlayerCard>
           <OnePlayerCard :id="2"></OnePlayerCard>
@@ -131,14 +179,18 @@ OnePlayerCard.props = {
           Settings</NButton
         >
       </div>
-    </div>
+    </SquareContainer>
     <PlayerDialog
       v-model:show="showPlayerDialog"
-      :id="showDialogFor.id"
-      :player-mode="showDialogFor.mode"
-      @join="(id, mode) => addPlayer(id, mode)"
+      :id="showDialogFor"
+      :player-mode="getPlayerMode(showDialogFor)"
+      @join="(id, mode) => join(id, mode)"
       @remove="(v) => removePlayer(v)"
     ></PlayerDialog>
+    <PlayerJoinDialog
+      v-model:show="showPlayerJoinDialog"
+      :player-id="showDialogFor"
+    ></PlayerJoinDialog>
     <WinnerDialog
       v-if="game.winner.value !== null"
       :id="game.winner.value"

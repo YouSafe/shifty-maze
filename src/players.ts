@@ -1,4 +1,4 @@
-import type { Side } from "../game-core/pkg";
+import type { Side } from "game-core/pkg/wasm";
 
 export const PlayerColors = [
   "#332288",
