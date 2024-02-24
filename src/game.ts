@@ -8,7 +8,7 @@ import init, {
   type SideIndex,
   type Game,
   type Result,
-} from "game-core/pkg";
+} from "../game-core/pkg";
 import { useLocalStorage } from "@/local-storage";
 
 await init();
