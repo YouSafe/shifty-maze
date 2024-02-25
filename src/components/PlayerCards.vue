@@ -68,7 +68,7 @@ const item = computed(() => getItem(props.item));
   pointer-events: none;
 }
 .player-cards.other-player .card {
-  background-color: #e0e0e0;
+  background-color: #b9b9b9;
 }
 .player-cards.is-active .card {
   box-shadow: 0 0 8px 4px var(--red);
