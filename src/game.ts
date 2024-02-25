@@ -15,7 +15,7 @@ await init();
 
 export function DefaultGameStartSettings(): GameStartSettings {
   return {
-    players: [],
+    players: new Map<PlayerId, undefined>(),
     side_length: 7,
     items_per_player: 6,
   };

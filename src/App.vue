@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { h, ref, watch } from "vue";
+import { computed, h, ref, watch } from "vue";
 import SquareContainer from "@/components/SquareContainer.vue";
 import GameBoard from "@/components/GameBoard.vue";
 import PlayerCards from "@/components/PlayerCards.vue";
@@ -43,42 +43,51 @@ watch(game.winner, (v) => {
   showWinnerDialog.value = v !== null;
 });
 
+const statusMessage = computed(() => {
+  if (game.winner.value !== null) {
+    return `Player ${game.winner.value} wins!`;
+  } else if (!game.hasStarted.value) {
+    return `Click on the cards to join.`;
+  } else if (game.phase.value === "MoveTiles") {
+    return `P${game.activePlayer.value} - Rotate and move the tiles.`;
+  } else if (game.phase.value === "MovePlayer") {
+    return `P${game.activePlayer.value} - Move your piece.`;
+  } else {
+    return `Unknown phase: ${game.phase.value}`;
+  }
+});
+
 function join(id: number, mode: PlayerMode) {
-  if (game.hasStarted.value === false) {
-    if (gameSettings.value.players.includes(id)) {
-      return;
+  if (game.hasStarted.value) {
+    if (!game.playerHelper.hasPlayer(id)) {
+      alert("Cannot add player to game that has already started.");
+    } else {
+      // We're switching player mode
+      if (mode === "online") {
+        if (server !== null) {
+          server?.startServer();
+          showPlayerJoinDialog.value = true;
+        } else {
+          alert("Cannot switch to online mode in client mode.");
+        }
+      } else {
+        game.removePlayer(id);
+      }
     }
-    gameSettings.value.players.push(id);
+  } else {
+    gameSettings.value.players.set(id, undefined);
     if (mode === "online") {
       server?.startServer();
       showPlayerJoinDialog.value = true;
     } else {
       // Nothing
     }
-  } else if (!game.playerHelper.hasPlayer(id)) {
-    alert("Cannot add player to game that has already started.");
-    return;
-  } else {
-    // We're switching player mode
-    if (mode === "online") {
-      if (server !== null) {
-        server?.startServer();
-        showPlayerJoinDialog.value = true;
-      } else {
-        alert("Cannot switch to online mode in client mode.");
-      }
-    } else {
-      game.removePlayer(id);
-    }
   }
 }
 
 function removePlayer(id: number) {
   if (game.hasStarted.value === false) {
-    const index = gameSettings.value.players.indexOf(id);
-    if (index !== -1) {
-      gameSettings.value.players.splice(index, 1);
-    }
+    gameSettings.value.players.delete(id);
   } else {
     game.removePlayer(id);
   }
@@ -86,7 +95,7 @@ function removePlayer(id: number) {
 
 function getPlayerMode(id: PlayerId): PlayerMode | null {
   if (game.hasStarted.value === false) {
-    if (gameSettings.value.players.includes(id)) {
+    if (gameSettings.value.players.has(id)) {
       return "local";
     }
     if (server !== null && server.isOnlinePlayer(id)) {
@@ -135,7 +144,7 @@ function OnePlayerCard(props: { id: number }) {
         return "no-player";
       }
     } else {
-      if (gameSettings.value.players.includes(props.id)) {
+      if (gameSettings.value.players.has(props.id)) {
         return isOtherPlayer(props.id) ? "other-player" : "normal";
       } else {
         return "no-player";
@@ -158,11 +167,10 @@ function OnePlayerCard(props: { id: number }) {
       if (isHidden) {
         return;
       }
-      if (isClient()) {
-        showDialogFor.value = PlayerIdRef.value;
-      } else {
-        showDialogFor.value = props.id;
+      if (isClient() && PlayerIdRef.value !== props.id) {
+        return;
       }
+      showDialogFor.value = props.id;
       showPlayerDialog.value = true;
     },
   });
@@ -178,6 +186,7 @@ OnePlayerCard.props = {
       <div class="container">
         <div class="top space-between">
           <OnePlayerCard :id="0"></OnePlayerCard>
+          <div class="status-message">{{ statusMessage }}</div>
           <OnePlayerCard :id="1"></OnePlayerCard>
         </div>
         <div class="middle">
@@ -321,5 +330,11 @@ OnePlayerCard.props = {
   .settings-button-large {
     display: block;
   }
+}
+
+.status-message {
+  font-size: 2.5vmin;
+  align-self: center;
+  padding-bottom: 0.5vmin;
 }
 </style>

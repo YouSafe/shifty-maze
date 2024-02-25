@@ -67,8 +67,14 @@ const item = computed(() => getItem(props.item));
   opacity: 0;
   pointer-events: none;
 }
-.player-cards.other-player {
-  /* TODO: ?? */
+.player-cards.other-player .card {
+  background-color: #e0e0e0;
+}
+.player-cards.is-active .card {
+  box-shadow: 0 0 8px 4px var(--red);
+}
+.player-cards.other-player.is-active .card {
+  box-shadow: 0 0 4px 2px var(--red);
 }
 
 .card {
@@ -144,9 +150,5 @@ const item = computed(() => getItem(props.item));
   font-weight: bold;
   filter: sepia(25%);
   text-shadow: 0 0 2px black;
-}
-
-.is-active > * {
-  box-shadow: 0 0 8px 4px var(--red);
 }
 </style>
