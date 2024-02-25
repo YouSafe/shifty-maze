@@ -130,14 +130,14 @@ impl Board {
     }
 
     pub fn get_reachable(&self, start: Position) -> HashSet<Position> {
-        self.maze_dfs(start, |_| true)
+        self.maze_dfs(start, |_| false).visited
     }
 
     pub fn is_reachable(&self, start: Position, goal: Position) -> bool {
         if start == goal {
             return true;
         }
-        self.maze_dfs(start, |pos| pos == goal).contains(&goal)
+        self.maze_dfs(start, |pos| pos == goal).is_reachable
     }
 
     pub fn rotate_free_tile(&mut self, rotation: Rotation) {
@@ -262,13 +262,16 @@ impl Board {
         neighbours
     }
 
-    fn maze_dfs(&self, start: Position, goal_fn: impl Fn(Position) -> bool) -> HashSet<Position> {
+    fn maze_dfs(&self, start: Position, goal_fn: impl Fn(Position) -> bool) -> DfsResult {
         let mut visited: HashSet<_> = [start].into();
         let mut to_visit = self.neighbours(start);
 
         while let Some(next) = to_visit.pop() {
             if goal_fn(next) {
-                return visited;
+                return DfsResult {
+                    is_reachable: true,
+                    visited,
+                };
             }
             for neighbour in self.neighbours(next) {
                 if visited.insert(neighbour) {
@@ -277,8 +280,16 @@ impl Board {
             }
         }
 
-        visited
+        DfsResult {
+            is_reachable: false,
+            visited,
+        }
     }
+}
+
+struct DfsResult {
+    is_reachable: bool,
+    visited: HashSet<Position>,
 }
 
 impl Index<Position> for Board {
