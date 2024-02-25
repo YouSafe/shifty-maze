@@ -60,8 +60,7 @@ impl Players {
 
         let players = ids
             .into_iter()
-            .enumerate()
-            .map(|(index, id)| {
+            .map(|id| {
                 (
                     id,
                     Player::new(
