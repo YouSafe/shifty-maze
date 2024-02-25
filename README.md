@@ -2,6 +2,9 @@
 
 Play it at [yousafe.github.io/shifty-maze/](https://yousafe.github.io/shifty-maze/)!
 
+<a href="https://yousafe.github.io/shifty-maze/">
+  <img src="./screenshot.png" alt="Shifty Maze Screenshot" width="400">
+</a>
 
 ### Project Setup
 
