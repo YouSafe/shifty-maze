@@ -52,6 +52,7 @@ const isSearchingFor = computed(() => {
 </script>
 
 <template>
+  {{ tile?.rotation ?? "a" }}
   <div
     class="tile-container"
     :class="{
@@ -92,7 +93,7 @@ img {
   align-items: center;
   justify-content: center;
   position: relative;
-  --edge: 2px;
+  --edge: 1px;
 }
 
 .tile {
@@ -108,7 +109,7 @@ img {
 }
 
 .tile-container.unreachable {
-  filter: grayscale(50%);
+  filter: grayscale(40%) brightness(75%);
   --edge: 5px;
 }
 
@@ -127,7 +128,7 @@ img {
   align-items: center;
   justify-content: center;
   font-weight: bold;
-  text-shadow: 0 0 5px black;
+  text-shadow: -2px 4px 4px black;
   filter: sepia(25%);
   pointer-events: none;
   z-index: 1;
