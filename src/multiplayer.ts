@@ -23,6 +23,7 @@ interface ServerGame {
   rotateFreeTile: () => void;
   shiftTiles: (side_index: SideIndex) => void;
   movePlayer: (id: PlayerId, x: number, y: number) => void;
+  activePlayer: ComputedRef<PlayerId | null>;
 }
 
 export function useServer(id: Ref<string>, game: ServerGame) {
@@ -59,16 +60,17 @@ export function useServer(id: Ref<string>, game: ServerGame) {
     });
     peer.on("connection", (connection) => {
       console.log("Connection from ", connection.peer);
+      const playerId = connection.metadata as PlayerId;
       connection.on("open", () => {
         onlinePlayers.value.set(
-          connection.metadata as PlayerId,
+          playerId,
           markRaw({
             connection,
           })
         );
       });
       connection.on("close", () => {
-        onlinePlayers.value.delete(connection.metadata as PlayerId);
+        onlinePlayers.value.delete(playerId);
       });
       connection.on("error", (err) => {
         console.error("Connection error", err);
@@ -76,11 +78,17 @@ export function useServer(id: Ref<string>, game: ServerGame) {
       connection.on("data", (v) => {
         const data: RPCFunction = serializer.parse(v as any);
         if (data.name === "rotateFreeTile") {
-          game.rotateFreeTile();
+          if (game.activePlayer.value === playerId) {
+            game.rotateFreeTile();
+          }
         } else if (data.name === "shiftTiles") {
-          game.shiftTiles(data.side_index);
+          if (game.activePlayer.value === playerId) {
+            game.shiftTiles(data.side_index);
+          }
         } else if (data.name === "movePlayer") {
-          game.movePlayer(data.id, data.x, data.y);
+          if (game.activePlayer.value === playerId) {
+            game.movePlayer(playerId, data.x, data.y);
+          }
         } else if (data.name === "requestGame") {
           updateGame(game.game.value);
         } else {
@@ -127,7 +135,6 @@ type RPCFunction =
     }
   | {
       name: "movePlayer";
-      id: PlayerId;
       x: number;
       y: number;
     }
@@ -257,7 +264,6 @@ export function useClientGame(
     setHasLocalChange();
     send({
       name: "movePlayer",
-      id,
       x,
       y,
     });
