@@ -1,6 +1,7 @@
 {
   "scripts": {
     "build": "wasm-pack build --target web --dev --out-dir ../pkg wasm",
+    "release": "wasm-pack build --target web --release --out-dir ../pkg wasm",
     "postinstall": "wasm-pack build --target web --dev --out-dir ../pkg wasm"
   },
   "devDependencies": {
