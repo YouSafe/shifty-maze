@@ -66,7 +66,7 @@ impl Players {
                     id,
                     Player::new(
                         id,
-                        get_start_position(index, board.get_side_length()),
+                        get_start_position(id, board.get_side_length()),
                         items.drain(0..items_per_player).collect(),
                     ),
                 )
