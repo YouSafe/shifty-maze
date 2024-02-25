@@ -264,7 +264,7 @@ impl Board {
 
     fn maze_dfs(&self, start: Position, goal_fn: impl Fn(Position) -> bool) -> DfsResult {
         let mut visited: HashSet<_> = [start].into();
-        let mut to_visit = self.neighbours(start);
+        let mut to_visit = vec![start];
 
         while let Some(next) = to_visit.pop() {
             if goal_fn(next) {

@@ -52,7 +52,6 @@ const isSearchingFor = computed(() => {
 </script>
 
 <template>
-  {{ tile?.rotation ?? "a" }}
   <div
     class="tile-container"
     :class="{
