@@ -1,4 +1,4 @@
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import init, {
   GameCore,
   type GameStartSettings,
@@ -8,6 +8,7 @@ import init, {
   type SideIndex,
   type Game,
   type Result,
+  type Position,
 } from "../game-core/pkg";
 import { useLocalStorage } from "@/local-storage";
 
@@ -21,8 +22,14 @@ export function DefaultGameStartSettings(): GameStartSettings {
   };
 }
 
+type StringPosition = string;
+function positionToString(p: Position): StringPosition {
+  return `${p.x},${p.y}`;
+}
+
 export function useGame(errorHandler: (error: string) => void) {
   const game = ref<Game | null>(null);
+  const reachable = ref<Set<StringPosition>>(new Set());
   const storage = useLocalStorage<Game>();
 
   function reset() {
@@ -33,6 +40,23 @@ export function useGame(errorHandler: (error: string) => void) {
   const core = new GameCore(10);
 
   storage.load().map((state) => setGame(state));
+
+  watch(
+    () => game.value,
+    (game) => {
+      reachable.value = new Set();
+      if (game === null) return;
+      if (game.phase !== "MovePlayer") return;
+
+      const v: Result<Position[], string> = core.currently_reachable();
+      if (v.type === "Ok") {
+        reachable.value = new Set(v.value.map(positionToString));
+      } else {
+        errorHandler(v.value);
+      }
+    },
+    { immediate: true, deep: true }
+  );
 
   function handleResult(result: Result<Game, string>) {
     if (result.type === "Ok") {
@@ -89,6 +113,12 @@ export function useGame(errorHandler: (error: string) => void) {
     storage.newGame();
   }
 
+  function isReachable(position: Position) {
+    if (game.value === null) return true;
+    if (game.value.phase !== "MovePlayer") return true;
+    return reachable.value.has(positionToString(position));
+  }
+
   const playerHelper = {
     hasPlayer: (id: PlayerId) => {
       return game.value?.players.players.has(id) ?? false;
@@ -131,6 +161,7 @@ export function useGame(errorHandler: (error: string) => void) {
     movePlayer,
     undoMove,
     finishGame,
+    isReachable,
   };
 }
 

@@ -200,6 +200,7 @@ OnePlayerCard.props = {
             :active-player="game.activePlayer.value"
             :active-player-item="game.activePlayerItem.value"
             :phase="game.phase.value"
+            :is-reachable="(p) => game.isReachable(p)"
             v-model:start-settings="gameSettings"
             @start-game="(v) => game.startGame(v)"
             @player-move="(player, x, y) => game.movePlayer(player, x, y)"
@@ -222,6 +223,8 @@ OnePlayerCard.props = {
           <GameTile
             :tile="game.board.value?.free_tile?.tile ?? null"
             :searching-for="game.activePlayerItem.value"
+            :is-reachable="true"
+            :is-clickable="game.phase.value === 'MoveTiles'"
           ></GameTile>
           <div v-if="game.phase.value === 'MoveTiles'">Rotate&nbsp;⟳</div>
         </div>

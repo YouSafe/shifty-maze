@@ -9,6 +9,7 @@ import type {
 } from "game-core/pkg";
 import { ref, type ComputedRef, watch, type Ref, markRaw } from "vue";
 import { JsonSerializer } from "json-safe-stringify";
+import type { Position } from "@vueuse/core";
 
 const serializer = new JsonSerializer();
 export type PlayerMode = "local" | "online";
@@ -118,21 +119,21 @@ export function useServer(id: Ref<string>, game: ServerGame) {
 
 type RPCFunction =
   | {
-    name: "rotateFreeTile";
-  }
+      name: "rotateFreeTile";
+    }
   | {
-    name: "shiftTiles";
-    side_index: SideIndex;
-  }
+      name: "shiftTiles";
+      side_index: SideIndex;
+    }
   | {
-    name: "movePlayer";
-    id: PlayerId;
-    x: number;
-    y: number;
-  }
+      name: "movePlayer";
+      id: PlayerId;
+      x: number;
+      y: number;
+    }
   | {
-    name: "requestGame";
-  };
+      name: "requestGame";
+    };
 
 function useLocalChangeTracker(requestGame: () => void) {
   let localChangeTimeout: number | null = null;
@@ -267,6 +268,9 @@ export function useClientGame(
   function finishGame() {
     disconnect();
   }
+  function isReachable(position: Position) {
+    return game.isReachable(position);
+  }
 
   return {
     game: game.game,
@@ -286,5 +290,6 @@ export function useClientGame(
     movePlayer,
     undoMove,
     finishGame,
+    isReachable,
   };
 }

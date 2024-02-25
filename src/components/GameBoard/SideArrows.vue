@@ -149,12 +149,11 @@ function startShiftTiles(side_index: SideIndex) {
   clip-path: polygon(50% 100%, 100% 0%, 0 0%);
 }
 .arrow-wrapper.is-active .arrow {
-  background-color: #7c7c7c;
   animation: pulse 2s infinite;
 }
 
-.arrow-wrapper:hover .arrow {
-  background-color: #4c4c4c;
+.arrow-wrapper.is-active:hover .arrow {
+  background-color: #0f228b !important;
 }
 
 /* animation for drop shadow */

@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { DungeonTiles } from "@/dungeon_tiles";
 import { getItem } from "@/items";
-import type { Item, Tile } from "game-core/pkg";
+import type { GamePhase, Item, Tile } from "game-core/pkg";
 import { computed } from "vue";
 
 const props = defineProps<{
   tile: Tile | null;
   searchingFor: Item | null;
+  isReachable: boolean;
+  isClickable: boolean;
 }>();
 const dungeonTile = computed(() => {
   if (props.tile === null) {
@@ -50,7 +52,13 @@ const isSearchingFor = computed(() => {
 </script>
 
 <template>
-  <div class="tile-container">
+  <div
+    class="tile-container"
+    :class="{
+      unreachable: !props.isReachable,
+      'is-clickable': props.isClickable,
+    }"
+  >
     <div class="tile">
       <img
         :src="dungeonTile.img"
@@ -84,7 +92,7 @@ img {
   align-items: center;
   justify-content: center;
   position: relative;
-  --edge: 5px;
+  --edge: 2px;
 }
 
 .tile {
@@ -96,18 +104,21 @@ img {
   border-radius: 5px;
   background-color: rgb(6, 6, 17);
   display: flex;
+  transition: top 0.2s, left 0.2s, right 0.2s, bottom 0.2s;
 }
 
-.tile:hover {
+.tile-container.unreachable {
+  filter: grayscale(50%);
+  --edge: 5px;
+}
+
+.tile-container.is-clickable .tile:hover {
+  cursor: pointer;
   outline: 6px solid rgb(6, 6, 17);
 }
 
 .item {
   position: absolute;
-  top: var(--edge);
-  left: var(--edge);
-  right: var(--edge);
-  bottom: var(--edge);
   display: flex;
   container-type: size;
   font-family: "Noto Color Emoji", sans-serif;

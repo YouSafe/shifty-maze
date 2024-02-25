@@ -30,6 +30,7 @@ const props = defineProps<{
   activePlayer: PlayerId | null;
   activePlayerItem: Item | null;
   phase: GamePhase;
+  isReachable: (position: Position) => boolean;
 }>();
 
 const emits = defineEmits<{
@@ -150,6 +151,14 @@ function tryMovePlayer(tileId: number) {
 function startGame() {
   emits("start-game", gameSettings.value);
 }
+
+function vLocal<T>(value: T | null) {
+  if (value === null) {
+    return [];
+  } else {
+    return [value];
+  }
+}
 </script>
 
 <template>
@@ -192,17 +201,20 @@ function startGame() {
           <div class="tiles-wrapper">
             <!-- Vue.js v-for is freaking cursed and counts like Lua. But we're smart and use the index. -->
             <template v-for="(_, id) in maxTileId" :key="id">
-              <div
-                v-if="animatedTiles.has(id)"
-                class="tile"
-                :style="tileStyle(id)"
+              <template
+                v-for="tile in vLocal(animatedTiles.get(id) ?? null)"
+                :key="tile.id"
               >
-                <GameTile
-                  :tile="animatedTiles.get(id)?.tile ?? null"
-                  :searching-for="props.activePlayerItem"
-                  @click="() => tryMovePlayer(id)"
-                />
-              </div>
+                <div class="tile" :style="tileStyle(id)">
+                  <GameTile
+                    :tile="tile.tile"
+                    :searching-for="props.activePlayerItem"
+                    :is-reachable="props.isReachable({ x: tile.x, y: tile.y })"
+                    :is-clickable="props.phase === 'MovePlayer'"
+                    @click="() => tryMovePlayer(id)"
+                  />
+                </div>
+              </template>
             </template>
           </div>
           <div class="tiles-wrapper">
