@@ -133,9 +133,9 @@ img {
   z-index: 1;
 }
 
-.highlight {
-  font-size: 3vmin;
+.item.highlight {
+  font-size: 3.5vmin;
   filter: none;
-  text-shadow: 0 0 5px black, 0 0 8px rgb(0, 23, 87);
+  text-shadow: 0 0 5px black, 0 0 8px rgb(255, 255, 255);
 }
 </style>
