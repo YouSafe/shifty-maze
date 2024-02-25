@@ -9,9 +9,7 @@ const props = defineProps<{
   isActive: boolean;
 }>();
 
-const dungeonTile = computed(() => {
-  return DungeonTiles.Players[props.player.id];
-});
+const playerTile = computed(() => DungeonTiles.Players[props.player.id]);
 const playerColor = computed(() => PlayerColors[props.player.id]);
 </script>
 
@@ -24,7 +22,7 @@ const playerColor = computed(() => PlayerColors[props.player.id]);
         opacity: props.isActive ? 0.8 : 0.4,
       }"
     ></div>
-    <img :src="dungeonTile.img" alt="Player" />
+    <img :src="playerTile.img" alt="Player" />
   </div>
 </template>
 

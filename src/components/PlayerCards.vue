@@ -7,8 +7,9 @@ import type { Item, PlayerId, Side } from "game-core/pkg";
 const props = defineProps<{
   side: Side;
   id: PlayerId;
+  isHidden: boolean;
+  type: "no-player" | "other-player" | "normal";
   isActive: boolean;
-  hasPlayer: boolean;
   count: number;
   item: Item | null;
 }>();
@@ -26,6 +27,8 @@ const item = computed(() => getItem(props.item));
     :class="{
       'is-active': props.isActive,
       horizontal: orientation === 'horizontal',
+      hidden: props.isHidden,
+      'other-player': props.type === 'other-player',
     }"
   >
     <div class="card">
@@ -37,13 +40,13 @@ const item = computed(() => getItem(props.item));
             dominant-baseline="central"
             text-anchor="middle"
           >
-            {{ hasPlayer ? props.count : "" }}
+            {{ props.type !== "no-player" ? props.count : "" }}
           </text>
         </svg>
       </div>
     </div>
 
-    <div v-if="hasPlayer" class="card item-card">
+    <div v-if="props.type !== 'no-player'" class="card item-card">
       <div class="card-inner">
         {{ item }}
       </div>
@@ -59,6 +62,13 @@ const item = computed(() => getItem(props.item));
 
 .player-cards.horizontal {
   flex-direction: column;
+}
+.player-cards.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+.player-cards.other-player {
+  /* TODO: ?? */
 }
 
 .card {

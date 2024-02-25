@@ -10,7 +10,6 @@ import PlayerJoinDialog from "@/components/PlayerJoinDialog.vue";
 import GameTile from "@/components/GameTile.vue";
 import { useGame, DefaultGameStartSettings } from "@/game";
 import { NButton } from "naive-ui";
-import { PlayerSides } from "@/players";
 import { useClientGame, type PlayerMode, useServer } from "@/multiplayer";
 import {
   PlayerIdRef,
@@ -18,7 +17,7 @@ import {
   quitClient as disconnectClient,
   ServerUrlRef,
 } from "@/multiplayer-url";
-import type { PlayerId } from "game-core/pkg";
+import type { PlayerId, Side } from "game-core/pkg";
 import { Message } from "@/notification";
 
 const showPlayerDialog = ref(false);
@@ -86,25 +85,79 @@ function removePlayer(id: number) {
 }
 
 function getPlayerMode(id: PlayerId): PlayerMode | null {
-  if (server !== null && server.isOnlinePlayer(id)) {
-    return "online";
+  if (game.hasStarted.value === false) {
+    if (gameSettings.value.players.includes(id)) {
+      return "local";
+    }
+    if (server !== null && server.isOnlinePlayer(id)) {
+      return "online";
+    }
+    return null;
+  } else {
+    if (game.playerHelper.hasPlayer(id)) {
+      return "local";
+    }
+    if (server !== null && server.isOnlinePlayer(id)) {
+      return "online";
+    }
+    return null;
   }
-  if (game.playerHelper.hasPlayer(id)) {
-    return "local";
-  }
-  return null;
 }
+
+function isOtherPlayer(id: PlayerId): boolean {
+  if (isClient()) {
+    return id !== PlayerIdRef.value;
+  } else if (server !== null) {
+    return server.isOnlinePlayer(id);
+  } else {
+    return false;
+  }
+}
+
+const PlayerSides: Side[] = [
+  "Top",
+  "Top",
+  "Right",
+  "Left",
+  "Left",
+  "Right",
+  "Bottom",
+  "Bottom",
+];
 
 // See also https://vuejs.org/guide/extras/render-function#typing-functional-components
 function OnePlayerCard(props: { id: number }) {
+  function cardType() {
+    if (game.hasStarted.value) {
+      if (game.playerHelper.hasPlayer(props.id)) {
+        return isOtherPlayer(props.id) ? "other-player" : "normal";
+      } else {
+        return "no-player";
+      }
+    } else {
+      if (gameSettings.value.players.includes(props.id)) {
+        return isOtherPlayer(props.id) ? "other-player" : "normal";
+      } else {
+        return "no-player";
+      }
+    }
+  }
+
+  const isHidden =
+    game.hasStarted.value === true && !game.playerHelper.hasPlayer(props.id);
+
   return h(PlayerCards, {
     side: PlayerSides[props.id] ?? "Top",
     id: props.id,
+    isHidden,
+    type: cardType(),
     isActive: game.activePlayer.value === props.id,
-    hasPlayer: game.playerHelper.hasPlayer(props.id),
-    count: game.playerHelper.itemCount(props.id),
     item: game.playerHelper.currentItem(props.id),
+    count: game.playerHelper.itemCount(props.id),
     onClick: () => {
+      if (isHidden) {
+        return;
+      }
       if (isClient()) {
         showDialogFor.value = PlayerIdRef.value;
       } else {
@@ -124,13 +177,13 @@ OnePlayerCard.props = {
     <SquareContainer>
       <div class="container">
         <div class="top space-between">
+          <OnePlayerCard :id="0"></OnePlayerCard>
           <OnePlayerCard :id="1"></OnePlayerCard>
-          <OnePlayerCard :id="2"></OnePlayerCard>
         </div>
         <div class="middle">
           <div class="left space-between">
-            <OnePlayerCard :id="0"></OnePlayerCard>
-            <OnePlayerCard :id="7"></OnePlayerCard>
+            <OnePlayerCard :id="4"></OnePlayerCard>
+            <OnePlayerCard :id="3"></OnePlayerCard>
           </div>
           <GameBoard
             :board="game.board.value"
@@ -144,13 +197,13 @@ OnePlayerCard.props = {
             @shift-tiles="(side_index) => game.shiftTiles(side_index)"
           />
           <div class="right space-between">
-            <OnePlayerCard :id="3"></OnePlayerCard>
-            <OnePlayerCard :id="4"></OnePlayerCard>
+            <OnePlayerCard :id="5"></OnePlayerCard>
+            <OnePlayerCard :id="2"></OnePlayerCard>
           </div>
         </div>
         <div class="bottom space-between">
+          <OnePlayerCard :id="7"></OnePlayerCard>
           <OnePlayerCard :id="6"></OnePlayerCard>
-          <OnePlayerCard :id="5"></OnePlayerCard>
         </div>
         <div
           v-if="game.board.value?.free_tile"

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { NModal, NButton, NPopconfirm } from "naive-ui";
+import { version } from "../../package.json";
 
 const show = defineModel("show", { type: Boolean, required: true });
 const props = defineProps<{
@@ -29,7 +30,7 @@ function quitGame() {
       }
     "
     preset="card"
-    title="Game Settings"
+    :title="`Game Settings - v${version}`"
     :bordered="false"
     size="huge"
     :segmented="{

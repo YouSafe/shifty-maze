@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { getServerUrl } from "@/multiplayer-url";
-import { Message } from "@/notification";
+import { Message, showError } from "@/notification";
 import { PlayerColors } from "@/players";
 import { NModal, NQrCode } from "naive-ui";
 import { computed } from "vue";
@@ -9,11 +9,14 @@ const show = defineModel("show", { type: Boolean, required: true });
 const props = defineProps<{
   playerId: number;
 }>();
+
 const playerColor = computed(() => PlayerColors[props.playerId]);
 const serverUrl = computed(() => getServerUrl(props.playerId));
 
 function copyUrl() {
-  navigator.clipboard.writeText(serverUrl.value);
+  navigator.clipboard
+    .writeText(serverUrl.value)
+    .catch((e) => showError("Failed to copy to clipboard", e));
   Message.success("Copied to clipboard");
 }
 </script>

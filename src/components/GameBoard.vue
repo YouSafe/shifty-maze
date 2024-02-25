@@ -103,7 +103,7 @@ const startPositionRenderOffsets = [
   { x: 1, y: 0 },
 ];
 
-function startCircleStyle(id: PlayerId) {
+function startCirclePosition(id: PlayerId) {
   const player = props.players.get(id) ?? null;
   if (player === null) {
     return {
@@ -121,9 +121,17 @@ function startCircleStyle(id: PlayerId) {
   };
 }
 
-const playerColors = computed(() => {
-  return PlayerColors;
-});
+function startCircleStyle(id: PlayerId) {
+  const player = props.players.get(id) ?? null;
+  if (player !== null && id === props.activePlayer) {
+    return {
+      backgroundColor: PlayerColors[id],
+      border: "1px solid white",
+    };
+  } else {
+    return {};
+  }
+}
 
 function tryMovePlayer(tileId: number) {
   if (props.phase !== "MovePlayer") {
@@ -197,13 +205,9 @@ function startGame() {
               v-for="[id, player] of props.players.entries()"
               :key="id"
               class="start-circle"
-              :style="startCircleStyle(id)"
+              :style="startCirclePosition(id)"
             >
-              <div
-                :style="{
-                  backgroundColor: playerColors[id],
-                }"
-              ></div>
+              <div :style="startCircleStyle(id)"></div>
             </div>
           </div>
           <div class="tiles-wrapper">
@@ -215,10 +219,7 @@ function startGame() {
             >
               <PlayerPiece
                 :player="player"
-                :is-active="
-                  props.phase === 'MovePlayer' &&
-                  player.id === props.activePlayer
-                "
+                :is-active="player.id === props.activePlayer"
               />
             </div>
           </div>

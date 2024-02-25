@@ -32,7 +32,7 @@ export function useGame(errorHandler: (error: string) => void) {
 
   const core = new GameCore(10);
 
-  storage.load().map(state => setGame(state));
+  storage.load().map((state) => setGame(state));
 
   function handleResult(result: Result<Game, string>) {
     if (result.type === "Ok") {
@@ -100,7 +100,7 @@ export function useGame(errorHandler: (error: string) => void) {
     },
     currentItem: (id: PlayerId): Item | null => {
       const player = game.value?.players.players.get(id);
-      if (!player) return 0;
+      if (!player) return null;
       return player.to_collect.at(-1) ?? null;
     },
   };

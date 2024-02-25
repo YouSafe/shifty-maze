@@ -7,6 +7,11 @@ const { message, notification, dialog, loadingBar } = createDiscreteApi([
   "loadingBar",
 ]);
 
+export function showError(msg: string, error: any) {
+  console.error(msg, error);
+  message.error(msg);
+}
+
 export {
   message as Message,
   notification as Notification,
