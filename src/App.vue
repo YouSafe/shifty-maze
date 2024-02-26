@@ -290,6 +290,7 @@ OnePlayerCard.props = {
   display: flex;
   flex-direction: row;
   min-height: 0;
+  height: 100%;
 }
 
 .space-between {
@@ -297,8 +298,10 @@ OnePlayerCard.props = {
 }
 
 .container {
+  display: flex;
   position: relative;
   flex-direction: column;
+  height: 100%;
 }
 
 .free-tile {

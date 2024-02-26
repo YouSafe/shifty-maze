@@ -282,8 +282,8 @@ function vLocal<T>(value: T | null) {
 }
 
 .board-container {
-  margin: 1vmin;
-  padding: 1vmin;
+  box-sizing: border-box;
+  padding: 2vmin;
   background-color: #e0e0e0;
   height: 100%;
 }
