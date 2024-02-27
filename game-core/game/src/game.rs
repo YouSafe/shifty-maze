@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeSet;
 
 use crate::{
     board::{Board, NewBoardError, ShiftTileError},
@@ -25,9 +25,7 @@ pub enum GamePhase {
 
 #[ts_interop]
 pub struct GameStartSettings {
-    /// The player ids. A map, so that serde-wasm-bindgen actually generates a map on the JS side.
-    /// Should be a set, but the bindings generator doesn't support that. Very stinky.
-    players: HashMap<PlayerId, ()>,
+    players: BTreeSet<PlayerId>,
     side_length: usize,
     items_per_player: usize,
 }
@@ -55,12 +53,8 @@ pub enum MovePlayerError {
 impl Game {
     pub fn new(settings: GameStartSettings) -> Result<Self, NewGameError> {
         let board = Board::new(settings.side_length)?;
-        let players = Players::new(
-            settings.players.into_keys().collect(),
-            settings.items_per_player,
-            &board,
-        )
-        .ok_or(NewGameError::PlayerError)?;
+        let players = Players::new(settings.players, settings.items_per_player, &board)
+            .ok_or(NewGameError::PlayerError)?;
 
         Ok(Self {
             board,
@@ -155,9 +149,9 @@ impl Game {
 }
 
 impl GameStartSettings {
-    pub fn new(players: Vec<PlayerId>, side_length: usize, items_per_player: usize) -> Self {
+    pub fn new(players: BTreeSet<PlayerId>, side_length: usize, items_per_player: usize) -> Self {
         Self {
-            players: players.into_iter().map(|id| (id, ())).collect(),
+            players,
             side_length,
             items_per_player,
         }

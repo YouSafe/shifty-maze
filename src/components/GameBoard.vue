@@ -6,7 +6,6 @@ import PlayerPiece from "@/components/PlayerPiece.vue";
 import type {
   Board,
   GamePhase,
-  GameStartSettings,
   Item,
   Player,
   PlayerId,
@@ -19,6 +18,7 @@ import { groupBy } from "@/array-utils";
 import { PlayerColors } from "@/players";
 import SideArrows from "@/components/GameBoard/SideArrows.vue";
 import { useTilesMap } from "@/components/GameBoard/tiles-map";
+import type { GameStartSettings } from "@/game";
 
 const gameSettings = defineModel<GameStartSettings>("startSettings", {
   required: true,

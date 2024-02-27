@@ -35,6 +35,11 @@ pub enum ShiftTileError {
     UndoMove,
 }
 
+struct DfsResult {
+    is_reachable: bool,
+    visited: HashSet<Position>,
+}
+
 impl Board {
     pub fn new(side_length: usize) -> Result<Self, NewBoardError> {
         use Rotation::*;
@@ -134,9 +139,6 @@ impl Board {
     }
 
     pub fn is_reachable(&self, start: Position, goal: Position) -> bool {
-        if start == goal {
-            return true;
-        }
         self.maze_dfs(start, |pos| pos == goal).is_reachable
     }
 
@@ -285,11 +287,6 @@ impl Board {
             visited,
         }
     }
-}
-
-struct DfsResult {
-    is_reachable: bool,
-    visited: HashSet<Position>,
 }
 
 impl Index<Position> for Board {

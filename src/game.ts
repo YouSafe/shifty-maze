@@ -1,7 +1,7 @@
 import { computed, ref, watch } from "vue";
 import init, {
   GameCore,
-  type GameStartSettings,
+  type GameStartSettings as G,
   type Item,
   type PlayerId,
   type Rotation,
@@ -14,9 +14,12 @@ import { useLocalStorage } from "@/local-storage";
 
 await init();
 
+{ type _ = G["players"]; } // assert, that G has players
+export type GameStartSettings = Omit<G, "players"> & { players: Set<PlayerId> };
+
 export function DefaultGameStartSettings(): GameStartSettings {
   return {
-    players: new Map<PlayerId, undefined>(),
+    players: new Set<PlayerId>(),
     side_length: 7,
     items_per_player: 6,
   };
@@ -69,7 +72,7 @@ export function useGame(errorHandler: (error: string) => void) {
 
   function startGame(settings: GameStartSettings) {
     reset();
-    handleResult(core.start_game(settings));
+    handleResult(core.start_game({ ...settings, players: [...settings.players] }));
   }
 
   function rotateFreeTile() {

@@ -17,11 +17,11 @@ mod tests {
     }
 
     fn new_players() -> Option<Players> {
-        Players::new(vec![0, 1, 2, 3], 6, &new_board().unwrap())
+        Players::new([0, 1, 2, 3].into(), 6, &new_board().unwrap())
     }
 
     fn new_game() -> Result<Game, NewGameError> {
-        Game::new(GameStartSettings::new(vec![0, 1, 2, 3], 7, 6))
+        Game::new(GameStartSettings::new([0, 1, 2, 3].into(), 7, 6))
     }
 
     #[test]

@@ -3,7 +3,7 @@ use rand::{
     seq::{IteratorRandom, SliceRandom},
     Rng,
 };
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use ts_interop::ts_interop;
 
 #[cfg_attr(feature = "wasm", tsify::declare)]
@@ -42,12 +42,10 @@ pub enum MoveResult<'a> {
 }
 
 impl Players {
-    pub fn new(mut ids: Vec<PlayerId>, items_per_player: usize, board: &Board) -> Option<Self> {
+    pub fn new(ids: BTreeSet<PlayerId>, items_per_player: usize, board: &Board) -> Option<Self> {
         if ids.len() < 2 {
             return None;
         }
-
-        ids.sort();
 
         let player_turn = *ids.first().unwrap();
         let mut rng = rand::thread_rng();
@@ -225,8 +223,8 @@ impl Position {
     }
 }
 
-fn get_start_position(index: usize, side_length: usize) -> Position {
-    match index % 4 {
+fn get_start_position(id: usize, side_length: usize) -> Position {
+    match id % 4 {
         0 => Position::new(0, 0),
         1 => Position::new(side_length - 1, 0),
         2 => Position::new(side_length - 1, side_length - 1),

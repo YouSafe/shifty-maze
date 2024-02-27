@@ -75,7 +75,7 @@ function join(id: number, mode: PlayerMode) {
       }
     }
   } else {
-    gameSettings.value.players.set(id, undefined);
+    gameSettings.value.players.add(id);
     if (mode === "online") {
       server?.startServer();
       showPlayerJoinDialog.value = true;
