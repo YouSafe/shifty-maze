@@ -34,11 +34,15 @@ pub struct Position {
     y: usize,
 }
 
-pub enum MoveResult<'a> {
-    Moved(&'a mut Player),
-    Won(PlayerId),
+pub struct PlayerMove {
+    pub winner: Option<PlayerId>,
+    pub path: Vec<Position>,
+}
+
+pub enum MoveError {
+    InvalidPosition,
     InvalidPlayer,
-    Unreachable,
+    UnreachablePosition,
 }
 
 impl Players {
@@ -102,7 +106,38 @@ impl Players {
         Ok(None)
     }
 
-    pub fn next_player_turn(&mut self) {
+    pub fn move_player(
+        &mut self,
+        player_id: PlayerId,
+        position: Position,
+        board: &Board,
+    ) -> Result<PlayerMove, MoveError> {
+        if board.get_tile(position).is_none() {
+            return Err(MoveError::InvalidPosition);
+        }
+
+        if let Some(player) = self.players.get_mut(&player_id) {
+            return match board.get_path(player.get_position(), position) {
+                Some(path) => {
+                    player.set_position(position);
+                    let mut result = PlayerMove { winner: None, path };
+
+                    if player.get_next_to_collect().is_none() && player.is_at_start() {
+                        result.winner = Some(player_id);
+                    } else {
+                        player.try_collect_item(board);
+                        self.next_player_turn();
+                    }
+
+                    Ok(result)
+                }
+                None => Err(MoveError::UnreachablePosition),
+            };
+        }
+        Err(MoveError::InvalidPlayer)
+    }
+
+    fn next_player_turn(&mut self) {
         self.player_turn = self
             .players
             .range(self.player_turn + 1..)
@@ -110,27 +145,6 @@ impl Players {
             .or_else(|| self.players.first_key_value())
             .map(|(id, _)| *id)
             .unwrap();
-    }
-
-    pub fn move_player(
-        &mut self,
-        player_id: PlayerId,
-        position: Position,
-        board: &Board,
-    ) -> MoveResult {
-        if let Some(player) = self.players.get_mut(&player_id) {
-            if !board.is_reachable(player.get_position(), position) {
-                return MoveResult::Unreachable;
-            }
-
-            player.set_position(position);
-            return if player.get_next_to_collect().is_none() && player.is_at_start() {
-                MoveResult::Won(player_id)
-            } else {
-                MoveResult::Moved(player)
-            };
-        }
-        MoveResult::InvalidPlayer
     }
 }
 

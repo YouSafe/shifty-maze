@@ -2,7 +2,7 @@ use std::collections::BTreeSet;
 
 use crate::{
     board::{Board, NewBoardError, ShiftTileError},
-    player::{MoveResult, PlayerId, Players, Position},
+    player::{MoveError, PlayerId, Players, Position},
     tile::{Rotation, SideIndex},
 };
 use ts_interop::ts_interop;
@@ -44,12 +44,6 @@ pub enum GameError<T> {
     ActionError(T),
 }
 
-pub enum MovePlayerError {
-    InvalidPosition,
-    InvalidPlayer,
-    UnreachablePosition,
-}
-
 impl Game {
     pub fn new(settings: GameStartSettings) -> Result<Self, NewGameError> {
         let board = Board::new(settings.side_length)?;
@@ -71,9 +65,7 @@ impl Game {
 
         Some(
             self.board
-                .get_reachable(self.players.current_player().get_position())
-                .into_iter()
-                .collect(),
+                .get_reachable(self.players.current_player().get_position()),
         )
     }
 
@@ -120,7 +112,7 @@ impl Game {
         &mut self,
         player_id: PlayerId,
         position: Position,
-    ) -> ActionResult<MovePlayerError> {
+    ) -> Result<Vec<Position>, GameError<MoveError>> {
         if self.winner.is_some() {
             return Err(GameError::GameOver);
         }
@@ -129,22 +121,11 @@ impl Game {
             return Err(GameError::StateError);
         }
 
-        if self.board.get_tile(position).is_none() {
-            return Err(MovePlayerError::InvalidPosition.into());
-        }
-
-        match self.players.move_player(player_id, position, &self.board) {
-            MoveResult::Moved(player) => {
-                player.try_collect_item(&self.board);
-                self.players.next_player_turn();
-            }
-            MoveResult::Won(id) => self.winner = Some(id),
-            MoveResult::InvalidPlayer => return Err(MovePlayerError::InvalidPlayer.into()),
-            MoveResult::Unreachable => return Err(MovePlayerError::UnreachablePosition.into()),
-        }
-
+        let result = self.players.move_player(player_id, position, &self.board)?;
         self.phase = GamePhase::MoveTiles;
-        Ok(())
+        self.winner = result.winner;
+
+        Ok(result.path)
     }
 }
 

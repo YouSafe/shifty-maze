@@ -8,7 +8,7 @@ mod tests {
     use crate::{
         board::{Board, NewBoardError},
         game::{Game, GameStartSettings, NewGameError},
-        player::{MoveResult, Players, Position},
+        player::{Players, Position},
         tile::{Side, SideIndex},
     };
 
@@ -57,13 +57,10 @@ mod tests {
     #[test]
     fn move_player() {
         let new_pos = Position::new(0, 0);
-        match new_players()
+        assert!(new_players()
             .unwrap()
             .move_player(0, new_pos, &new_board().unwrap())
-        {
-            MoveResult::Moved(player) => assert!(player.get_position() == new_pos),
-            _ => panic!("Wrong result"),
-        };
+            .is_ok());
     }
 
     #[test]

@@ -2,8 +2,8 @@ mod result;
 
 use game::{
     board::{NewBoardError, ShiftTileError},
-    game::{Game, GameError, GameStartSettings, MovePlayerError, NewGameError},
-    player::{PlayerId, Position},
+    game::{Game, GameError, GameStartSettings, NewGameError},
+    player::{MoveError, PlayerId, Position},
     tile::{Rotation, SideIndex},
 };
 use std::collections::VecDeque;
@@ -16,6 +16,7 @@ type ActionResult = result::Result<Game, String>;
 #[wasm_bindgen]
 pub struct GameCore {
     history: VecDeque<Game>,
+    last_path: Option<Vec<Position>>,
 }
 
 impl GameCore {
@@ -63,6 +64,7 @@ impl GameCore {
     pub fn new(history_size: usize) -> Self {
         Self {
             history: VecDeque::with_capacity(history_size),
+            last_path: None,
         }
     }
 
@@ -149,24 +151,40 @@ impl GameCore {
     }
 
     pub fn move_player(&mut self, player_id: PlayerId, position: Position) -> ActionResult {
-        self.do_action_result(|game| {
-            game.move_player(player_id, position).map_err(|err| {
-                match err {
-                    GameError::GameOver => "Cannot move player: Game has ended",
-                    GameError::StateError => "Cannot move player: Player has to shift tiles first",
-                    GameError::ActionError(MovePlayerError::InvalidPosition) => {
-                        "Cannot move player: Position is not on the board"
+        let mut path = None;
+        let res = self.do_action_result(|game| {
+            game.move_player(player_id, position)
+                .map_err(|err| {
+                    match err {
+                        GameError::GameOver => "Cannot move player: Game has ended",
+                        GameError::StateError => {
+                            "Cannot move player: Player has to shift tiles first"
+                        }
+                        GameError::ActionError(MoveError::InvalidPosition) => {
+                            "Cannot move player: Position is not on the board"
+                        }
+                        GameError::ActionError(MoveError::InvalidPlayer) => {
+                            "Cannot move player: No such player exists"
+                        }
+                        GameError::ActionError(MoveError::UnreachablePosition) => {
+                            "Cannot move player: Position is not reachable by player"
+                        }
                     }
-                    GameError::ActionError(MovePlayerError::InvalidPlayer) => {
-                        "Cannot move player: No such player exists"
-                    }
-                    GameError::ActionError(MovePlayerError::UnreachablePosition) => {
-                        "Cannot move player: Position is not reachable by player"
-                    }
-                }
-                .into()
-            })
-        })
+                    .into()
+                })
+                .map(|p| path = Some(p))
+        });
+
+        self.last_path = path;
+
+        res
+    }
+
+    pub fn last_path(&mut self) -> result::Result<Vec<Position>, String> {
+        self.last_path
+            .take()
+            .ok_or_else(|| "Player has not moved yet".into())
+            .into()
     }
 
     pub fn undo_move(&mut self) -> ActionResult {

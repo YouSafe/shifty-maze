@@ -1,5 +1,5 @@
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{hash_map::Entry, HashMap, VecDeque},
     iter, mem,
     ops::Index,
 };
@@ -35,9 +35,9 @@ pub enum ShiftTileError {
     UndoMove,
 }
 
-struct DfsResult {
+struct BFSResult {
     is_reachable: bool,
-    visited: HashSet<Position>,
+    preds: HashMap<Position, Position>,
 }
 
 impl Board {
@@ -134,12 +134,27 @@ impl Board {
         self.tiles.get(x + y * self.side_length)
     }
 
-    pub fn get_reachable(&self, start: Position) -> HashSet<Position> {
-        self.maze_dfs(start, |_| false).visited
+    pub fn get_reachable(&self, start: Position) -> Vec<Position> {
+        self.maze_bfs(start, |_| false).preds.into_keys().collect()
     }
 
-    pub fn is_reachable(&self, start: Position, goal: Position) -> bool {
-        self.maze_dfs(start, |pos| pos == goal).is_reachable
+    pub fn get_path(&self, start: Position, goal: Position) -> Option<Vec<Position>> {
+        let result = self.maze_bfs(start, |pos| pos == goal);
+        if !result.is_reachable {
+            return None;
+        }
+
+        let mut path = Vec::new();
+        let mut current = goal;
+
+        while current != start {
+            path.push(current);
+            current = result.preds[&current];
+        }
+
+        path.push(start);
+        path.reverse();
+        Some(path)
     }
 
     pub fn rotate_free_tile(&mut self, rotation: Rotation) {
@@ -264,27 +279,28 @@ impl Board {
         neighbours
     }
 
-    fn maze_dfs(&self, start: Position, goal_fn: impl Fn(Position) -> bool) -> DfsResult {
-        let mut visited: HashSet<_> = [start].into();
-        let mut to_visit = vec![start];
+    fn maze_bfs(&self, start: Position, goal_fn: impl Fn(Position) -> bool) -> BFSResult {
+        let mut to_visit: VecDeque<_> = [start].into();
+        let mut preds: HashMap<_, _> = [(start, start)].into();
 
-        while let Some(next) = to_visit.pop() {
-            if goal_fn(next) {
-                return DfsResult {
-                    is_reachable: true,
-                    visited,
-                };
-            }
+        while let Some(next) = to_visit.pop_front() {
             for neighbour in self.neighbours(next) {
-                if visited.insert(neighbour) {
-                    to_visit.push(neighbour);
+                if let Entry::Vacant(entry) = preds.entry(neighbour) {
+                    to_visit.push_back(neighbour);
+                    entry.insert(next);
                 }
+            }
+            if goal_fn(next) {
+                return BFSResult {
+                    is_reachable: true,
+                    preds,
+                };
             }
         }
 
-        DfsResult {
+        BFSResult {
             is_reachable: false,
-            visited,
+            preds,
         }
     }
 }
