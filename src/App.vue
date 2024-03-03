@@ -125,12 +125,12 @@ function isOtherPlayer(id: PlayerId): boolean {
 
 const PlayerSides: Side[] = [
   "Top",
-  "Top",
-  "Right",
   "Left",
-  "Left",
-  "Right",
   "Bottom",
+  "Right",
+  "Right",
+  "Top",
+  "Left",
   "Bottom",
 ];
 
@@ -187,7 +187,7 @@ OnePlayerCard.props = {
         <div class="top space-between">
           <OnePlayerCard :id="0"></OnePlayerCard>
           <div class="status-message">{{ statusMessage }}</div>
-          <OnePlayerCard :id="1"></OnePlayerCard>
+          <OnePlayerCard :id="5"></OnePlayerCard>
         </div>
         <div class="middle">
           <div class="left space-between">
@@ -207,13 +207,13 @@ OnePlayerCard.props = {
             @shift-tiles="(side_index) => game.shiftTiles(side_index)"
           />
           <div class="right space-between">
-            <OnePlayerCard :id="5"></OnePlayerCard>
-            <OnePlayerCard :id="2"></OnePlayerCard>
+            <OnePlayerCard :id="1"></OnePlayerCard>
+            <OnePlayerCard :id="6"></OnePlayerCard>
           </div>
         </div>
         <div class="bottom space-between">
           <OnePlayerCard :id="7"></OnePlayerCard>
-          <OnePlayerCard :id="6"></OnePlayerCard>
+          <OnePlayerCard :id="2"></OnePlayerCard>
         </div>
         <div
           v-if="game.board.value?.free_tile"
