@@ -14,7 +14,9 @@ import { useLocalStorage } from "@/local-storage";
 
 await init();
 
-{ type _ = G["players"]; } // assert, that G has players
+{
+  type _ = G["players"];
+} // assert, that G has players
 export type GameStartSettings = Omit<G, "players"> & { players: Set<PlayerId> };
 
 export function DefaultGameStartSettings(): GameStartSettings {
@@ -73,7 +75,9 @@ export function useGame(errorHandler: (error: string) => void) {
 
   function startGame(settings: GameStartSettings) {
     reset();
-    handleResult(core.start_game({ ...settings, players: [...settings.players] }));
+    handleResult(
+      core.start_game({ ...settings, players: [...settings.players] })
+    );
   }
 
   function rotateFreeTile() {
@@ -93,6 +97,7 @@ export function useGame(errorHandler: (error: string) => void) {
     handleResult(core.remove_player(id));
   }
 
+  let cancelLastMove = () => {};
   function movePlayer(id: PlayerId, x: number, y: number) {
     handleResult(core.move_player(id, { x, y }));
     let result = core.last_path();
@@ -101,17 +106,29 @@ export function useGame(errorHandler: (error: string) => void) {
       path.value = result.value;
       const duration = 1000 / path.value.length;
 
-      const setPosTimeout = (pos: Position) => {
-        (game.value?.players.players.get(id) ?? {} as any).position = pos;
-        return new Promise((resolve: any) => setTimeout(() => resolve(), duration));
+      (game.value?.players.players.get(id) ?? ({} as any)).position = {
+        x: path.value[0].x,
+        y: path.value[0].y,
       };
+      let toExecute: (() => void)[] = path.value.map((pos) => {
+        return () => {
+          (game.value?.players.players.get(id) ?? ({} as any)).position = pos;
+        };
+      });
+      toExecute.push(() => (path.value = [{ x: 0, y: 0 }]));
 
-      let prom = new Promise((r: any) => { r() });
+      let movePlayerTimeout = setInterval(() => {
+        let f = toExecute.shift();
+        if (f) f();
+      }, duration);
 
-      for (let pos of path.value) {
-        prom = prom.then(() => setPosTimeout(pos));
-      }
-      prom.then(() => path.value = [{ x: 0, y: 0 }]);
+      cancelLastMove = () => {
+        clearInterval(movePlayerTimeout);
+        (game.value?.players.players.get(id) ?? ({} as any)).position = {
+          x,
+          y,
+        };
+      };
     }
   }
 
