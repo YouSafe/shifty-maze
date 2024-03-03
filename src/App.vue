@@ -200,6 +200,7 @@ OnePlayerCard.props = {
             :active-player="game.activePlayer.value"
             :active-player-item="game.activePlayerItem.value"
             :phase="game.phase.value"
+            :pathLength="game.pathLength.value"
             :is-reachable="(p) => game.isReachable(p)"
             v-model:start-settings="gameSettings"
             @start-game="(v) => game.startGame(v)"

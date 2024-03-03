@@ -30,6 +30,7 @@ const props = defineProps<{
   activePlayer: PlayerId | null;
   activePlayerItem: Item | null;
   phase: GamePhase;
+  pathLength: number;
   isReachable: (position: Position) => boolean;
 }>();
 
@@ -88,6 +89,7 @@ function playerStyle(id: PlayerId) {
   return {
     top: (player.position.y / sideLength.value) * 100 + "%",
     left: (player.position.x / sideLength.value) * 100 + "%",
+    transitionDuration: `${1 / props.pathLength}s`,
     transform,
   };
 }
@@ -219,7 +221,7 @@ function vLocal<T>(value: T | null) {
           </div>
           <div class="tiles-wrapper">
             <div
-              v-for="[id, player] of props.players.entries()"
+              v-for="id of props.players.keys()"
               :key="id"
               class="start-circle"
               :style="startCirclePosition(id)"

@@ -9,6 +9,7 @@ import init, {
   type Game,
   type Result,
   type Position,
+  type Player,
 } from "../game-core/pkg";
 import { useLocalStorage } from "@/local-storage";
 
@@ -32,6 +33,7 @@ function positionToString(p: Position): StringPosition {
 
 export function useGame(errorHandler: (error: string) => void) {
   const game = ref<Game | null>(null);
+  const pathLength = ref(1);
   const reachable = ref<Set<StringPosition>>(new Set());
   const storage = useLocalStorage<Game>();
 
@@ -72,7 +74,9 @@ export function useGame(errorHandler: (error: string) => void) {
 
   function startGame(settings: GameStartSettings) {
     reset();
-    handleResult(core.start_game({ ...settings, players: [...settings.players] }));
+    handleResult(
+      core.start_game({ ...settings, players: [...settings.players] })
+    );
   }
 
   function rotateFreeTile() {
@@ -84,8 +88,12 @@ export function useGame(errorHandler: (error: string) => void) {
     }
   }
 
+  let lastInterval: number | null = null;
   function shiftTiles(side_index: SideIndex) {
     handleResult(core.shift_tiles(side_index));
+    if (lastInterval !== null) {
+      clearInterval(lastInterval);
+    }
   }
 
   function removePlayer(id: PlayerId) {
@@ -94,6 +102,30 @@ export function useGame(errorHandler: (error: string) => void) {
 
   function movePlayer(id: PlayerId, x: number, y: number) {
     handleResult(core.move_player(id, { x, y }));
+    let result: Result<Position[], string> = core.last_path();
+
+    if (result.type === "Ok") {
+      const path = result.value;
+      pathLength.value = path.length;
+      const duration = 1000 / pathLength.value;
+
+      if (lastInterval !== null) {
+        clearInterval(lastInterval);
+        forPlayer(id, (p) => p.position = { x, y });
+      }
+
+      forPlayer(id, (p) => p.position = path.shift() ?? {} as Position);
+
+      lastInterval = setInterval(() => {
+        const pos = path.shift();
+        if (pos) {
+          forPlayer(id, (p) => p.position = pos);
+        } else {
+          clearInterval(lastInterval ?? 0);
+          pathLength.value = 1;
+        }
+      }, duration);
+    }
   }
 
   function setGame(g: Game) {
@@ -120,6 +152,13 @@ export function useGame(errorHandler: (error: string) => void) {
     if (game.value === null) return true;
     if (game.value.phase !== "MovePlayer") return true;
     return reachable.value.has(positionToString(position));
+  }
+
+  function forPlayer(id: number, action: (player: Player) => void) {
+    let player = game.value?.players.players.get(id);
+    if (player) {
+      action(player);
+    }
   }
 
   const playerHelper = {
@@ -155,6 +194,7 @@ export function useGame(errorHandler: (error: string) => void) {
     board: computed(() => game.value?.board ?? null),
     phase: computed(() => game.value?.phase ?? "MoveTiles"),
     winner: computed(() => game.value?.winner ?? null),
+    pathLength: computed(() => pathLength.value),
 
     setGame,
     startGame,
