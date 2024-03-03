@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { DungeonTiles } from "@/dungeon_tiles";
 import { getItem } from "@/items";
-import type { GamePhase, Item, Tile } from "game-core/pkg";
+import type { Item, Tile } from "game-core/pkg";
 import { computed } from "vue";
 
 const props = defineProps<{
