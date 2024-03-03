@@ -87,8 +87,8 @@ function playerStyle(id: PlayerId) {
       }%)`
     : "";
   return {
-    top: (player.position.y / sideLength.value) * 100 + "%",
-    left: (player.position.x / sideLength.value) * 100 + "%",
+    // top: (player.position.y / sideLength.value) * 100 + "%",
+    // left: (player.position.x / sideLength.value) * 100 + "%",
     transitionDuration: `${1 / props.path.length}s`,
     transform,
   };
@@ -230,6 +230,22 @@ function vLocal<T>(value: T | null) {
             </div>
           </div>
           <div class="tiles-wrapper">
+            <svg
+              viewBox="0 0 100 100"
+              xmlns="http://www.w3.org/2000/svg"
+              style="position: absolute"
+            >
+              <path
+                id="movePath"
+                d="M 10,30
+           A 20,20 0,0,1 50,30
+           A 20,20 0,0,1 90,30
+           Q 90,60 50,90
+           Q 10,60 10,30 z"
+                fill="red"
+              />
+            </svg>
+
             <div
               v-for="[id, player] of props.players.entries()"
               :key="id"
@@ -265,6 +281,8 @@ function vLocal<T>(value: T | null) {
 }
 .player {
   pointer-events: none;
+  offset-path: url(#movePath);
+  animation: move 5s linear infinite;
 }
 
 .start-circle {
@@ -306,5 +324,15 @@ function vLocal<T>(value: T | null) {
   height: 100%;
   gap: 20px;
   flex-direction: column;
+}
+
+@keyframes move {
+  from {
+    offset-distance: 0%;
+  }
+
+  to {
+    offset-distance: 100%;
+  }
 }
 </style>
