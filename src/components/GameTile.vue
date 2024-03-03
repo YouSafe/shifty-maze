@@ -119,8 +119,11 @@ img {
 
 .item {
   position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   display: flex;
-  container-type: size;
   font-family: "Noto Color Emoji", sans-serif;
   color: #422b0d;
   font-size: 2.5vmin;
@@ -130,7 +133,6 @@ img {
   text-shadow: -2px 4px 4px black;
   filter: sepia(25%);
   pointer-events: none;
-  z-index: 1;
 }
 
 .item.highlight {
