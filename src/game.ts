@@ -32,6 +32,7 @@ function positionToString(p: Position): StringPosition {
 
 export function useGame(errorHandler: (error: string) => void) {
   const game = ref<Game | null>(null);
+  const path = ref<Position[]>([]);
   const reachable = ref<Set<StringPosition>>(new Set());
   const storage = useLocalStorage<Game>();
 
@@ -94,6 +95,24 @@ export function useGame(errorHandler: (error: string) => void) {
 
   function movePlayer(id: PlayerId, x: number, y: number) {
     handleResult(core.move_player(id, { x, y }));
+    let result = core.last_path();
+
+    if (result.type === "Ok") {
+      path.value = result.value;
+      const duration = 1000 / path.value.length;
+
+      const setPosTimeout = (pos: Position) => {
+        (game.value?.players.players.get(id) ?? {} as any).position = pos;
+        return new Promise((resolve: any) => setTimeout(() => resolve(), duration));
+      };
+
+      let prom = new Promise((r: any) => { r() });
+
+      for (let pos of path.value) {
+        prom = prom.then(() => setPosTimeout(pos));
+      }
+      prom.then(() => path.value = [{ x: 0, y: 0 }]);
+    }
   }
 
   function setGame(g: Game) {
@@ -155,6 +174,7 @@ export function useGame(errorHandler: (error: string) => void) {
     board: computed(() => game.value?.board ?? null),
     phase: computed(() => game.value?.phase ?? "MoveTiles"),
     winner: computed(() => game.value?.winner ?? null),
+    path: computed(() => path.value),
 
     setGame,
     startGame,
