@@ -1,7 +1,7 @@
 const Items = [
   "<invalid>",
   "🐈",
-  "🐈‍⬛",
+  "🐩",
   "😺",
   "😹",
   "😻",
@@ -10,9 +10,9 @@ const Items = [
   "🐯",
   "🦁",
   "🌰",
-  "🦊",
+  "🧁",
   "🐚",
-  "🪶",
+  "🌈",
   "🦴",
   "🎈",
   "🎃",
@@ -36,7 +36,7 @@ const Items = [
   "🦊",
   "🦝",
   "🐴",
-  "🫎",
+  "🌑",
   "🦄",
   "🦓",
   "🐮",
@@ -48,14 +48,14 @@ const Items = [
   "🐰",
   "🦇",
   "🐻",
-  "🐻‍❄️",
+  "🐟",
   "🐨",
   "🐼",
   "🐔",
   "💐",
   "🌸",
   "💮",
-  "🪷",
+  "☕",
   "🏵️",
   "🌹",
   "🌺",
@@ -121,6 +121,16 @@ const Items = [
   "❄️",
   "🐧",
 ];
+
+{
+  const seen = new Set<string>();
+  for (const item of Items) {
+    if (seen.has(item)) {
+      console.warn(`duplicate item: ${item}`);
+    }
+    seen.add(item);
+  }
+}
 
 export function getItem(value: number | null | undefined): string | null {
   if (value === null || value === undefined) {
