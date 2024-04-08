@@ -9,7 +9,7 @@ import WinnerDialog from "@/components/WinnerDialog.vue";
 import PlayerJoinDialog from "@/components/PlayerJoinDialog.vue";
 import GameTile from "@/components/GameTile.vue";
 import { useGame, DefaultGameStartSettings } from "@/game";
-import { NButton } from "naive-ui";
+import { NButton, darkTheme, NConfigProvider } from "naive-ui";
 import { useClientGame, type PlayerMode, useServer } from "@/multiplayer";
 import {
   PlayerIdRef,
@@ -19,7 +19,6 @@ import {
 } from "@/multiplayer-url";
 import type { PlayerId, Side } from "game-core/pkg";
 import { Message } from "@/notification";
-
 const showPlayerDialog = ref(false);
 const showDialogFor = ref(0);
 
@@ -181,95 +180,97 @@ OnePlayerCard.props = {
 </script>
 
 <template>
-  <div class="max-size">
-    <SquareContainer>
-      <div class="container">
-        <div class="top space-between">
-          <OnePlayerCard :id="0"></OnePlayerCard>
-          <div class="status-message">{{ statusMessage }}</div>
-          <OnePlayerCard :id="5"></OnePlayerCard>
-        </div>
-        <div class="middle">
-          <div class="left space-between">
-            <OnePlayerCard :id="4"></OnePlayerCard>
-            <OnePlayerCard :id="3"></OnePlayerCard>
+  <n-config-provider :theme="darkTheme" class="max-size">
+    <div class="max-size">
+      <SquareContainer>
+        <div class="container">
+          <div class="top space-between">
+            <OnePlayerCard :id="0"></OnePlayerCard>
+            <div class="status-message">{{ statusMessage }}</div>
+            <OnePlayerCard :id="5"></OnePlayerCard>
           </div>
-          <GameBoard
-            :board="game.board.value"
-            :players="game.playersMap.value"
-            :active-player="game.activePlayer.value"
-            :active-player-item="game.activePlayerItem.value"
-            :phase="game.phase.value"
-            :pathLength="game.pathLength.value"
-            :is-reachable="(p) => game.isReachable(p)"
-            v-model:start-settings="gameSettings"
-            @start-game="(v) => game.startGame(v)"
-            @player-move="(player, x, y) => game.movePlayer(player, x, y)"
-            @shift-tiles="(side_index) => game.shiftTiles(side_index)"
-          />
-          <div class="right space-between">
-            <OnePlayerCard :id="1"></OnePlayerCard>
-            <OnePlayerCard :id="6"></OnePlayerCard>
+          <div class="middle">
+            <div class="left space-between">
+              <OnePlayerCard :id="4"></OnePlayerCard>
+              <OnePlayerCard :id="3"></OnePlayerCard>
+            </div>
+            <GameBoard
+              :board="game.board.value"
+              :players="game.playersMap.value"
+              :active-player="game.activePlayer.value"
+              :active-player-item="game.activePlayerItem.value"
+              :phase="game.phase.value"
+              :pathLength="game.pathLength.value"
+              :is-reachable="(p) => game.isReachable(p)"
+              v-model:start-settings="gameSettings"
+              @start-game="(v) => game.startGame(v)"
+              @player-move="(player, x, y) => game.movePlayer(player, x, y)"
+              @shift-tiles="(side_index) => game.shiftTiles(side_index)"
+            />
+            <div class="right space-between">
+              <OnePlayerCard :id="1"></OnePlayerCard>
+              <OnePlayerCard :id="6"></OnePlayerCard>
+            </div>
           </div>
+          <div class="bottom space-between">
+            <OnePlayerCard :id="7"></OnePlayerCard>
+            <OnePlayerCard :id="2"></OnePlayerCard>
+          </div>
+          <div
+            v-if="game.board.value?.free_tile"
+            class="free-tile"
+            @click="game.rotateFreeTile()"
+          >
+            <GameTile
+              :tile="game.board.value?.free_tile?.tile ?? null"
+              :searching-for="game.activePlayerItem.value"
+              :is-reachable="true"
+              :is-clickable="game.phase.value === 'MoveTiles'"
+            ></GameTile>
+            <div v-if="game.phase.value === 'MoveTiles'">Rotate&nbsp;⟳</div>
+          </div>
+          <NButton
+            round
+            size="small"
+            class="settings-button-small"
+            @click="showSettingsDialog = true"
+          >
+            ⚙️</NButton
+          >
+          <NButton
+            round
+            class="settings-button-large"
+            @click="showSettingsDialog = true"
+          >
+            Settings</NButton
+          >
         </div>
-        <div class="bottom space-between">
-          <OnePlayerCard :id="7"></OnePlayerCard>
-          <OnePlayerCard :id="2"></OnePlayerCard>
-        </div>
-        <div
-          v-if="game.board.value?.free_tile"
-          class="free-tile"
-          @click="game.rotateFreeTile()"
-        >
-          <GameTile
-            :tile="game.board.value?.free_tile?.tile ?? null"
-            :searching-for="game.activePlayerItem.value"
-            :is-reachable="true"
-            :is-clickable="game.phase.value === 'MoveTiles'"
-          ></GameTile>
-          <div v-if="game.phase.value === 'MoveTiles'">Rotate&nbsp;⟳</div>
-        </div>
-        <NButton
-          round
-          size="small"
-          class="settings-button-small"
-          @click="showSettingsDialog = true"
-        >
-          ⚙️</NButton
-        >
-        <NButton
-          round
-          class="settings-button-large"
-          @click="showSettingsDialog = true"
-        >
-          Settings</NButton
-        >
-      </div>
-    </SquareContainer>
-    <PlayerDialog
-      v-model:show="showPlayerDialog"
-      :id="showDialogFor"
-      :player-mode="getPlayerMode(showDialogFor)"
-      @join="(id, mode) => join(id, mode)"
-      @remove="(v) => removePlayer(v)"
-    ></PlayerDialog>
-    <PlayerJoinDialog
-      v-model:show="showPlayerJoinDialog"
-      :player-id="showDialogFor"
-    ></PlayerJoinDialog>
-    <WinnerDialog
-      v-if="game.winner.value !== null"
-      :id="game.winner.value"
-      v-model:show="showWinnerDialog"
-      @new-game="game.finishGame()"
-    ></WinnerDialog>
-    <SettingsDialog
-      v-model:show="showSettingsDialog"
-      :has-game-started="game.hasStarted.value"
-      @quit-game="game.finishGame()"
-      @undo="game.undoMove()"
-    ></SettingsDialog>
-  </div>
+      </SquareContainer>
+      <PlayerDialog
+        v-model:show="showPlayerDialog"
+        :id="showDialogFor"
+        :player-mode="getPlayerMode(showDialogFor)"
+        @join="(id, mode) => join(id, mode)"
+        @remove="(v) => removePlayer(v)"
+      ></PlayerDialog>
+      <PlayerJoinDialog
+        v-model:show="showPlayerJoinDialog"
+        :player-id="showDialogFor"
+      ></PlayerJoinDialog>
+      <WinnerDialog
+        v-if="game.winner.value !== null"
+        :id="game.winner.value"
+        v-model:show="showWinnerDialog"
+        @new-game="game.finishGame()"
+      ></WinnerDialog>
+      <SettingsDialog
+        v-model:show="showSettingsDialog"
+        :has-game-started="game.hasStarted.value"
+        @quit-game="game.finishGame()"
+        @undo="game.undoMove()"
+      ></SettingsDialog>
+    </div>
+  </n-config-provider>
 </template>
 
 <style scoped>

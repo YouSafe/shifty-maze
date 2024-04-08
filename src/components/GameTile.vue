@@ -126,13 +126,11 @@ img {
   width: 100%;
   height: 100%;
   display: flex;
-  color: #422b0d;
   font-size: 2.5vmin;
   align-items: center;
   justify-content: center;
   font-weight: bold;
   text-shadow: -2px 4px 4px black;
-  filter: sepia(25%);
   pointer-events: none;
 }
 

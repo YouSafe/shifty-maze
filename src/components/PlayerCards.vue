@@ -78,8 +78,9 @@ const item = computed(() => getItem(props.item));
 }
 
 .card {
+  background-color: black;
   margin: 5px;
-  border: 2px solid black;
+  border: 2px solid white;
   border-radius: 8px;
 
   --red: v-bind(playerColor);
@@ -101,7 +102,7 @@ const item = computed(() => getItem(props.item));
 }
 
 .card-inner {
-  border: 1px solid black;
+  border: 1px solid white;
   border-radius: 5px;
   width: calc(100% - 8px);
   height: calc(100% - 8px);
@@ -143,11 +144,8 @@ const item = computed(() => getItem(props.item));
 }
 
 .card.item-card .card-inner {
-  color: #422b0d;
   font-size: 5vmin;
-  background-image: none;
-  font-weight: bold;
-  filter: sepia(25%);
-  text-shadow: 0 0 2px black;
+  position: relative;
+  background: none;
 }
 </style>
