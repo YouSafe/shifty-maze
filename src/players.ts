@@ -1,5 +1,5 @@
 export const PlayerColors = [
-  "#332288",
+  "#3015b9",
   "#117733",
   "#44aa99",
   "#88ccee",
