@@ -83,6 +83,8 @@ const isSearchingFor = computed(() => {
 <style scoped>
 img {
   image-rendering: pixelated;
+  width: 100%;
+  height: 100%;
 }
 
 .tile-container {
@@ -124,7 +126,6 @@ img {
   width: 100%;
   height: 100%;
   display: flex;
-  font-family: "Noto Color Emoji", sans-serif;
   color: #422b0d;
   font-size: 2.5vmin;
   align-items: center;
